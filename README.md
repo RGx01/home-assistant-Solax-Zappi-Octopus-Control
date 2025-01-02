@@ -79,7 +79,7 @@ Automations can take a long time to run. I wish it could be made to be more snap
 
 ### 5001 - Solax Zappi Octopus Control
 * Manages the inverter behaviour when Zappi is plugged/unplugged/charging.
-* Exports Solax battery on demand or daily during offpeak periods.
+* Exports Solax battery on demand or daily during offpeak periods down to 20% SoC.
 * Creates Events that can be notified with 5005.
 * By selecting "Full Octopus Control" in the UI, as soon as an EV is plugged in Octopus should provide a dispatch.
 * By selecting "Solar Export Priority" in the UI, Zappi won't be controlled by Octopus until the sun is below a configurable elevation.
