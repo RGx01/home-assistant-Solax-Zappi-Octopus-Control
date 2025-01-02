@@ -3,7 +3,17 @@
 ## Introduction
 This started out as a Home Assistant project to create a UI to control my Solax inverter locally. It's now a project to automate the contol of the my Solax inverter, Zappi EV charger and Octopus Energy interactions including Octoplus Saving Sessions and Free Electric sessions. The idea isn't entirely new (see credits below) but the project now goes beyond my original idea and now provides the opportunity to automatically contol for scenarios (decribed in the requirements below). 
 
-The project is split into 3 parts. The first part is to simplify previous efforts by Kamil Baczkowicz into a single Home Assistant Package (with some updated parts). The second, is to create an interactive dashboard/ui to control how energy is used with Octopus Energy and Zappi EV charger. The third part is a reworking of work done by Kamil Baczkowicz to improve working with Octoplus Saving Sessions and Free Electric Sessions.
+The project is split into 3 parts:
+* The first part is to simplify previous efforts by Kamil Baczkowicz into a single Home Assistant Package (with some updated parts).
+	* config/packages/solax.
+* The second, is to create an interactive dashboard/ui to control how energy is used with Octopus Energy and Zappi EV charger.
+	* config/packages/solax_zappi_octopus
+ 	* Automations 5001-5005
+  	* Dashboard Solax & Octopus Settings.yaml	 
+* The third part is a reworking of work done by Kamil Baczkowicz to improve working with Octoplus Saving Sessions and Free Electric Sessions.
+	* config/packages/octopus_saving_sessions
+ 	* Automations 6001-6003
+  	* Dashboard Octopus Saving Sessions.yaml
 
 * [Introduction](#introduction)
 * [Screenshots](#screenshots-of-dashboards)
