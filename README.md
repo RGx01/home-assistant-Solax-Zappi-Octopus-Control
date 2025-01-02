@@ -9,10 +9,6 @@ The project is split into 3 parts. The first part is to simplify previous effort
 * [Screenshots](#screenshots-of-dashboards)
 * [Credits and Acknowledgments](#credits-and-acknowledgments)
 * [Prerequisite Integrations](#prerequisite-integrations)
-* [Requirements](#requirements)
-* [Future Dev Work](#future-dev-work)
-* [Problems Found During Development](#problems-found-during-development)
-* [Equipment Used During Development](#equipment-used-during-development)
 * [Mandatory Manual Adjustments to Config Yaml-Dashboard Yaml](#mandatory-manual-adjustments-to-config-yaml-dashboard-yaml)
 * [Still to be Tested](#still-to-be-tested)
 	* [6001 - Octopus - Free Electric Automation](#6001---octopus---free-electric-automation)
@@ -27,7 +23,12 @@ The project is split into 3 parts. The first part is to simplify previous effort
 	* [6001 - Octopus - Free Electric Automation](#6001---octopus---free-electric-automation)
 	* [6002 - Octopus - Saving Sessions Automation](#6002---octopus---saving-sessions-automation)
 	* [6003 - Octopus Energy - Join Saving Session](#6003---octopus-energy---join-saving-session)
- * [Adding the Dashboards](#adding-the-dashboards)
+* [Adding the Dashboards](#adding-the-dashboards)
+* [User Requirements](#user-requirements)
+* [Future Dev Work](#future-dev-work)
+* [Problems Found During Development](#problems-found-during-development)
+* [Equipment Used During Development](#equipment-used-during-development)
+
 
 
 ## Screenshots of Dashboards
@@ -53,7 +54,93 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 * Uptime
 * Powercalc
 
-## Requirements
+## Mandatory Manual Adjustments to Config Yaml-Dashboard Yaml
+You must edit and replace instances of Zappi number, Solax registration number, Octopus account details & IP address :
+* automations.yaml
+* templates.yaml
+* secrets.yaml
+* Dashboards
+	* Solax & Octopus Settings.yaml
+	* Octopus Saving Sessions.yaml
+If you have previous used similar Solax automations/config be aware that some rest_command names may have changed. Feed in priority options have been added. Also be aware that some entities have been added in templates.yaml
+### Other Adjustments needed
+* In the solax package templates.yaml you must adjust the battery size to your battery size and set a flag indicating where your solax CT clamp is. (notes are in the yaml)
+
+## Still to be Tested
+### 6001 - Octopus - Free Electric Automation
+Limited testing due to the amount of Free Electric Sessions I've been able to participate in. Use at own risk.
+### 6002 - Octopus - Saving Sessions Automation
+Entirely based on work done by @Kamil Baczkowicz but completely untested as I've never seen a saving session via the Octopus API. I've added the manual join a mode for those sessions that don't appear via the API. Never been tried - Use at own risk.
+### 5001 - Solax Zappi Octopus Control
+I've been unable to test what happens when Octopus Dispatches have multiple gaps where daily battery export may get fired. I suspect that the trigger for Zappi Plug Status Charging would fire and stop the discharge.
+
+## Automation Function Summary
+Automations can take a long time to run. I wish it could be made to be more snappy but the rest_commands aren't reliable. The automations make use of an input_boolean.solax_automation_running set to true to indicate in the UI (and to other automations) that an automation is running. Please be patient and wait for the input_boolean to go off before assuming the automation failed. On the dashboard it should turn red whilst something is running.
+
+### 5001 - Solax Zappi Octopus Control
+* Manages the inverter behaviour when Zappi is plugged/unplugged/charging.
+* Exports Solax battery on demand or daily during offpeak periods.
+* Creates Events that can be notified with 5005.
+* By selecting "Full Octopus Control" in the UI, as soon as an EV is plugged in Octopus should provide a dispatch.
+* By selecting "Solar Export Priority" in the UI, Zappi won't be controlled by Octopus until the sun is below a configurable elevation.
+* If neither "Full Octopus Control" or "Solar Export Priority" is on then Octopus won't start control until a configured time.
+* "Intelligent Charge Target" amount of energy % of car battery size to be dispatched by Octopus.
+* "Intelligent Target Time" target EV ready time.
+* "Intelligent Smart Charge" Indicates if Octopus is in control of charging (leave alone and let automation work)
+* "myenergi zappi-XXXXXXX Charge Mode" Zappi Mode - (leave alone and let automation work)  
+* "Use Grid During Octopus Dispatch" Use this option to use the grid rather than battery when Octopus dispatching (this can be true in off peak hours).
+* "Prevent Zappi Draining Battery" Use this option if the CT clamp is positioned in a place that sees Zappi load and consequently discharges the house battery into the EV.
+* Solax defaults - set default work mode, Charge to SoC & Min Soc. These values are used to return inverter to some defaults after a battery discharge or EV charge session.
+### 5002 - Solax Reset Mode After Manual Discharge
+* Monitors the battery SoC and stops the discharge at target SoC
+* Triggered whenever a force discharge is in progress
+* Multiple target SoC can be set for different scenarios
+	* Free electric preparation
+	* Saving Sessions
+	* Daily Exports
+	* Manual Exports
+### 5003 - Solax Set UI Options
+* When user uses the UI to change a Solax setting rest_command is used to set that option on the inverter.
+* Patience is key when changing options. Alter one at a time and wait for the red roboot to go off.
+### 5004 - Solax Reload Settings
+* Sets the UI options based on whats set on the inverter.
+* Triggered whenever a change occurs on the inverter (whenever input_boolean.solax_automation_running changes to off).
+* Triggered every 15 minutes.
+### 5005 - Solax Zappi Octopus Control - Notifier
+* Sends notifications based on Events created in automations.
+* Can be turned off by using input_bool.solax_zappi_octopus_control_notifications.
+### 6001 - Octopus - Free Electric Automation
+* Use the UI to set the day and times of the free electric.
+* Use the UI to set the target battery SoC.
+* Use the UI to set when the battery should discharge (usually early in morning just in case it's sunny later).
+* UI can be used to use the target battery SoC as the "charge to SoC" if you don't wish to export battery.
+* The automation will set the Zappi to FAST during free electric period.
+### 6002 - Octopus - Saving Sessions Automation
+* Template Sensor is required for this to work - sensor.octopus_is_there_a_saving_session_today.
+* Automatically joins a session.
+* Allows for joining manually.
+* Allows for setting a target battery discharge SoC.
+* Prepares the by charging the battery at peak rate or tries to get an Octopus dispatch if Zappi is connected and charges the battery.
+* During saving session the zappi is stopped and battery is discharged.
+* After saving session a dispatch is requested if Zappi is connected.
+### 6003 - Octopus Energy - Join Saving Session.
+* This is created by Octopus Energy (bottlecapdave) Integration Blueprint.
+
+## Adding the Dashboards
+* Copy the contents of Solax & Octopus Settings.yaml
+* Replace zappi_XXXXXXXX with your Zappi number
+* Replace z_ZZZZZZZZ with your Octopus account number
+* Open Home Assistant
+* Open Overview dashboard
+* Click Pencil icon in top left
+* Click + to add a new dashboard
+* New window opens, click the 3 dots in top left corner
+* Select Edit in Yaml
+* Replace the contents with your prepared yaml
+* Click Save
+* Click Done
+
+## User Requirements
 <ol>
 <li>Control all Solax G4 Inverter settings locally.</li>
 <li>Optionally Prevent Solax battery discharging when Zappi is charging EV.
@@ -143,91 +230,5 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 </ol>
 
 
-## Mandatory Manual Adjustments to Config Yaml-Dashboard Yaml
-You must edit and replace instances of Zappi number, Solax registration number, Octopus account details & IP address :
-* automations.yaml
-* templates.yaml
-* secrets.yaml
-* Dashboards
-	* Solax & Octopus Settings.yaml
-	* Octopus Saving Sessions.yaml
-If you have previous used similar Solax automations/config be aware that some rest_command names may have changed. Feed in priority options have been added. Also be aware that some entities have been added in templates.yaml
-### Other Adjustments needed
-* In the solax package templates.yaml you must adjust the battery size to your battery size and set a flag indicating where your solax CT clamp is
-  
 
-
-## Still to be Tested
-### 6001 - Octopus - Free Electric Automation
-Limited testing due to the amount of Free Electric Sessions I've been able to participate in. Use at own risk.
-### 6002 - Octopus - Saving Sessions Automation
-Entirely based on work done by @Kamil Baczkowicz but completely untested as I've never seen a saving session via the Octopus API. I've added the manual join a mode for those sessions that don't appear via the API. Never been tried - Use at own risk.
-### 5001 - Solax Zappi Octopus Control
-I've been unable to test what happens when Octopus Dispatches have multiple gaps where daily battery export may get fired. I suspect that the trigger for Zappi Plug Status Charging would fire and stop the discharge.
-
-## Automation Function Summary
-Automations can take a long time to run. I wish it could be made to be more snappy but the rest_commands aren't reliable. The automations make use of an input_boolean.solax_automation_running set to true to indicate in the UI (and to other automations) that an automation is running. Please be patient and wait for the input_boolean to go off before assuming the automation failed. On the dashboard it should turn red whilst something is running.
-
-### 5001 - Solax Zappi Octopus Control
-* Manages the inverter behaviour when Zappi is plugged/unplugged/charging.
-* Exports Solax battery on demand or daily during offpeak periods.
-* Creates Events that can be notified with 5005.
-* By selecting "Full Octopus Control" in the UI, as soon as an EV is plugged in Octopus should provide a dispatch.
-* By selecting "Solar Export Priority" in the UI, Zappi won't be controlled by Octopus until the sun is below a configurable elevation.
-* If neither "Full Octopus Control" or "Solar Export Priority" is on then Octopus won't start control until a configured time.
-* "Intelligent Charge Target" amount of energy % of car battery size to be dispatched by Octopus.
-* "Intelligent Target Time" target EV ready time.
-* "Intelligent Smart Charge" Indicates if Octopus is in control of charging (leave alone and let automation work)
-* "myenergi zappi-XXXXXXX Charge Mode" Zappi Mode - (leave alone and let automation work)  
-* "Use Grid During Octopus Dispatch" Use this option to use the grid rather than battery when Octopus dispatching (this can be true in off peak hours).
-* "Prevent Zappi Draining Battery" Use this option if the CT clamp is positioned in a place that sees Zappi load and consequently discharges the house battery into the EV.
-* Solax defaults - set default work mode, Charge to SoC & Min Soc. These values are used to return inverter to some defaults after a battery discharge or EV charge session.
-### 5002 - Solax Reset Mode After Manual Discharge
-* Monitors the battery SoC and stops the discharge at target SoC
-* Triggered whenever a force discharge is in progress
-* Multiple target SoC can be set for different scenarios
-	* Free electric preparation
-	* Saving Sessions
-	* Daily Exports
-	* Manual Exports
-### 5003 - Solax Set UI Options
-* When user uses the UI to change a Solax setting rest_command is used to set that option on the inverter.
-* Patience is key when changing options. Alter one at a time and wait for the red roboot to go off.
-### 5004 - Solax Reload Settings
-* Sets the UI options based on whats set on the inverter.
-* Triggered whenever a change occurs on the inverter (whenever input_boolean.solax_automation_running changes to off).
-* Triggered every 15 minutes.
-### 5005 - Solax Zappi Octopus Control - Notifier
-* Sends notifications based on Events created in automations.
-* Can be turned off by using input_bool.solax_zappi_octopus_control_notifications.
-### 6001 - Octopus - Free Electric Automation
-* Use the UI to set the day and times of the free electric.
-* Use the UI to set the target battery SoC.
-* Use the UI to set when the battery should discharge (usually early in morning just in case it's sunny later).
-* UI can be used to use the target battery SoC as the "charge to SoC" if you don't wish to export battery.
-* The automation will set the Zappi to FAST during free electric period.
-### 6002 - Octopus - Saving Sessions Automation
-* Template Sensor is required for this to work - sensor.octopus_is_there_a_saving_session_today.
-* Automatically joins a session.
-* Allows for joining manually.
-* Allows for setting a target battery discharge SoC.
-* Prepares the by charging the battery at peak rate or tries to get an Octopus dispatch if Zappi is connected and charges the battery.
-* During saving session the zappi is stopped and battery is discharged.
-* After saving session a dispatch is requested if Zappi is connected.
-### 6003 - Octopus Energy - Join Saving Session.
-* This is created by Octopus Energy (bottlecapdave) Integration Blueprint.
-
-## Adding the Dashboards
-* Copy the contents of Solax & Octopus Settings.yaml
-* Replace zappi_XXXXXXXX with your Zappi number
-* Replace z_ZZZZZZZZ with your Octopus account number
-* Open Home Assistant
-* Open Overview dashboard
-* Click Pencil icon in top left
-* Click + to add a new dashboard
-* New window opens, click the 3 dots in top left corner
-* Select Edit in Yaml
-* Replace the contents with your prepared yaml
-* Click Save
-* Click Done
 
