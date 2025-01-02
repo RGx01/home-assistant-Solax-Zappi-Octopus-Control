@@ -20,6 +20,7 @@ The project is split into 3 parts:
 * [Credits and Acknowledgments](#credits-and-acknowledgments)
 * [Prerequisite Integrations](#prerequisite-integrations)
 * [Mandatory Manual Adjustments to Config Yaml-Dashboard Yaml](#mandatory-manual-adjustments-to-config-yaml-dashboard-yaml)
+* [Adding the Dashboards](#adding-the-dashboards)
 * [Still to be Tested](#still-to-be-tested)
 	* [6001 - Octopus - Free Electric Automation](#6001---octopus---free-electric-automation)
 	* [6002 - Octopus - Saving Sessions Automation](#6002---octopus---saving-sessions-automation)
@@ -33,7 +34,6 @@ The project is split into 3 parts:
 	* [6001 - Octopus - Free Electric Automation](#6001---octopus---free-electric-automation)
 	* [6002 - Octopus - Saving Sessions Automation](#6002---octopus---saving-sessions-automation)
 	* [6003 - Octopus Energy - Join Saving Session](#6003---octopus-energy---join-saving-session)
-* [Adding the Dashboards](#adding-the-dashboards)
 * [User Requirements](#user-requirements)
 * [Future Dev Work](#future-dev-work)
 * [Problems Found During Development](#problems-found-during-development)
@@ -75,6 +75,20 @@ You must edit and replace instances of Zappi number, Solax registration number, 
 If you have previous used similar Solax automations/config be aware that some rest_command names may have changed. Feed in priority options have been added. Also be aware that some entities have been added in templates.yaml
 ### Other Adjustments needed
 * In the solax package templates.yaml you must adjust the battery size to your battery size and set a flag indicating where your solax CT clamp is. (notes are in the yaml)
+
+## Adding the Dashboards
+* Copy the contents of Solax & Octopus Settings.yaml
+* Replace zappi_XXXXXXXX with your Zappi number
+* Replace z_ZZZZZZZZ with your Octopus account number
+* Open Home Assistant
+* Open Overview dashboard
+* Click Pencil icon in top left
+* Click + to add a new dashboard
+* New window opens, click the 3 dots in top left corner
+* Select Edit in Yaml
+* Replace the contents with your prepared yaml
+* Click Save
+* Click Done
 
 ## Still to be Tested
 ### 6001 - Octopus - Free Electric Automation
@@ -135,20 +149,6 @@ Automations can take a long time to run. I wish it could be made to be more snap
 * After saving session a dispatch is requested if Zappi is connected.
 ### 6003 - Octopus Energy - Join Saving Session.
 * This is created by Octopus Energy (bottlecapdave) Integration Blueprint.
-
-## Adding the Dashboards
-* Copy the contents of Solax & Octopus Settings.yaml
-* Replace zappi_XXXXXXXX with your Zappi number
-* Replace z_ZZZZZZZZ with your Octopus account number
-* Open Home Assistant
-* Open Overview dashboard
-* Click Pencil icon in top left
-* Click + to add a new dashboard
-* New window opens, click the 3 dots in top left corner
-* Select Edit in Yaml
-* Replace the contents with your prepared yaml
-* Click Save
-* Click Done
 
 ## User Requirements
 <ol>
