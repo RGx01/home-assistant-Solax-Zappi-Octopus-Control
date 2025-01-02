@@ -3,6 +3,12 @@
 #
 # offset:
 #   days: 2 <---- update to your billing day (2 if your bills start on the 3rd)
+#
+# For EV Meters please add your own vehicles i.e.
+#         tariffs:
+#         - Car1
+#         - Car2
+#         - Guest
 ##############################################################
 
 solax_utilitymeter:
