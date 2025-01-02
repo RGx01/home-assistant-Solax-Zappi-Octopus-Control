@@ -13,7 +13,7 @@ I've broken down the project into 3 parts. the first part is to simplify previou
 * [Future Dev Work](#future-dev-work)
 * [Problems Found During Development](#problems-found-during-development)
 * [Equipment Used During Development](#equipment-used-during-development)
-* [Adjustments to Config Files](#adjustments-to-config-files)
+* [Mandatory Manual Adjustments to Config Yaml-Dashboard Yaml](#mandatory-manual-adjustments-to-config-yaml-dashboard-yaml)
 * [Still to be Tested](#still-to-be-tested)
 	* [6001 - Octopus - Free Electric Automation](#6001---octopus---free-electric-automation)
 	* [6002 - Octopus - Saving Sessions Automation](#6002---octopus---saving-sessions-automation)
@@ -27,7 +27,6 @@ I've broken down the project into 3 parts. the first part is to simplify previou
 	* [6001 - Octopus - Free Electric Automation](#6001---octopus---free-electric-automation)
 	* [6002 - Octopus - Saving Sessions Automation](#6002---octopus---saving-sessions-automation)
 	* [6003 - Octopus Energy - Join Saving Session](#6003---octopus-energy---join-saving-session)
- * [Supporting Config Yaml](#supporting-config-yaml)
  * [Adding the Dashboards](#adding-the-dashboards)
 
 
@@ -37,7 +36,7 @@ I've broken down the project into 3 parts. the first part is to simplify previou
 <img width="1498" alt="Screenshot 2024-12-30 at 00 58 33" src="https://github.com/user-attachments/assets/4933240f-efa7-475b-b1fa-b32758e3504c" />
 
 ## Credits and Acknowledgments
-The Solax interactions are possible due to work published by @Colin Robbins and @Kamil Baczkowicz. Suggested reading: 
+The Solax interactions are possible due to work published by @Colin Robbins and @Kamil Baczkowicz. I've tried to simplify things by putting their work into a package. Essentially it becomes a building block for my automations and dashboards. Suggested reading: 
 <ol>
 <li>https://community.home-assistant.io/t/solax-x1-hybrid-g4-worked-example/499362
 </li>
@@ -144,7 +143,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 </ol>
 
 
-## Mandatory Manual Adjustments to Config Files/Dashboard Yaml
+## Mandatory Manual Adjustments to Config Yaml-Dashboard Yaml
 You must edit and replace instances of Zappi number, Solax registration number, Octopus account details & IP address :
 * automations.yaml
 * templates.yaml
