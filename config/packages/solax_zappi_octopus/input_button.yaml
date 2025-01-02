@@ -1,0 +1,16 @@
+solax_zappi_octopus_input_button:
+  input_button:
+    # Refresh solax settings
+    refresh:
+      name: Refresh
+      icon: mdi:button-pointer
+
+    # Force Solax Discharge
+    solax_force_discharge:
+      name: Solax Force Discharge
+      icon: mdi:button-pointer
+
+    # Stop Solax Discharge
+    solax_stop_discharge:
+      name: Solax Stop Discharge
+      icon: mdi:button-pointer

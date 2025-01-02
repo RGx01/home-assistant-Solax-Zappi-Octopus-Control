@@ -1,0 +1,86 @@
+type: sections
+path: octopus-saving-sessions
+max_columns: 4
+title: Octopus Saving Sessions
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        heading: Octopus Saving Sessions
+      - type: entities
+        entities:
+          - entity: binary_sensor.octopus_energy_Z_ZZZZZZZZ_octoplus_saving_sessions
+            name: octoplus_saving_sessions
+          - entity: binary_sensor.octopus_energy_Z_ZZZZZZZZ_octoplus_saving_sessions
+            type: attribute
+            name: Current event start
+            attribute: current_joined_event_start
+          - entity: binary_sensor.octopus_energy_Z_ZZZZZZZZ_octoplus_saving_sessions
+            type: attribute
+            name: Current event end
+            attribute: current_joined_event_end
+          - entity: binary_sensor.octopus_energy_Z_ZZZZZZZZ_octoplus_saving_sessions
+            type: attribute
+            name: Current event duration
+            attribute: current_joined_event_duration_in_minutes
+          - entity: binary_sensor.octopus_energy_Z_ZZZZZZZZ_octoplus_saving_sessions
+            type: attribute
+            name: Next event start
+            attribute: next_joined_event_start
+          - entity: binary_sensor.octopus_energy_Z_ZZZZZZZZ_octoplus_saving_sessions
+            type: attribute
+            name: Next event end
+            attribute: next_joined_event_end
+          - entity: binary_sensor.octopus_energy_Z_ZZZZZZZZ_octoplus_saving_sessions
+            type: attribute
+            name: Next event duration
+            attribute: next_joined_event_duration_in_minutes
+          - entity: binary_sensor.octopus_energy_Z_ZZZZZZZZ_octoplus_saving_sessions
+            type: attribute
+            name: Data last retrieved
+            attribute: data_last_retrieved
+          - entity: sensor.octopus_is_there_a_saving_session_today
+            type: attribute
+            attribute: session_start
+          - entity: sensor.octopus_is_there_a_saving_session_today
+            type: attribute
+            attribute: session_end
+    visibility:
+      - condition: state
+        entity: input_select.saving_session_today
+        state: "yes"
+  - type: grid
+    cards:
+      - type: heading
+        heading: Octopus Saving Session
+        heading_style: title
+        badges:
+          - type: entity
+            show_state: false
+            show_icon: true
+            entity: input_boolean.solax_automation_running
+            color: pink
+      - type: entities
+        entities:
+          - entity: automation.octopus_energy_join_saving_session
+          - entity: automation.octopus_saving_session
+          - entity: input_number.octopus_saving_session_target_battery_soc
+          - entity: input_select.saving_session_today
+          - entity: input_datetime.saving_session_start
+          - entity: input_datetime.saving_session_end
+          - entity: input_boolean.octopus_saving_session_manual
+    column_span: 1
+  - type: grid
+    cards:
+      - type: heading
+        heading: Octopus Free Electricity
+      - type: entities
+        entities:
+          - entity: automation.free_electric_automation
+          - entity: input_datetime.octopus_free_electricity
+          - entity: input_datetime.solax_start_charge_2
+          - entity: input_datetime.solax_stop_charge_2
+          - entity: input_boolean.octopus_free_electric_soc_use
+          - entity: input_number.octopus_free_session_battery_prep_soc
+          - entity: input_datetime.octopus_free_electricity_prep
+    column_span: 1
