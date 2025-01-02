@@ -107,7 +107,11 @@ solax_zappi_octopus_templates:
           unique_id: f9b1faae-64bf-454e-a907-c64a35dd626c
           device_class: "timestamp"
           state: >
-            {% set x = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[0]|int*60*60 +states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[1]|int*60 )|as_datetime) %}
+            {% if states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time') != 'unknown'%}
+            {% set x = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+(states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[0]|int(default=5)*60*60 +states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[1]|int(default=0)*60) )|as_datetime) %}
+            {%else%}
+            {% set x = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+18000)|as_datetime) %}
+            {%endif%}
             {%if now()|as_timestamp > x|as_timestamp%}
             {% set x = x|as_timestamp + 86400 %}
             {{x|as_datetime}}
