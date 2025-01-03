@@ -1,0 +1,65 @@
+########################################################################################
+# AUTOMATION 5005 
+# 1. This is 5005 only you need 5001 5002 5003 and 5004. files are kept seperate in repo 
+# for ease of maintenance
+# 2. Find and replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus account
+# 3. Paste into your automations.yaml
+########################################################################################
+- id: '5005'
+  alias: Solax Zappi Octopus Control - Notifier v1.0.0
+  description: ''
+  triggers:
+  - trigger: event
+    event_type: Solax Zappi Octopus Control
+    event_data:
+      class: normal
+    id: Normal
+  - trigger: event
+    event_type: Solax Zappi Octopus Control
+    event_data:
+      class: high
+    id: High
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - High
+      - condition: state
+        entity_id: input_boolean.solax_zappi_octopus_control_notifications
+        state: 'off'
+      sequence:
+      - action: notify.mobile_app_r_s_iphone
+        metadata: {}
+        data:
+          title: '{{trigger.event.data.title}}'
+          message: '{{trigger.event.data.message}}'
+      - action: persistent_notification.create
+        data:
+          title: '{{trigger.event.data.title}}'
+          message: '{{trigger.event.data.message}}'
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: trigger
+          id:
+          - Normal
+        - condition: trigger
+          id:
+          - High
+      - condition: state
+        entity_id: input_boolean.solax_zappi_octopus_control_notifications
+        state: 'on'
+      sequence:
+      - action: persistent_notification.create
+        data:
+          title: '{{trigger.event.data.title}}'
+          message: '{{trigger.event.data.message}}'
+      - action: notify.mobile_app_r_s_iphone
+        metadata: {}
+        data:
+          title: '{{trigger.event.data.title}}'
+          message: '{{trigger.event.data.message}}'
+  mode: queued
+  max: 10
