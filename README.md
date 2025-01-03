@@ -66,7 +66,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 
 ## Mandatory Manual Adjustments to Config Yaml-Dashboard Yaml
 You must edit and replace instances of Zappi number, Solax registration number, Octopus account details & IP address :
-* automations.yaml
+* automations.yaml (automation files need to be cut and paste into your single automation.yaml)
 * templates.yaml
 * secrets.yaml
 * Dashboards
