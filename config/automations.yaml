@@ -2,7 +2,7 @@ find and replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus acco
 
 - id: '5001'
   alias: Solax Zappi Octopus Control
-  description: Solax Zappi Octopus Control - V1.03
+  description: Solax Zappi Octopus Control - V1.04
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -270,6 +270,17 @@ find and replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus acco
                 minutes: 0
                 seconds: '{{refresh_settings_delay}}'
                 milliseconds: 0
+            - if:
+              - condition: template
+                value_template: '{{repeat.index == 3}}'
+              then:
+              - event: Solax Zappi Octopus Control
+                event_data:
+                  message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels
+                    may need attention.
+                  title: Failure to SoC levels - Action required!
+                  class: high
+                enabled: true
             until:
             - condition: template
               value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
@@ -312,6 +323,17 @@ find and replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus acco
                 minutes: 0
                 seconds: '{{refresh_settings_delay}}'
                 milliseconds: 0
+            - if:
+              - condition: template
+                value_template: '{{repeat.index == 3}}'
+              then:
+              - event: Solax Zappi Octopus Control
+                event_data:
+                  message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels
+                    may need attention.
+                  title: Failure to SoC levels - Action required!
+                  class: high
+                enabled: true
             until:
             - condition: template
               value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
@@ -354,6 +376,17 @@ find and replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus acco
                 minutes: 0
                 seconds: '{{refresh_settings_delay}}'
                 milliseconds: 0
+            - if:
+              - condition: template
+                value_template: '{{repeat.index == 3}}'
+              then:
+              - event: Solax Zappi Octopus Control
+                event_data:
+                  message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels
+                    may need attention.
+                  title: Failure to SoC levels - Action required!
+                  class: high
+                enabled: true
             until:
             - condition: template
               value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
@@ -398,6 +431,17 @@ find and replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus acco
                 minutes: 0
                 seconds: '{{refresh_settings_delay}}'
                 milliseconds: 0
+            - if:
+              - condition: template
+                value_template: '{{repeat.index == 3}}'
+              then:
+              - event: Solax Zappi Octopus Control
+                event_data:
+                  message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels
+                    may need attention.
+                  title: Failure to SoC levels - Action required!
+                  class: high
+                enabled: true
             until:
             - condition: template
               value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
@@ -450,6 +494,17 @@ find and replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus acco
                 minutes: 0
                 seconds: '{{refresh_settings_delay}}'
                 milliseconds: 0
+            - if:
+              - condition: template
+                value_template: '{{repeat.index == 3}}'
+              then:
+              - event: Solax Zappi Octopus Control
+                event_data:
+                  message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels
+                    may need attention.
+                  title: Failure to SoC levels - Action required!
+                  class: high
+                enabled: true
             until:
             - condition: template
               value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
@@ -581,7 +636,7 @@ find and replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus acco
           conditions:
           - condition: time
             after: sensor.ev_start_time
-            before: sensor.octopus_intelligent_target_time
+            before: sensor.intelligent_target_time
           - condition: state
             entity_id: input_boolean.zappi_eco_mode_override
             state: 'on'
@@ -933,7 +988,7 @@ find and replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus acco
         else:
         - event: Solax Zappi Octopus Control
           event_data:
-            message: 'Cheap Rate @ {{now().strftime(''%H:%M'')}}. '
+            message: 'OP10:Cheap Rate @ {{now().strftime(''%H:%M'')}}. '
             title: OP10:Cheap Rate
             class: normal
           enabled: true
