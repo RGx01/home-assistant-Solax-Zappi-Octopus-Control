@@ -1,0 +1,9 @@
+octopus_saving_sessions_input_select:
+  input_select:
+    # Octopus saving sessions
+    saving_session_today:
+      name: saving_session_today
+      options:
+        - "yes"
+        - "no"
+        - "manual"

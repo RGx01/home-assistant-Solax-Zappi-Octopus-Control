@@ -1,0 +1,12 @@
+octopus_saving_sessions_input_boolean:
+  input_boolean:
+    #Saving Session Override
+    octopus_saving_session_manual:
+      name: Saving Session Manual Program
+      icon: mdi:human-male-board
+    # When there is an octopus free electric session, to prepare on the day, user can choose to set
+    # a target SoC for which to discharge the battery to at a certain time, or, by using this switch the battery will
+    # only be charged to the target SoC.
+    octopus_free_electric_soc_use:
+      name: Use Target SoC as Charge to Soc
+      icon: mdi:transmission-tower-import

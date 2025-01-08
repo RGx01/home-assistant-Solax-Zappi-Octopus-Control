@@ -1,0 +1,29 @@
+octopus_saving_sessions_input_datetime:
+  input_datetime:
+    #########################################
+    #Date of when theres free electric from Octopus
+    octopus_free_electricity:
+      name: Octopus Free Electricity
+      has_date: true
+      has_time: false
+      icon: mdi:calendar
+
+    octopus_free_electricity_prep:
+      name: Export Battery @Time to Target SoC
+      has_date: false
+      has_time: true
+      icon: mdi:clock
+
+    #Octopus Saving Session
+    saving_session_start:
+      name: Octopus Saving Session Start
+      has_date: true
+      has_time: true
+      icon: mdi:clock-digital
+
+    #Octopus Saving Session
+    saving_session_end:
+      name: Octopus Saving Session End
+      has_date: true
+      has_time: true
+      icon: mdi:clock-digital

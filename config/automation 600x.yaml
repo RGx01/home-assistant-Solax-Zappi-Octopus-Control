@@ -1,0 +1,758 @@
+
+########################################################################################
+# AUTOMATION 6001 6002 6003 
+# 1. Octoplus saving sessions automations + free electric automation
+# 2. Find and replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus account
+# 3. Paste into your automations.yaml
+########################################################################################
+- id: '6001'
+  alias: Octopus - Free Electric Automation
+  description: ''
+  triggers:
+  - at: sensor.octopus_free_electricity_start
+    id: start
+    trigger: time
+  - at: sensor.octopus_free_electric_stop
+    id: stop
+    trigger: time
+  - entity_id:
+    - binary_sensor.free_electricity_today
+    to: 'on'
+    id: Pre
+    trigger: state
+  - at: input_datetime.octopus_free_electricity_prep
+    id: ExportBattery
+    trigger: time
+  conditions: []
+  actions:
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.solax_automation_running
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - start
+      sequence:
+      - data:
+          level: 94
+        action: rest_command.solax_local_set_feedin_charge_battery_from_grid
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 10
+          milliseconds: 0
+      - data:
+          level: 94
+        action: rest_command.solax_local_set_charge_battery_from_grid
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 10
+          milliseconds: 0
+      - action: input_boolean.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solaxchargeperiod2
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 30
+          milliseconds: 0
+      - device_id: 81feeff7f6c38ffda31d691e485aafbb
+        domain: select
+        entity_id: f3b01825f9cfc654dfb179e64a2be0fe
+        type: select_option
+        option: Fast
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: 'Free electric session started @ {{now().strftime(''%H:%M'')}}. '
+          title: Free Electric Started
+          class: high
+        enabled: true
+    - conditions:
+      - condition: trigger
+        id:
+        - stop
+      sequence:
+      - repeat:
+          sequence:
+          - data:
+              value: '{{states(''sensor.solax_default_operation_mode'')|int}}'
+            action: rest_command.solax_local_set_inverter_mode
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 10
+              milliseconds: 0
+          - data:
+              value: 0
+            action: rest_command.solax_local_set_manual_mode_behaviour
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 10
+              milliseconds: 0
+          - data:
+              value: 0
+            action: rest_command.solax_local_set_period2_enable
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 10
+              milliseconds: 0
+          - data:
+              level: '{{states(''input_number.solax_default_charge_to_limit_soc'')}}'
+            action: rest_command.solax_local_set_charge_battery_from_grid
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 10
+              milliseconds: 0
+          - data:
+              level: '{{states(''input_number.solax_default_charge_to_limit_soc'')}}'
+            action: rest_command.solax_local_set_feedin_charge_battery_from_grid
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 10
+              milliseconds: 0
+          - action: homeassistant.update_entity
+            data:
+              entity_id:
+              - sensor.solax_rest_local_settings
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 2
+              milliseconds: 0
+          until:
+          - condition: template
+            value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
+              == states(''sensor.solax_default_operation_mode'')|int and state_attr(''sensor.solax_local_settings'',
+              ''Data'')[7] == 0 and state_attr(''sensor.solax_local_settings'', ''Data'')[2]
+              == states(''input_number.solax_default_charge_to_limit_soc'') and state_attr(''sensor.solax_local_settings'',
+              ''Data'')[13] == states(''input_number.solax_default_charge_to_limit_soc''))
+              or repeat.index == 3 }}'
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: 'Free electric session finished @ {{now().strftime(''%H:%M'')}}. '
+          title: Free Electric Finished
+          class: high
+        enabled: true
+    - conditions:
+      - condition: trigger
+        id:
+        - Pre
+      - condition: state
+        entity_id: input_boolean.export_battery
+        state: 'off'
+      sequence:
+      - data:
+          level: '{{state(''input_number.octopus_free_session_battery_prep_soc'')}}'
+        action: rest_command.solax_local_set_feedin_charge_battery_from_grid
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 10
+          milliseconds: 0
+        enabled: true
+      - data:
+          level: '{{state(''input_number.octopus_free_session_battery_prep_soc'')}}'
+        action: rest_command.solax_local_set_charge_battery_from_grid
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 10
+          milliseconds: 0
+        enabled: true
+      - data:
+          level:
+            '[object Object]':
+        action: rest_command.solax_local_set_charge_battery_from_grid
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 10
+          milliseconds: 0
+        enabled: true
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: Free electric session prep started @ {{now().strftime('%H:%M')}}.
+            Charge from grid to {{states('input_number.octopus_free_session_battery_prep_soc')}}%
+          title: Free Electric Prep
+          class: high
+        enabled: true
+    - conditions:
+      - condition: trigger
+        id:
+        - ExportBattery
+      - condition: state
+        entity_id: input_boolean.export_battery
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.free_electricity_today
+        state: 'on'
+      - condition: numeric_state
+        entity_id: sensor.solax_local_battery_soc
+        above: input_number.octopus_free_session_battery_prep_soc
+        value_template: '{{ state.state | float(0)  - 4 }}'
+      - condition: state
+        entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+        state: 'off'
+      - condition: template
+        value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]!=
+          3)}}'
+      sequence:
+      - if:
+        - condition: numeric_state
+          entity_id: sensor.solax_local_battery_soc
+          above: input_number.octopus_free_session_battery_prep_soc
+          value_template: '{{ state.state | float(0)  - 4 }}'
+        then:
+        - repeat:
+            sequence:
+            - data:
+                value: 3
+              action: rest_command.solax_local_set_inverter_mode
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: 15
+                milliseconds: 0
+            - data:
+                value: 2
+              action: rest_command.solax_local_set_manual_mode_behaviour
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: 15
+                milliseconds: 0
+            - action: homeassistant.update_entity
+              data:
+                entity_id:
+                - sensor.solax_rest_local_settings
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: 2
+                milliseconds: 0
+            until:
+            - condition: template
+              value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
+                == 3 and state_attr(''sensor.solax_local_settings'', ''Data'')[11]
+                == 2) or repeat.index == 3 }}'
+        - event: Solax Zappi Octopus Control
+          event_data:
+            message: Free electric session prep export started @ {{now().strftime('%H:%M')}}.
+              Discharging to {{states('input_number.octopus_free_session_battery_prep_soc')}}%
+            title: Free Electric Prep
+            class: high
+          enabled: true
+  - action: input_boolean.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.solax_automation_running
+  mode: single
+- id: '6002'
+  alias: Octopus - Saving Sessions Automation
+  description: Automatically join Octopus Saving Session Events v1.1
+  triggers:
+  - event_type: octopus_energy_new_octoplus_saving_session
+    trigger: event
+    id: Octopus New Saving Session
+  - trigger: state
+    entity_id:
+    - sensor.octopus_is_there_a_saving_session_today
+    id: Is there a session today?
+  - trigger: state
+    entity_id:
+    - input_select.saving_session_today
+    from: 'no'
+    to: 'yes'
+    id: saving session changes to yes
+  - trigger: state
+    entity_id:
+    - input_select.saving_session_today
+    from: 'yes'
+    to: 'no'
+    id: saving session changes to no
+  - trigger: time
+    at: input_datetime.saving_session_start
+    id: Start Discharge
+  - trigger: time
+    at: input_datetime.saving_session_end
+    id: Saving Session Ended
+  - trigger: time
+    at: input_datetime.solax_start_charge_2
+    id: Pre Saving Session
+  - trigger: state
+    entity_id:
+    - input_boolean.octopus_saving_session_manual
+    to: 'on'
+    id: Manual
+  - trigger: state
+    entity_id:
+    - input_boolean.octopus_saving_session_manual
+    to: 'off'
+    id: Is there a session today?
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  conditions: []
+  actions:
+  - variables:
+      default_mode: '{{states(''sensor.solax_default_operation_mode'')|int}}'
+      mode_delay: 15
+      settings_delay: 10
+      refresh_settings_delay: 10
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - Is there a session today?
+      - condition: state
+        entity_id: input_boolean.octopus_saving_session_manual
+        state: 'off'
+      sequence:
+      - action: input_datetime.set_datetime
+        data_template:
+          datetime: '{{state_attr(''sensor.octopus_is_there_a_saving_session_today'',''session_start'')}}'
+          entity_id: input_datetime.saving_session_start
+      - action: input_datetime.set_datetime
+        data_template:
+          datetime: '{{state_attr(''sensor.octopus_is_there_a_saving_session_today'',''session_end'')}}'
+          entity_id: input_datetime.saving_session_end
+      - action: input_select.select_option
+        metadata: {}
+        data:
+          option: '{{states(''sensor.octopus_is_there_a_saving_session_today'')}}'
+        target:
+          entity_id: input_select.saving_session_today
+      - if:
+        - condition: state
+          entity_id: input_select.saving_session_today
+          state: 'no'
+        then:
+        - action: input_boolean.turn_on
+          metadata: {}
+          data: {}
+          target:
+            entity_id: input_boolean.solax_automation_running
+        - data:
+            enabled: '{{ 0 }}
+
+              '
+          action: rest_command.solax_local_set_period2_enable
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: '{{settings_delay}}'
+            milliseconds: 0
+        - action: input_boolean.turn_off
+          metadata: {}
+          data: {}
+          target:
+            entity_id: input_boolean.solax_automation_running
+    - conditions:
+      - condition: trigger
+        id:
+        - Octopus New Saving Session
+      sequence:
+      - data:
+          event_code: '{{ trigger.event.data["event_code"] }}'
+        target:
+          entity_id: event.octopus_energy_z_ZZZZZZZZ_octoplus_saving_session_events
+        action: octopus_energy.join_octoplus_saving_session_event
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: 'Joined new Octopus Energy saving session. It starts at {{ trigger.event.data["event_start"].strftime(''%H:%M'')
+            }} on {{ trigger.event.data["event_start"].day }}/{{ trigger.event.data["event_start"].month
+            }}
+
+            '
+          title: Octopus Saving Sessions Updated
+          class: high
+        enabled: true
+    - conditions:
+      - condition: trigger
+        id:
+        - saving session changes to yes
+      - condition: template
+        value_template: "{{ states('sensor.solax_local_battery_chd2_enabled')|bool==false
+          \n    and states('input_select.saving_session_today') == 'yes' \n    and
+          states('input_datetime.saving_session_start') != None }}"
+      - condition: state
+        entity_id: input_boolean.octopus_saving_session_manual
+        state: 'off'
+      sequence:
+      - action: input_boolean.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
+      - repeat:
+          sequence:
+          - data:
+              enabled: '{{ 1 }}
+
+                '
+            action: rest_command.solax_local_set_period2_enable
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - data:
+              value: '{% set end_time = as_datetime(state_attr(''input_datetime.saving_session_start'',
+                ''timestamp'') - 2600) %} {{ end_time.hour + end_time.minute * 256
+                }}'
+            action: rest_command.solax_local_set_forced_charge_start2
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - data:
+              value: '{% set end_time = as_datetime(state_attr(''input_datetime.saving_session_start'',
+                ''timestamp'') - 60) %} {{ end_time.hour + end_time.minute * 256 }}'
+            action: rest_command.solax_local_set_forced_charge_stop2
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - repeat:
+              sequence:
+              - action: homeassistant.update_entity
+                data:
+                  entity_id:
+                  - sensor.solax_rest_local_settings
+              - delay:
+                  hours: 0
+                  minutes: 0
+                  seconds: '{{refresh_settings_delay}}'
+              until:
+              - condition: template
+                value_template: '{{states(''sensor.solax_rest_local_settings'')!=
+                  ''unavailable'' or states(''sensor.solax_rest_local_settings'')!=
+                  ''unknown'' or repeat.index == 3}}'
+          until:
+          - condition: template
+            value_template: "{% set end_time = as_datetime(state_attr('input_datetime.saving_session_start',
+              'timestamp') - 60).strftime('%H:%M') %} \n{% set start_time = as_datetime(state_attr('input_datetime.saving_session_start',
+              'timestamp') - 2600).strftime('%H:%M') %} \n\n{{ (states('sensor.solax_local_battery_chd2_enabled')|bool==true
+              \n    and states('sensor.solax_local_battery_setting_stop_charge_2')
+              == end_time\n    and states('sensor.solax_local_battery_setting_stop_charge_2')
+              == start_time)\n    or repeat.index == 3 }}"
+      - action: input_boolean.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
+    - conditions:
+      - condition: trigger
+        id:
+        - saving session changes to no
+      - condition: template
+        value_template: '{{ states(''sensor.solax_local_battery_chd2_enabled'')|bool==true}}'
+      sequence:
+      - action: input_boolean.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
+      - repeat:
+          sequence:
+          - data:
+              enabled: '{{ 0 }}
+
+                '
+            action: rest_command.solax_local_set_period2_enable
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - repeat:
+              sequence:
+              - action: homeassistant.update_entity
+                data:
+                  entity_id:
+                  - sensor.solax_rest_local_settings
+              - delay:
+                  hours: 0
+                  minutes: 0
+                  seconds: '{{refresh_settings_delay}}'
+              until:
+              - condition: template
+                value_template: '{{states(''sensor.solax_rest_local_settings'')!=
+                  ''unavailable'' or states(''sensor.solax_rest_local_settings'')!=
+                  ''unknown'' or repeat.index == 3}}'
+          until:
+          - condition: template
+            value_template: '{{ (states(''sensor.solax_local_battery_chd2_enabled'')|bool==false)
+              or repeat.index == 3 }}'
+      - action: input_boolean.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
+    - conditions:
+      - condition: trigger
+        id:
+        - Start Discharge
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_select.saving_session_today
+          state: 'yes'
+        - condition: state
+          entity_id: input_boolean.octopus_saving_session_manual
+          state: 'on'
+      sequence:
+      - action: input_boolean.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
+      - if:
+        - condition: numeric_state
+          entity_id: sensor.solax_local_battery_soc
+          above: input_number.solax_manual_forced_discharge_limit_soc
+          value_template: '{{ state.state | float(0)  - 4 }}'
+        then:
+        - repeat:
+            sequence:
+            - data:
+                value: 3
+              action: rest_command.solax_local_set_inverter_mode
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: '{{mode_delay}}'
+                milliseconds: 0
+            - data:
+                value: 2
+              action: rest_command.solax_local_set_manual_mode_behaviour
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: '{{mode_delay}}'
+                milliseconds: 0
+            - repeat:
+                sequence:
+                - action: homeassistant.update_entity
+                  data:
+                    entity_id:
+                    - sensor.solax_rest_local_settings
+                - delay:
+                    hours: 0
+                    minutes: 0
+                    seconds: '{{refresh_settings_delay}}'
+                until:
+                - condition: template
+                  value_template: '{{states(''sensor.solax_rest_local_settings'')!=
+                    ''unavailable'' or states(''sensor.solax_rest_local_settings'')!=
+                    ''unknown'' or repeat.index == 3}}'
+            until:
+            - condition: template
+              value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
+                == 3 and state_attr(''sensor.solax_local_settings'', ''Data'')[11]
+                == 2) or repeat.index == 3 }}'
+      - action: switch.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+      - action: select.select_option
+        metadata: {}
+        data:
+          option: Stopped
+        target:
+          entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
+      - action: input_boolean.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: 'Attempting Discharge at {{now().strftime(''%H:%M'') }}
+
+            '
+          title: Octopus Saving Sessions - Discharging
+          class: high
+        enabled: true
+    - conditions:
+      - condition: trigger
+        id:
+        - Pre Saving Session
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_select.saving_session_today
+          state: 'yes'
+        - condition: state
+          entity_id: input_boolean.octopus_saving_session_manual
+          state: 'on'
+      sequence:
+      - action: input_boolean.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.zappi_eco_mode_override
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: Charging 2 @ {{now().strftime('%H:%M')}}. Battery @ {{sensor('sensor.solax_local_battery_soc')}}%
+          title: Charge Period 2 Active
+          class: high
+        enabled: true
+    - conditions:
+      - condition: trigger
+        id:
+        - Saving Session Ended
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_select.saving_session_today
+          state: 'yes'
+        - condition: state
+          entity_id: input_boolean.octopus_saving_session_manual
+          state: 'on'
+      sequence:
+      - repeat:
+          sequence:
+          - data:
+              value: '{{default_mode}}'
+            action: rest_command.solax_local_set_inverter_mode
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{mode_delay}}'
+              milliseconds: 0
+          - repeat:
+              sequence:
+              - action: homeassistant.update_entity
+                data:
+                  entity_id:
+                  - sensor.solax_rest_local_settings
+              - delay:
+                  hours: 0
+                  minutes: 0
+                  seconds: '{{refresh_settings_delay}}'
+                  milliseconds: 0
+              until:
+              - condition: template
+                value_template: '{{states(''sensor.solax_rest_local_settings'')!=
+                  ''unavailable'' or states(''sensor.solax_rest_local_settings'')!=
+                  ''unknown'' or repeat.index == 3}}'
+          until:
+          - condition: template
+            value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
+              == default_mode) or repeat.index == 3 }}'
+      - action: input_boolean.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.zappi_eco_mode_override
+      - action: input_boolean.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.octopus_saving_session_manual
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: 'Octopus Saving Session ended @ {{now().strftime(''%H:%M'')}}.
+            Battery @
+
+            {{states(''sensor.solax_local_battery_soc'')}}%. Some Octopus/inverter
+
+            settingsmay need updating. Please check.
+
+            '
+          title: Saving Session Ended
+          class: high
+        enabled: true
+    - conditions:
+      - condition: trigger
+        id:
+        - Manual
+      sequence:
+      - action: input_boolean.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
+      - repeat:
+          sequence:
+          - data:
+              enabled: '{{ 1 }}
+
+                '
+            action: rest_command.solax_local_set_period2_enable
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - data:
+              value: '{% set end_time = as_datetime(state_attr(''input_datetime.saving_session_start'',
+                ''timestamp'') - 3660) %} {{ end_time.hour + end_time.minute * 256
+                }}'
+            action: rest_command.solax_local_set_forced_charge_start2
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - data:
+              value: '{% set end_time = as_datetime(state_attr(''input_datetime.saving_session_start'',
+                ''timestamp'') - 60) %} {{ end_time.hour + end_time.minute * 256 }}'
+            action: rest_command.solax_local_set_forced_charge_stop2
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - repeat:
+              sequence:
+              - action: homeassistant.update_entity
+                data:
+                  entity_id:
+                  - sensor.solax_rest_local_settings
+              - delay:
+                  hours: 0
+                  minutes: 0
+                  seconds: '{{refresh_settings_delay}}'
+              until:
+              - condition: template
+                value_template: '{{states(''sensor.solax_rest_local_settings'')!=
+                  ''unavailable'' or states(''sensor.solax_rest_local_settings'')!=
+                  ''unknown'' or repeat.index == 3}}'
+          until:
+          - condition: template
+            value_template: "\n{{ (states('sensor.solax_local_battery_chd2_enabled')|bool==true
+              \n    and states('sensor.solax_local_battery_setting_stop_charge_2')
+              == as_datetime(state_attr('input_datetime.saving_session_start', 'timestamp')
+              - 60).strftime('%H:%M')\n    and states('sensor.solax_local_battery_setting_start_charge_2')
+              == as_datetime(state_attr('input_datetime.saving_session_start', 'timestamp')
+              - 3660).strftime('%H:%M'))\n    or repeat.index == 3 }}"
+      - action: input_boolean.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
+  mode: single
+- id: '6003'
+  alias: Octopus Energy - Join Saving Session
+  description: ''
+  use_blueprint:
+    path: BottlecapDave/octopus_energy_octoplus_join_saving_session.yml.yaml
+    input:
+      saving_session_event_entity: event.octopus_energy_z_ZZZZZZZZ_octoplus_saving_session_events
