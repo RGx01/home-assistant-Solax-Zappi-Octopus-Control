@@ -609,7 +609,7 @@
           entity_id: input_boolean.zappi_eco_mode_override
       - event: Solax Zappi Octopus Control
         event_data:
-          message: Charging 2 @ {{now().strftime('%H:%M')}}. Battery @ {{sensor('sensor.solax_local_battery_soc')}}%
+          message: Charging period 2 started @ {{now().strftime('%H:%M')}}. Battery @{{states('sensor.solax_local_battery_soc')}}%
           title: Charge Period 2 Active
           class: high
         enabled: true
@@ -673,7 +673,7 @@
 
             {{states(''sensor.solax_local_battery_soc'')}}%. Some Octopus/inverter
 
-            settingsmay need updating. Please check.
+            settings may need updating. Please check.
 
             '
           title: Saving Session Ended
