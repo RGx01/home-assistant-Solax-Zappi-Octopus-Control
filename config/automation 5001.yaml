@@ -1167,7 +1167,7 @@
       sequence:
       - event: Solax Zappi Octopus Control
         event_data:
-          message: Battery close to min SoC {{now().strftime('%H:%M')}}. {{sensor('sensor.solax_local_battery_soc')}}%
+          message: Battery close to min SoC {{now().strftime('%H:%M')}}. {{states('sensor.solax_local_battery_soc')}}%
           title: Battery Flat
           class: high
         enabled: true
