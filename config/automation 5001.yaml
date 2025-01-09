@@ -627,7 +627,7 @@
           state: 'on'
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
-          value_template: '{{ state.state | float(0)  - 4 }}'
+          value_template: '{{ state.state | float(0)  - 14 }}'
           above: input_number.solax_manual_forced_discharge_limit_soc
         - condition: template
           value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
@@ -922,7 +922,7 @@
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
           above: input_number.solax_manual_forced_discharge_limit_soc
-          value_template: '{{ state.state | float(0)  - 4 }}'
+          value_template: '{{ state.state | float(0)  - 14 }}'
         then:
         - repeat:
             sequence:
@@ -1051,7 +1051,7 @@
           state: 'on'
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
-          value_template: '{{ state.state | float(0)  - 4 }}'
+          value_template: '{{ state.state | float(0)  - 14 }}'
           above: input_number.solax_manual_forced_discharge_limit_soc
         - condition: template
           value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
