@@ -307,7 +307,7 @@
   conditions: []
   actions:
   - variables:
-      default_mode: '{{states(''sensor.solax_default_operation_mode'')|int}}'
+      default_mode: '{{states(''sensor.solax_default_operation_mode'')|int(default=0)}}'
       mode_delay: 15
       settings_delay: 10
       refresh_settings_delay: 10
