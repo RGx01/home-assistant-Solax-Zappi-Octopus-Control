@@ -27,3 +27,8 @@ solax_zappi_octopus_input_select:
         - Force Charge
         - Force Discharge
       icon: mdi:battery-outline
+    solax_automation_notification_devices:
+      name: Notify Mobile Device
+      options:
+        - None
+      icon: mdi:cellphone-sound
