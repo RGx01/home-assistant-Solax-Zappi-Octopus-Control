@@ -286,4 +286,4 @@ solax_zappi_octopus_templates:
           data:
             entity_id: input_select.solax_automation_notification_devices
             options: >
-              {{ set listx = integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list }}
+              {{integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list }}
