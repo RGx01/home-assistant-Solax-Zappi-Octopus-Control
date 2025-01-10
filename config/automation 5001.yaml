@@ -1178,4 +1178,7 @@
     target:
       entity_id: input_boolean.solax_automation_running
     enabled: true
-  mode: single
+  trace:
+    stored_traces: 20
+  mode: queued
+  max: 2
