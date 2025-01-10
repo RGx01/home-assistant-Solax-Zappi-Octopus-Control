@@ -273,3 +273,17 @@ solax_zappi_octopus_templates:
               {{states('sensor.octopus_total_planned_dispatch')}}kWh.
             title: Octopus Dispatch
             class: normal
+
+    ######################################################
+    # Mobile device list
+    ######################################################
+
+    - trigger:
+        - trigger: time_pattern
+          minutes: /30
+      action:
+        - service: input_select.set_options
+          data:
+            entity_id: input_select.solax_automation_notification_devices
+            options: >
+              {{ set listx = integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list }}
