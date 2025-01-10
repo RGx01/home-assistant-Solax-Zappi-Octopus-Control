@@ -608,8 +608,7 @@
               == default_mode) or repeat.index == 3 }}'
       - event: Solax Zappi Octopus Control
         event_data:
-          message: EV started charging @ {{now().strftime('%H:%M')}}. Planned total
-            to dispatch       {{states('sensor.octopus_total_planned_dispatch')}}kWh
+          message: EV started charging @ {{now().strftime('%H:%M')}}.
           title: OP1:EV Charging Started
           class: normal
         enabled: true
