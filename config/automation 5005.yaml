@@ -5,10 +5,9 @@
 # 2. Copy and Paste into your automations.yaml
 # 3. Requires new dashboard update see /dasboards/Solax & Octopus Settings
 ########################################################################################
-- id: '5005'
-  alias: Solax Zappi Octopus Control - Notifier
-  description: V2.0
-  triggers:
+alias: Solax Zappi Octopus Control - Notifier
+description: V2.0
+triggers:
   - trigger: event
     event_type: Solax Zappi Octopus Control
     event_data:
@@ -19,68 +18,68 @@
     event_data:
       class: high
     id: High
-  conditions: []
-  actions:
+conditions: []
+actions:
   - choose:
-    - conditions:
-      - condition: trigger
-        id:
-        - High
-      - condition: state
-        entity_id: input_boolean.solax_zappi_octopus_control_notifications
-        state: 'off'
-      sequence:
-      - action: persistent_notification.create
-        data:
-          title: '{{trigger.event.data.title}}'
-          message: '{{trigger.event.data.message}}'
-      - if:
-        - condition: template
-          value_template: '{{states(''input_boolean.nofify_mobile'') == on and states(''input_select.solax_automation_notification_devices'')
-            != ''None''}}'
-        then:
-        - action: '{% set nofify = "notify." + states(''input_select.solax_automation_notification_devices'')
-            -%} {{notify}}'
-          metadata: {}
-          data:
-            title: '{{trigger.event.data.title}}'
-            message: '{{trigger.event.data.message}}'
-    - conditions:
-      - condition: or
-        conditions:
-        - condition: trigger
-          id:
-          - Normal
-        - condition: trigger
-          id:
-          - High
-      - condition: state
-        entity_id: input_boolean.solax_zappi_octopus_control_notifications
-        state: 'on'
-      sequence:
-      - action: '{% set ns3 = namespace( devices  =0) %} {% set ns3.devices =  integration_entities(''mobile_app'')
-          | select(''match'',''device_tracker'') | map(''replace'', ''device_tracker.'',
-          ''notify.mobile_app_'') | list %} {% if ns3.devices|length >0 %} {%- for
-          device in ns3.devices -%} {{device}} {%- endfor -%} {%endif%}'
-        metadata: {}
-        data:
-          title: '{{trigger.event.data.title}}'
-          message: '{{trigger.event.data.message}}'
-        enabled: false
-      - action: persistent_notification.create
-        data:
-          title: '{{trigger.event.data.title}}'
-          message: '{{trigger.event.data.message}}'
-      - if:
-        - condition: template
-          value_template: '{{states(''input_boolean.nofify_mobile'') == on and states(''input_select.solax_automation_notification_devices'')
-            != ''None''}}'
-        then:
-        - action: '{% set nofify = "notify." + states(''input_select.solax_automation_notification_devices'')
-            -%} {{notify}}'
-          metadata: {}
-          data:
-            title: '{{trigger.event.data.title}}'
-            message: '{{trigger.event.data.message}}'
-  mode: queued
-  max: 10
+      - conditions:
+          - condition: trigger
+            id:
+              - High
+          - condition: state
+            entity_id: input_boolean.solax_zappi_octopus_control_notifications
+            state: "off"
+        sequence:
+          - action: persistent_notification.create
+            data:
+              title: "{{trigger.event.data.title}}"
+              message: "{{trigger.event.data.message}}"
+          - if:
+              - condition: template
+                value_template: >-
+                  {{states('input_boolean.nofify_mobile') == 'on' and
+                  states('input_select.solax_automation_notification_devices')
+                  != 'None'}}
+            then:
+              - action: >-
+                  {% set notify = "notify." +
+                  states('input_select.solax_automation_notification_devices')
+                  -%} {{notify}}
+                metadata: {}
+                data:
+                  title: "{{trigger.event.data.title}}"
+                  message: "{{trigger.event.data.message}}"
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id:
+                  - Normal
+              - condition: trigger
+                id:
+                  - High
+          - condition: state
+            entity_id: input_boolean.solax_zappi_octopus_control_notifications
+            state: "on"
+        sequence:
+          - action: persistent_notification.create
+            data:
+              title: "{{trigger.event.data.title}}"
+              message: "{{trigger.event.data.message}}"
+          - if:
+              - condition: template
+                value_template: >-
+                  {{states('input_boolean.nofify_mobile') == 'on' and
+                  states('input_select.solax_automation_notification_devices')
+                  != 'None'}}
+            then:
+              - action: >-
+                  {% set notify = "notify." +
+                  states('input_select.solax_automation_notification_devices')
+                  -%} {{notify}}
+                metadata: {}
+                data:
+                  title: "{{trigger.event.data.title}}"
+                  message: "{{trigger.event.data.message}}"
+mode: queued
+max: 10
+
