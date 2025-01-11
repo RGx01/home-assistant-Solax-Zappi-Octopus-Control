@@ -7,7 +7,7 @@
 ########################################################################################
 - id: '5001'
   alias: Solax Zappi Octopus Control
-  description: Solax Zappi Octopus Control - V1.1
+  description: Solax Zappi Octopus Control - V2.0
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -196,28 +196,60 @@
       '
   - variables:
       default_mode: '{{states(''sensor.solax_default_operation_mode'')|int}}'
-      default_min_soc: '{% if (states(''input_boolean.use_grid_during_octopus_dispatch'')
-        == ''on'' and now() > today_at(''23:29''))%} {{100}}  {% else %} {{states(''input_number.solax_default_discharge_limit_soc'')|int}}  {%endif
-        %}
-
-        '
-      while_charging_soc: '{% if states(''input_boolean.ev_solax_battery_drain'')
-        == ''off'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
-        == ''on'' %}  {{100}} {% elif states(''input_boolean.ev_solax_battery_drain'')
-        == ''off'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
-        == ''off'' %}  {{states(''input_number.solax_default_discharge_limit_soc'')|int}}  {%
-        elif states(''input_boolean.ev_solax_battery_drain'') == ''on''  %}  {{100}}
-        {%endif %}
-
-        '
-      while_dispatch_soc: '{% if states(''input_boolean.use_grid_during_octopus_dispatch'')
-        == ''on''%} {{100}} {% else %} {{states(''input_number.solax_default_discharge_limit_soc'')|int}}
-        {%endif %}
+      min_soc: '{%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''on'' and states(''sensor.zappi_plug_status'') == ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''on'' and states(''input_boolean.ev_solax_battery_drain'') == ''on''-%}  {{100}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''on'' and states(''sensor.zappi_plug_status'') == ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''off'' and states(''input_boolean.ev_solax_battery_drain'') == ''on''-%}  {{100}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''on'' and states(''sensor.zappi_plug_status'') == ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''on'' and states(''input_boolean.ev_solax_battery_drain'') == ''off''-%}  {{100}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''on'' and states(''sensor.zappi_plug_status'') == ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''off'' and states(''input_boolean.ev_solax_battery_drain'') == ''off''-%}  {{states(''input_number.solax_default_discharge_limit_soc'')|int}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''on'' and states(''sensor.zappi_plug_status'') != ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''on'' and states(''input_boolean.ev_solax_battery_drain'') == ''on''-%}  {{100}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''on'' and states(''sensor.zappi_plug_status'') != ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''off'' and states(''input_boolean.ev_solax_battery_drain'') == ''on''-%}  {{states(''input_number.solax_default_discharge_limit_soc'')|int}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''on'' and states(''sensor.zappi_plug_status'') != ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''on'' and states(''input_boolean.ev_solax_battery_drain'') == ''off''-%}  {{100}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''on'' and states(''sensor.zappi_plug_status'') != ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''off'' and states(''input_boolean.ev_solax_battery_drain'') == ''off''-%}  {{states(''input_number.solax_default_discharge_limit_soc'')|int}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''off'' and states(''sensor.zappi_plug_status'') != ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''on'' and states(''input_boolean.ev_solax_battery_drain'') == ''on''-%}  {{states(''input_number.solax_default_discharge_limit_soc'')|int}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''off'' and states(''sensor.zappi_plug_status'') != ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''off'' and states(''input_boolean.ev_solax_battery_drain'') == ''on''-%}  {{states(''input_number.solax_default_discharge_limit_soc'')|int}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''off'' and states(''sensor.zappi_plug_status'') != ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''on'' and states(''input_boolean.ev_solax_battery_drain'') == ''off''-%}  {{states(''input_number.solax_default_discharge_limit_soc'')|int}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''off'' and states(''sensor.zappi_plug_status'') != ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''off'' and states(''input_boolean.ev_solax_battery_drain'') == ''off''-%}  {{states(''input_number.solax_default_discharge_limit_soc'')|int}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''off'' and states(''sensor.zappi_plug_status'') == ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''on'' and states(''input_boolean.ev_solax_battery_drain'') == ''on''-%}  {{100}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''off'' and states(''sensor.zappi_plug_status'') == ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''off'' and states(''input_boolean.ev_solax_battery_drain'') == ''on''-%}  {{100}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''off'' and states(''sensor.zappi_plug_status'') == ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''on'' and states(''input_boolean.ev_solax_battery_drain'') == ''off''-%}  {{states(''input_number.solax_default_discharge_limit_soc'')|int}}
+        {%-endif -%} {%-if states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')
+        == ''off'' and states(''sensor.zappi_plug_status'') == ''Charging'' and states(''input_boolean.use_grid_during_octopus_dispatch'')
+        == ''off'' and states(''input_boolean.ev_solax_battery_drain'') == ''off''-%}  {{states(''input_number.solax_default_discharge_limit_soc'')|int}}
+        {%-endif -%}
 
         '
       mode_delay: 15
       settings_delay: 10
-      refresh_settings_delay: 5
+      refresh_settings_delay: 10
   - action: input_number.set_value
     target:
       entity_id: input_number.solax_manual_forced_discharge_limit_soc
@@ -229,343 +261,79 @@
     target:
       entity_id: input_boolean.solax_automation_running
     enabled: true
-  - action: homeassistant.update_entity
-    data:
-      entity_id:
-      - sensor.solax_rest_local_settings
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: '{{refresh_settings_delay}}'
-      milliseconds: 0
-  - if:
-    - condition: or
-      conditions:
-      - condition: trigger
-        id:
-        - Finished Charging
+  - repeat:
+      sequence:
+      - action: homeassistant.update_entity
+        data:
+          entity_id:
+          - sensor.solax_rest_local_settings
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: '{{refresh_settings_delay}}'
+          milliseconds: 0
+      until:
+      - condition: template
+        value_template: '{{(states(''sensor.solax_rest_local_settings'')!= ''unavailable''
+          or states(''sensor.solax_rest_local_settings'')!= ''unknown'') or repeat.index
+          == 3}}'
+  - repeat:
+      sequence:
+      - condition: not
+        conditions:
+        - condition: template
+          value_template: "{{(state_attr('sensor.solax_local_settings', 'Data')[0]
+            == min_soc\n  and state_attr('sensor.solax_local_settings', 'Data')[12]
+            == min_soc)}}"
         enabled: true
-      - condition: state
-        entity_id: sensor.zappi_plug_status
-        state: Charging
-        enabled: true
-      enabled: true
-    then:
-    - choose:
-      - conditions:
-        - condition: template
-          value_template: '{{states(''sensor.zappi_plug_status'')==''Charging''}}'
-        sequence:
-        - condition: not
-          conditions:
+      - action: rest_command.solax_local_set_selfuse_battery_min_soc
+        data:
+          level: '{{min_soc}}'
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: '{{settings_delay}}'
+          milliseconds: 0
+      - action: rest_command.solax_local_set_feedin_battery_min_soc
+        data:
+          level: '{{min_soc}}'
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: '{{settings_delay}}'
+          milliseconds: 0
+      - repeat:
+          sequence:
+          - action: homeassistant.update_entity
+            data:
+              entity_id:
+              - sensor.solax_rest_local_settings
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{refresh_settings_delay}}'
+              milliseconds: 0
+          until:
           - condition: template
-            value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[0]
-              == while_charging_soc and state_attr(''sensor.solax_local_settings'',
-              ''Data'')[12] == while_charging_soc)}}'
-        - repeat:
-            sequence:
-            - action: rest_command.solax_local_set_selfuse_battery_min_soc
-              data:
-                level: '{{while_charging_soc}}'
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{settings_delay}}'
-                milliseconds: 0
-            - action: rest_command.solax_local_set_feedin_battery_min_soc
-              data:
-                level: '{{while_charging_soc}}'
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{settings_delay}}'
-                milliseconds: 0
-            - repeat:
-                sequence:
-                - action: homeassistant.update_entity
-                  data:
-                    entity_id:
-                    - sensor.solax_rest_local_settings
-                - delay:
-                    hours: 0
-                    minutes: 0
-                    seconds: '{{refresh_settings_delay}}'
-                    milliseconds: 0
-                until:
-                - condition: template
-                  value_template: '{{states(''sensor.solax_rest_local_settings'')!=
-                    ''unavailable'' or states(''sensor.solax_rest_local_settings'')!=
-                    ''unknown'' or repeat.index == 3}}'
-            - if:
-              - condition: template
-                value_template: '{{repeat.index == 3}}'
-              then:
-              - event: Solax Zappi Octopus Control
-                event_data:
-                  message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels
-                    may need attention.
-                  title: Failure to set SoC levels - Action required!
-                  class: high
-                enabled: true
-            until:
-            - condition: template
-              value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
-                == while_charging_soc and state_attr(''sensor.solax_local_settings'',
-                ''Data'')[12] == while_charging_soc) or repeat.index == 3 }}'
-      - conditions:
+            value_template: '{{(states(''sensor.solax_rest_local_settings'')!= ''unavailable''
+              or states(''sensor.solax_rest_local_settings'')!= ''unknown'') or repeat.index
+              == 3}}'
+      - if:
         - condition: template
-          value_template: '{{states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')==''off''}}'
-        sequence:
-        - condition: not
-          conditions:
-          - condition: template
-            value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[0]
-              == default_min_soc and state_attr(''sensor.solax_local_settings'', ''Data'')[12]
-              == default_min_soc)}}'
-        - repeat:
-            sequence:
-            - action: rest_command.solax_local_set_selfuse_battery_min_soc
-              data:
-                level: '{{default_min_soc}}'
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{settings_delay}}'
-                milliseconds: 0
-            - action: rest_command.solax_local_set_feedin_battery_min_soc
-              data:
-                level: '{{default_min_soc}}'
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{settings_delay}}'
-                milliseconds: 0
-            - repeat:
-                sequence:
-                - action: homeassistant.update_entity
-                  data:
-                    entity_id:
-                    - sensor.solax_rest_local_settings
-                - delay:
-                    hours: 0
-                    minutes: 0
-                    seconds: '{{refresh_settings_delay}}'
-                    milliseconds: 0
-                until:
-                - condition: template
-                  value_template: '{{states(''sensor.solax_rest_local_settings'')!=
-                    ''unavailable'' or states(''sensor.solax_rest_local_settings'')!=
-                    ''unknown'' or repeat.index == 3}}'
-            - if:
-              - condition: template
-                value_template: '{{repeat.index == 3}}'
-              then:
-              - event: Solax Zappi Octopus Control
-                event_data:
-                  message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels
-                    may need attention.
-                  title: Failure to set SoC levels - Action required!
-                  class: high
-                enabled: true
-            until:
-            - condition: template
-              value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
-                == default_min_soc and state_attr(''sensor.solax_local_settings'',
-                ''Data'')[12] == default_min_soc) or repeat.index == 3 }}'
-      - conditions:
-        - condition: template
-          value_template: '{{states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')==''on''}}'
-        sequence:
-        - condition: not
-          conditions:
-          - condition: template
-            value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[0]
-              == while_dispatch_soc and state_attr(''sensor.solax_local_settings'',
-              ''Data'')[12] == while_dispatch_soc)}}'
-        - repeat:
-            sequence:
-            - action: rest_command.solax_local_set_selfuse_battery_min_soc
-              data:
-                level: '{{while_dispatch_soc}}'
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{settings_delay}}'
-                milliseconds: 0
-            - action: rest_command.solax_local_set_feedin_battery_min_soc
-              data:
-                level: '{{while_dispatch_soc}}'
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{settings_delay}}'
-                milliseconds: 0
-            - repeat:
-                sequence:
-                - action: homeassistant.update_entity
-                  data:
-                    entity_id:
-                    - sensor.solax_rest_local_settings
-                - delay:
-                    hours: 0
-                    minutes: 0
-                    seconds: '{{refresh_settings_delay}}'
-                    milliseconds: 0
-                until:
-                - condition: template
-                  value_template: '{{states(''sensor.solax_rest_local_settings'')!=
-                    ''unavailable'' or states(''sensor.solax_rest_local_settings'')!=
-                    ''unknown'' or repeat.index == 3}}'
-            - if:
-              - condition: template
-                value_template: '{{repeat.index == 3}}'
-              then:
-              - event: Solax Zappi Octopus Control
-                event_data:
-                  message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels
-                    may need attention.
-                  title: Failure to set SoC levels - Action required!
-                  class: high
-                enabled: true
-            until:
-            - condition: template
-              value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
-                == while_dispatch_soc and state_attr(''sensor.solax_local_settings'',
-                ''Data'')[12] == while_dispatch_soc) or repeat.index == 3 }}'
-    else:
-    - choose:
-      - conditions:
-        - condition: template
-          value_template: '{{states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')==''off''}}'
-        sequence:
-        - condition: not
-          conditions:
-          - condition: template
-            value_template: "{{(state_attr('sensor.solax_local_settings', 'Data')[0]
-              == default_min_soc\n  and state_attr('sensor.solax_local_settings',
-              'Data')[12] == default_min_soc)}}"
+          value_template: '{{repeat.index == 3}}'
+        then:
+        - event: Solax Zappi Octopus Control
+          event_data:
+            message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels may
+              need attention.
+            title: Failure to set SoC levels - Action required!
+            class: high
           enabled: true
-        - repeat:
-            sequence:
-            - action: rest_command.solax_local_set_selfuse_battery_min_soc
-              data:
-                level: '{{default_min_soc}}'
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{settings_delay}}'
-                milliseconds: 0
-            - action: rest_command.solax_local_set_feedin_battery_min_soc
-              data:
-                level: '{{default_min_soc}}'
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{settings_delay}}'
-                milliseconds: 0
-            - repeat:
-                sequence:
-                - action: homeassistant.update_entity
-                  data:
-                    entity_id:
-                    - sensor.solax_rest_local_settings
-                - delay:
-                    hours: 0
-                    minutes: 0
-                    seconds: '{{refresh_settings_delay}}'
-                    milliseconds: 0
-                until:
-                - condition: template
-                  value_template: '{{states(''sensor.solax_rest_local_settings'')!=
-                    ''unavailable'' or states(''sensor.solax_rest_local_settings'')!=
-                    ''unknown'' or repeat.index == 3}}'
-            - if:
-              - condition: template
-                value_template: '{{repeat.index == 3}}'
-              then:
-              - event: Solax Zappi Octopus Control
-                event_data:
-                  message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels
-                    may need attention.
-                  title: Failure to set SoC levels - Action required!
-                  class: high
-                enabled: true
-            until:
-            - condition: template
-              value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
-                == default_min_soc and state_attr(''sensor.solax_local_settings'',
-                ''Data'')[12] == default_min_soc) or repeat.index == 3 }}'
-      - conditions:
-        - condition: or
-          conditions:
-          - condition: template
-            value_template: '{{states(''binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching'')==''on''}}'
-          - condition: and
-            conditions:
-            - condition: time
-              after: '23:30:00'
-              before: 05:30:00
-            - condition: state
-              entity_id: input_boolean.use_grid_during_octopus_dispatch
-              state: 'on'
-        sequence:
-        - condition: not
-          conditions:
-          - condition: template
-            value_template: "{{(state_attr('sensor.solax_local_settings', 'Data')[0]
-              == while_dispatch_soc\n  and state_attr('sensor.solax_local_settings',
-              'Data')[12] ==\n  while_dispatch_soc)}}"
-        - repeat:
-            sequence:
-            - action: rest_command.solax_local_set_selfuse_battery_min_soc
-              data:
-                level: '{{while_dispatch_soc}}'
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{settings_delay}}'
-                milliseconds: 0
-            - action: rest_command.solax_local_set_feedin_battery_min_soc
-              data:
-                level: '{{while_dispatch_soc}}'
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{settings_delay}}'
-                milliseconds: 0
-            - repeat:
-                sequence:
-                - action: homeassistant.update_entity
-                  data:
-                    entity_id:
-                    - sensor.solax_rest_local_settings
-                - delay:
-                    hours: 0
-                    minutes: 0
-                    seconds: '{{refresh_settings_delay}}'
-                    milliseconds: 0
-                until:
-                - condition: template
-                  value_template: '{{states(''sensor.solax_rest_local_settings'')!=
-                    ''unavailable'' or states(''sensor.solax_rest_local_settings'')!=
-                    ''unknown'' or repeat.index == 3}}'
-            - if:
-              - condition: template
-                value_template: '{{repeat.index == 3}}'
-              then:
-              - event: Solax Zappi Octopus Control
-                event_data:
-                  message: Failure Occured @ {{now().strftime('%H:%M')}}. SoC levels
-                    may need attention.
-                  title: Failure to set SoC levels - Action required!
-                  class: high
-                enabled: true
-            until:
-            - condition: template
-              value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
-                == while_dispatch_soc and state_attr(''sensor.solax_local_settings'',
-                ''Data'')[12] == while_dispatch_soc) or repeat.index == 3 }}'
-      enabled: true
+      until:
+      - condition: template
+        value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
+          == min_soc and state_attr(''sensor.solax_local_settings'', ''Data'')[12]
+          == min_soc) or repeat.index == 3 }}'
     enabled: true
   - choose:
     - conditions:
@@ -1115,7 +883,7 @@
         else:
         - event: Solax Zappi Octopus Control
           event_data:
-            message: 'OP10:Cheap Rate @ {{now().strftime(''%H:%M'')}}. '
+            message: 'Cheap Rate @ {{now().strftime(''%H:%M'')}}. '
             title: OP10:Cheap Rate
             class: normal
           enabled: true
