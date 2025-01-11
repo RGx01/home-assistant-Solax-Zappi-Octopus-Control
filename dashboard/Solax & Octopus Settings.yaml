@@ -28,7 +28,7 @@ sections:
                 state: EV Connected
               - condition: state
                 entity: >-
-                  binary_sensor.octopus_energy_a_42b0bca7_intelligent_dispatching
+                  binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
                 state: "off"
           - type: entity
             show_state: true
@@ -57,7 +57,7 @@ sections:
             visibility:
               - condition: state
                 entity: >-
-                  binary_sensor.octopus_energy_a_42b0bca7_intelligent_dispatching
+                  binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
                 state: "on"
               - condition: state
                 entity: sensor.zappi_plug_status
@@ -80,14 +80,14 @@ sections:
           - entity: sensor.solar_export_threshold
             format: time
           - entity: input_datetime.don_t_charge_ev_before_time
-          - entity: number.octopus_energy_a_42b0bca7_intelligent_charge_target
+          - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
             name: Intelligent Charge Target
-          - entity: select.octopus_energy_a_42b0bca7_intelligent_target_time
+          - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
             name: Intelligent Target Time
-          - entity: switch.octopus_energy_a_42b0bca7_intelligent_smart_charge
+          - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
             state_color: true
             name: Intelligent Smart Charge
-          - entity: select.myenergi_zappi_25600069_charge_mode
+          - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
             name: Zappi Charge Mode
         show_header_toggle: false
         state_color: true
@@ -143,7 +143,6 @@ sections:
         entities:
           - entity: input_boolean.solax_zappi_octopus_control_notifications
             name: All Automation Notifications
-          - entity: input_boolean.nofify_mobile
           - entity: input_select.solax_automation_notification_devices
       - type: entities
         entities:
