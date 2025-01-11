@@ -447,7 +447,7 @@
         - event: Solax Zappi Octopus Control
           event_data:
             message: EV stopped charging @ {{now().strftime('%H:%M')}}. Attempting
-              Discharge. Completed Octopus dispatch {{states('sensor.octopus_completed_dispatch')}}kWh.
+              Discharge. 
               Zappi charge session {{states('sensor.myenergi_zappi_XXXXXXXX_charge_added_session')}}kWh.
             title: OP2:EV Stopped Charging - Attempting Battery Export.
             class: normal
@@ -455,8 +455,7 @@
         else:
         - event: Solax Zappi Octopus Control
           event_data:
-            message: EV stopped charging @ {{now().strftime('%H:%M')}}. Octopus Completed
-              dispatch {{states('sensor.octopus_completed_dispatch')}}kWh. Zappi charge
+            message: EV stopped charging @ {{now().strftime('%H:%M')}}. Zappi charge
               session {{states('sensor.myenergi_zappi_XXXXXXXX_charge_added_session')}}kWh.
             title: OP2:EV Stopped Charging.
             class: normal
