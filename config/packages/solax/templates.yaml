@@ -263,11 +263,22 @@ solax_templates:
         ### Battery current, voltage and temperature ###
         - name: "Solax Local Battery Voltage"
           unique_id: solax_local_battery_voltage
-          state: "{{ state_attr('sensor.solax_local', 'Data')[14] | float / 100}}"
+          state: >
+            {% set val = state_attr('sensor.solax_local', 'Data')[14]|float(default=0.0) %}
+            {{ val/100 if is_number(val) and (val|float > 0) else 0 }}
           unit_of_measurement: "V"
           state_class: measurement
           device_class: "voltage"
 
+        - name: "Solax Local Battery Cell Voltage"
+          unique_id: solax_local_battery_cell_voltage
+          state: >
+            {% set val = state_attr('sensor.solax_local', 'Data')[14]|float(default=0.0) %}
+            {{ val/100/90 if is_number(val) and (val|float > 0) else 0 }}
+          unit_of_measurement: "V"
+          state_class: measurement
+          device_class: "voltage"
+          
         - name: "Solax Local Battery Current"
           unique_id: solax_local_battery_current
           state: >
