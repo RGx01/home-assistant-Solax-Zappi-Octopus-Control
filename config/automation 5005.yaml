@@ -1,3 +1,10 @@
+########################################################################################
+# AUTOMATION 5005 
+# 1. This is 5005 only you need 5001 5002 5003 and 5004. files are kept seperate in repo 
+# for ease of maintenance
+# 2. Copy and Paste into your automations.yaml
+# 3. Requires new dashboard update see /dasboards/Solax & Octopus Settings
+########################################################################################
 - id: '5005'
   alias: Solax Zappi Octopus Control - Notifier
   description: V2.0
