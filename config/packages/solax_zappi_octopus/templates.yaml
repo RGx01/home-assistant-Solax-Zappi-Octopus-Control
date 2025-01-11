@@ -282,8 +282,20 @@ solax_zappi_octopus_templates:
         - trigger: time_pattern
           minutes: /30
       action:
+        - service: input_text.set_value
+          target:
+            entity_id: "input_text.mobile_device_list"
+          data:
+            value: >
+              {% set ns= namespace(val ="None")%}
+              {% if  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list |length >0%}
+              {% for item in  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list %}
+              {% set ns.val = ns.val+"," + item %}
+              {%- endfor -%}
+              {%- endif  -%}
+              {{ns.val}}
         - service: input_select.set_options
           data:
             entity_id: input_select.solax_automation_notification_devices
             options: >
-              {{integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list }}
+              {{states('input_text.mobile_device_list').split(',')|list}}
