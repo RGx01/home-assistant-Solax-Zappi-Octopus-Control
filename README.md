@@ -46,8 +46,10 @@ The project is split into 3 parts:
 
 
 ## Screenshots of Dashboards
-<img width="1335" alt="Screenshot 2025-01-19 at 19 15 59" src="https://github.com/user-attachments/assets/0da2ec8d-adb9-4a2b-8b4b-69d3d09dfd4b" />
-<img width="1498" alt="Screenshot 2024-12-30 at 00 58 33" src="https://github.com/user-attachments/assets/4933240f-efa7-475b-b1fa-b32758e3504c" />
+<img width="1355" alt="Screenshot 2025-01-23 at 18 05 48" src="https://github.com/user-attachments/assets/b1d88b66-31ac-4388-a4b3-1117d4caf2ee" />
+<img width="1158" alt="Screenshot 2025-01-23 at 18 08 50" src="https://github.com/user-attachments/assets/42dbf762-6a9f-46a4-b2b8-ffaf84140597" />
+
+
 
 ## Credits and Acknowledgments
 The Solax interactions are possible due to work published by @Colin Robbins and @Kamil Baczkowicz. I've tried to simplify things by putting their work into a package. Essentially it becomes a building block for my automations and dashboards. Suggested reading: 
