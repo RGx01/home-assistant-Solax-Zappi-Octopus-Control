@@ -47,8 +47,7 @@ The project is split into 3 parts:
 
 ## Screenshots of Dashboards
 <img width="1355" alt="Screenshot 2025-01-23 at 18 05 48" src="https://github.com/user-attachments/assets/b1d88b66-31ac-4388-a4b3-1117d4caf2ee" />
-<img width="1158" alt="Screenshot 2025-01-23 at 18 08 50" src="https://github.com/user-attachments/assets/42dbf762-6a9f-46a4-b2b8-ffaf84140597" />
-
+<img width="1242" alt="Screenshot 2025-01-23 at 22 40 44" src="https://github.com/user-attachments/assets/c05740d9-f33c-4e7b-9c0a-574bdf4514ba" />
 
 
 ## Credits and Acknowledgments
