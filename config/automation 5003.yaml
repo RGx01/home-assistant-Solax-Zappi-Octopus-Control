@@ -204,6 +204,7 @@
                     option: Feed In Priority
                   target:
                     entity_id: input_select.solax_default_mode
+              enabled: false
             - if:
                 - condition: template
                   value_template: "{{state_attr(trigger.entity_id,'options').index(states(trigger.entity_id))==0}}"
@@ -221,6 +222,7 @@
                     option: Self Use
                   target:
                     entity_id: input_select.solax_default_mode
+              enabled: false
         - conditions:
             - condition: trigger
               id:
