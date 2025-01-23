@@ -12,6 +12,8 @@ sections:
         heading_style: title
         badges:
           - type: entity
+            entity: sensor.octopus_energy_z_ZZZZZZZZ_octoplus_points
+          - type: entity
             show_state: false
             show_icon: true
             entity: input_boolean.solax_automation_running
