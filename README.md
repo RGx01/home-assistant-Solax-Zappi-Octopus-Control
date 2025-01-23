@@ -95,9 +95,7 @@ If you have previous used similar Solax automations/config be aware that some re
 
 ## Still to be Tested
 ### 6001 - Octopus - Free Electric Automation
-Limited testing due to the amount of Free Electric Sessions I've been able to participate in. Use at own risk.
-### 6002 - Octopus - Saving Sessions Automation
-Entirely based on work done by @Kamil Baczkowicz but completely untested as I've never seen a saving session via the Octopus API. I've added the manual join a mode for those sessions that don't appear via the API. Never been tried - Use at own risk.
+Limited testing due to the amount of Free Electric Sessions I've been able to participate in. Use at own risk but reasonably confident it should work.
 ### 5001 - Solax Zappi Octopus Control
 I've been unable to test what happens when Octopus Dispatches have multiple gaps where daily battery export may get fired. I suspect that the trigger for Zappi Plug Status Charging would fire and stop the discharge.
 
@@ -147,6 +145,9 @@ Automations can take a long time to run. I wish it could be made to be more snap
 * Automatically joins a session.
 * Allows for joining manually.
 * Allows for setting a target battery discharge SoC.
+* Allows for setting Prep charge to SoC
+* Allows for setting of Prep time
+* Checks if prep SoC is reached and stops charging
 * Prepares the by charging the battery at peak rate or tries to get an Octopus dispatch if Zappi is connected and charges the battery.
 * During saving session the zappi is stopped and battery is discharged.
 * After saving session a dispatch is requested if Zappi is connected.
