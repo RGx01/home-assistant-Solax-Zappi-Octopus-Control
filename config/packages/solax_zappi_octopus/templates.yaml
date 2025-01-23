@@ -1,0 +1,432 @@
+###############################################
+# Replace octopus account number z_ZZZZZZZZ
+# replace zappi serial number zappi_XXXXXXXX
+#
+# Change log
+# v2.1.3 Moved the free elecreic tarriff template to octopus saving sessions package
+# v2.1.1 Fixed template bug with tariff select
+# v2.1 Added template triggers for tariffs
+# v2.0 Added mobile notifications
+###############################################
+solax_zappi_octopus_templates:
+  template:
+    ######################################################
+    # Wobble
+    ######################################################
+    - trigger:
+        - trigger: time
+          at: "01:00:00"
+      sensor:
+        - name: "Wobble"
+          unique_id: wobble
+          state: >
+            {{range(1, 16)|random}}
+
+    ######################################################
+    # EV Start Time + Wobble
+    ######################################################
+    - sensor:
+        - name: Don't Charge EV before time (wobble)
+          unique_id: don_t_charge_ev_before_time_wobble
+          device_class: "timestamp"
+          state: >
+            {% set wobble = states('sensor.wobble')|int(default=0)%}
+            {{((today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_timestamp + (wobble|int*60))|as_datetime).isoformat()}}
+
+    ######################################################
+    # Solar threshold calcs
+    # elevation - is degrees the sun is above the horizon
+    ######################################################
+    - sensor:
+        - name: Solar Threshold
+          unique_id: solar_export_threshold
+          device_class: "timestamp"
+          icon: mdi:weather-sunset-down
+          state: >
+            {% set utc_offset = now().utcoffset().total_seconds() / 3600 %}
+            {% set year = now().year -%}
+            {% set month = now().month -%}
+            {% set day = now().day -%}
+            {% set longitude = state_attr('zone.home','longitude')|float -%}
+            {% set latitude = state_attr('zone.home','latitude')|float -%}
+            {% set elevation = states('input_number.sun_degrees_above_horizon')|float -%}
+            {% set JD = (367 * year) - ((7 * (year + ((month + 9) // 12))) // 4) + ((275 * month) // 9) + day + 1721014 -%}
+            {% set JC = (JD - 2451545) / 36525 %}
+            {% set Geom_Mean_Long_Sun_deg = (280.46646+JC*(36000.76983+JC*0.0003032)) %360 -%}
+            {% set Geom_Mean_Anom_Sun_deg = 357.52911+JC*(35999.05029-0.0001537*JC) -%}
+            {% set Eccent_Earth_Orbit= 0.016708634-JC*(0.000042037+0.0000001267*JC) -%}
+            {% set Sun_Eq_of_Ctr = sin(Geom_Mean_Anom_Sun_deg*pi/180)*(1.914602-JC*(0.004817+0.000014*JC))+sin(2*Geom_Mean_Anom_Sun_deg*pi/180)*(0.019993-0.000101*JC)+sin(3*Geom_Mean_Anom_Sun_deg*pi/180)*0.000289 -%}
+            {% set Sun_True_Long_deg = Geom_Mean_Long_Sun_deg + Sun_Eq_of_Ctr -%}
+            {% set Sun_True_Anom_deg = Geom_Mean_Anom_Sun_deg + Sun_Eq_of_Ctr -%}
+            {% set Sun_Rad_Vector_AUs = (1.000001018*(1-Eccent_Earth_Orbit*Eccent_Earth_Orbit))/(1+Eccent_Earth_Orbit*cos(Sun_True_Anom_deg*pi/180)) -%}
+            {% set Sun_App_Long_deg = Sun_True_Long_deg-0.00569-0.00478*sin((125.04-1934.136*JC)*pi/180) -%}
+            {% set Mean_Obliq_Ecliptic_deg = 23+(26+((21.448-JC*(46.815+JC*(0.00059-JC*0.001813))))/60)/60 -%}
+            {% set Obliq_Corr_deg = Mean_Obliq_Ecliptic_deg+0.00256*cos((125.04-1934.136*JC)*pi/180) -%}
+            {% set Sun_Rt_Ascen_deg = (atan2(cos((Obliq_Corr_deg)*pi/180)*sin((Sun_App_Long_deg)*pi/180),cos((Sun_App_Long_deg)*pi/180)))*180/pi -%}
+            {% set Sun_Declin_deg = (asin(sin((Obliq_Corr_deg)*pi/180)*sin((Sun_App_Long_deg)*pi/180)))*180/pi -%}
+            {% set Var_Y = tan((Obliq_Corr_deg/2)*pi/180)*tan((Obliq_Corr_deg/2)*pi/180) -%}
+            {% set Eq_of_Time_minutes = 4*180/pi*(Var_Y*sin(2*(Geom_Mean_Long_Sun_deg)*pi/180)-2*Eccent_Earth_Orbit*sin((Geom_Mean_Anom_Sun_deg)*pi/180)+4*Eccent_Earth_Orbit*Var_Y*sin((Geom_Mean_Anom_Sun_deg)*pi/180)*cos(2*(Geom_Mean_Long_Sun_deg)*pi/180)-0.5*Var_Y*Var_Y*sin(4*(Geom_Mean_Long_Sun_deg)*pi/180)-1.25*Eccent_Earth_Orbit*Eccent_Earth_Orbit*sin(2*(Geom_Mean_Anom_Sun_deg)*pi/180)) -%}
+            {% set HA_Sunrise_deg = 180/pi*(acos((sin((elevation)*pi/180) - sin((latitude)*pi/180) * sin((Sun_Declin_deg)*pi/180)) / (cos((latitude)*pi/180) * cos((Sun_Declin_deg)*pi/180)))) -%}
+            {% set Solar_Noon_LST = (720-4*longitude-Eq_of_Time_minutes+utc_offset*60)/1440 -%}
+            {% set Sunrise_Time_LST = (Solar_Noon_LST*1440-HA_Sunrise_deg*4)/1440 -%}
+            {% set Sunset_Time_LST = (Solar_Noon_LST*1440+HA_Sunrise_deg*4)/1440 -%}
+            {% set Sunlight_Duration_minutes = 8*HA_Sunrise_deg -%}
+            {% set True_Solar_Time_min = (0.5*1440+Eq_of_Time_minutes+4*longitude-60*utc_offset)%1440 -%}
+            {% if True_Solar_Time_min/4 <0 -%}
+            {% set Hour_Angle_deg = True_Solar_Time_min/4+180 -%}
+            {% else -%}
+            {% set Hour_Angle_deg = True_Solar_Time_min/4-180 -%}
+            {% endif -%}
+            {% set Sunset_time_UTC = Sunset_Time_LST*24 -%}
+            {% set sunset_hour = Sunset_time_UTC | int -%}
+            {% set sunset_minute = ((Sunset_time_UTC * 60) % 60) | int -%}
+            {% set sunset_second = (((Sunset_time_UTC * 60 * 60) % 60) % 60) | int -%}
+            {% set local_sunset_time = now().replace(hour=sunset_hour, minute=sunset_minute, second=sunset_second, microsecond=0)|as_datetime|as_local -%}
+            {% set local_sunset_time2 = sunset_hour|string +':'+ sunset_minute|string  -%}
+            {{local_sunset_time.isoformat() }}
+
+    ######################################################
+    # EV start time
+    # Calculates the actual time to start EV based on various input_bool options
+    ######################################################
+    - sensor:
+        - name: EV Start Time
+          unique_id: ev_start_time
+          device_class: "timestamp"
+          state: >
+            {% if states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'on' %}
+              {% set starttime = [states('sensor.don_t_charge_ev_before_time_wobble'),states('sensor.solar_export_threshold')] | max %}
+            {% elif states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'off' %}
+              {% set starttime = states('sensor.don_t_charge_ev_before_time_wobble') %}
+            {%else %}
+              {% set starttime = now() %}
+            {% endif -%}
+            {{starttime|as_datetime|as_local}}
+    ####################################################
+    # Octopus depricated the time.Intelligent Target Time
+    # but it's used in an automation so this is calculated
+    # from the select.Intelligent Target Time
+    #####################################################
+    - sensor:
+        - name: Octopus Intelligent Target Time
+          unique_id: f9b1faae-64bf-454e-a907-c64a35dd626c
+          device_class: "timestamp"
+          state: >
+            {% if states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time') != 'unknown'%}
+            {% set x = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+(states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[0]|int(default=5)*60*60 +states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[1]|int(default=0)*60) )|as_datetime) %}
+            {%else%}
+            {% set x = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+18000)|as_datetime) %}
+            {%endif%}
+            {%if now()|as_timestamp > x|as_timestamp%}
+            {% set x = x|as_timestamp + 86400 %}
+            {{x|as_datetime}}
+            {%else%}
+            {{x|as_datetime}}
+            {%endif%}
+    ######################################################
+    # Octopus dispatch kWh
+    ######################################################
+    - sensor:
+        - name: "Octopus Total Planned Dispatch"
+          unique_id: octopus_total_planned_dispatch
+          icon: mdi:ev-station
+          unit_of_measurement: "kWh"
+          device_class: "energy"
+          state_class: total
+          state: >
+            {%- set ns2 = namespace( total_dispatch = 0 ) -%}
+            {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0) -%}
+            {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'planned_dispatches') -%}
+            {%- set ns2.total_dispatch = ns2.total_dispatch|float + dispatch.charge_in_kwh|float%}
+            {%- endfor -%}
+            {%- endif  -%}
+            {{ns2.total_dispatch}}
+          attributes:
+            total_dispatches: >
+              {{state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches')|list|count}}
+
+    ######################################################
+    # Octopus completed dispatch kWh
+    ######################################################
+    - sensor:
+        - name: "Octopus Completed Dispatch"
+          unique_id: octopus_completed_dispatch
+          icon: mdi:ev-station
+          unit_of_measurement: "kWh"
+          device_class: "energy"
+          state_class: total
+          state: >
+            {% set ns = namespace( total_dispatch = 0 ) %}
+            {% set disconnected =(states('sensor.zappi_last_disconnected')|as_timestamp-states('sensor.zappi_last_disconnected')|as_timestamp%1800)|as_datetime +timedelta(minutes=30)%}
+            {% set connected = (states('sensor.zappi_last_connected')|as_timestamp-states('sensor.zappi_last_connected')|as_timestamp%1800)|as_datetime %}
+            {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') | length > 0) -%}
+            {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') -%}
+            {%- if dispatch.start|as_timestamp >= disconnected|as_timestamp -%}
+            {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float%}
+            {%- endif-%}
+            {%- endfor -%}
+            {%- endif  %}
+            {{ns.total_dispatch}}
+
+    ######################################################
+    # Zappi plug status avoiding unknown when cloud response is not available
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: sensor.myenergi_zappi_XXXXXXXX_plug_status
+          not_to:
+            - unavailable
+            - unknown
+      #      not_from:
+      #        - unavailable
+      #        - unknown
+      sensor:
+        - name: Zappi Plug Status
+          unique_id: cfa5b1f6-14c7-44e8-955a-a57321401378
+          state: "{{states('sensor.myenergi_zappi_XXXXXXXX_plug_status')}}"
+          icon: mdi:ev-plug-type2
+          attributes:
+            changes: >
+              {% set current = this.attributes.get('changes', {}) %}
+              {% set new =
+                { trigger.entity_id:
+                  {
+                    'datetime': trigger.to_state.last_changed.isoformat(),
+                    'from': trigger.from_state.state,
+                    'to': trigger.to_state.state
+                  }
+                }
+              %}
+              {{ dict(current, **new) }}
+
+    ######################################################
+    # Zappi last disconnect
+    ######################################################
+
+    - trigger:
+        - trigger: state
+          entity_id: sensor.myenergi_zappi_XXXXXXXX_plug_status
+          to:
+            - EV Disconnected
+      sensor:
+        - name: Zappi Last Disconnected
+          unique_id: 159a0089-e859-40d4-8153-e363c9642571
+          state: >
+            {{now()}}
+          attributes:
+            Octopus_total_charge: >
+              {% set ns = namespace( total_dispatch = 0 ) %}
+                {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') | length > 0) -%}
+                  {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') -%}
+                    {%- if dispatch.start|as_timestamp > states('sensor.zappi_last_disconnected')|as_timestamp and dispatch.start|as_timestamp < states('sensor.zappi_last_connected')|as_timestamp-%}
+                      {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float%}
+                    {%- endif-%}
+                  {%- endfor -%}
+                  {{ns.total_dispatch}}  
+                {%- endif  -%}
+
+    ######################################################
+    # Zappi last Connected
+    ######################################################
+
+    - trigger:
+        - trigger: state
+          entity_id: sensor.myenergi_zappi_XXXXXXXX_plug_status
+          to:
+            - EV Connected
+      sensor:
+        - name: Zappi Last Connected
+          unique_id: edee5227-fd4a-498c-a4ac-fcf182ec3308
+          state: >
+            {{now()}}
+
+    ######################################################
+    # Generate an event if solax_rest_local_settings becomes unavailable
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: sensor.solax_rest_local_settings
+          to: unavailable
+        - trigger: state
+          entity_id: sensor.solax_rest_local_settings
+          to: unknown
+      action:
+        - event: Solax Zappi Octopus Control
+          event_data:
+            message: >-
+              solax_rest_local_settings became unavailable @
+              {{now().strftime('%H:%M')}}. 
+              {{states('sensor.solax_rest_local_settings')}}
+            title: Sensor Failed
+            class: high
+
+    ######################################################
+    # Generate an event when theres a new dispatch
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: sensor.octopus_total_planned_dispatch
+          from: "0"
+          not_to:
+            - unavailable
+      action:
+        - event: Solax Zappi Octopus Control
+          event_data:
+            message: >-
+              Octopus Planned Dispatch @
+              {{now().strftime('%H:%M')}}. 
+              {{states('sensor.octopus_total_planned_dispatch')}}kWh.
+            title: Octopus Dispatch
+            class: normal
+
+    ######################################################
+    # Mobile device list
+    ######################################################
+
+    - trigger:
+        - trigger: homeassistant
+          event: start
+          id: "HA_START"
+        - trigger: time_pattern
+          minutes: /10
+        # - trigger:
+        #   platform: homeassistant
+        #   event: start
+        # - trigger: state
+        #   entity_id: input_select.solax_automation_notification_devices
+        #   to:
+        #     - none
+      action:
+        - service: input_text.set_value
+          target:
+            entity_id: "input_text.mobile_device_list"
+          data:
+            value: >
+              {% set ns= namespace(val ="None Selected")%}
+              {% if  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list |length >0%}
+              {% for item in  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list %}
+              {% set ns.val = ns.val+"," + item %}
+              {%- endfor -%}
+              {%- endif  -%}
+              {{ns.val}}
+        - service: input_select.set_options
+          data:
+            entity_id: input_select.solax_automation_notification_devices
+            options: >
+              {{states('input_text.mobile_device_list').split(',')|list}}
+        - service: input_select.select_option
+          data:
+            entity_id: input_select.solax_automation_notification_devices
+            option: >
+              {% if states('input_text.mobile_device_selected') == ""%}
+              {{"None Selected"}}
+              {%else%}
+              {{states('input_text.mobile_device_selected')}}
+              {%endif%}
+
+    ######################################################
+    # Mobile device list
+    ######################################################
+
+    - trigger:
+        - trigger: state
+          entity_id: input_select.solax_automation_notification_devices
+          not_to:
+            - unknown
+            - unavailable
+      action:
+        - service: input_text.set_value
+          target:
+            entity_id: "input_text.mobile_device_selected"
+          data:
+            value: >
+              {{states('input_select.solax_automation_notification_devices')}}
+
+    ######################################################
+    # Generate tariff events and selects utility meter settings when:
+    #   dispatching changes
+    #   free electric sessions moved to saving sessions package
+    #   between 05:30 and 23:30
+    ######################################################
+    - trigger:
+        - trigger: time
+          at: "05:30:00"
+      condition:
+        - condition: template
+          value_template: >
+            {{ now()|as_timestamp > states('sensor.intelligent_target_time')|as_timestamp and (states('sensor.sensor.zappi_plug_status' != "Charging") or states('sensor.sensor.zappi_plug_status' != "Waiting for EV"))}}
+      action:
+        - event: octopus_tariff
+          event_data:
+            tariff: "peak"
+            time: >
+              {{now()|as_datetime}}
+        - service: select.select_option
+          data:
+            entity_id: select.daily_grid_import
+            option: "peak"
+        - service: select.select_option
+          data:
+            entity_id: select.monthly_grid_import
+            option: "peak"
+
+    - trigger:
+        - trigger: time
+          at: "23:30:00"
+      action:
+        - event: octopus_tariff
+          event_data:
+            tariff: "offpeak"
+            time: >
+              {{now()|as_datetime}}
+        - service: select.select_option
+          data:
+            entity_id: select.daily_grid_import
+            option: "offpeak"
+        - service: select.select_option
+          data:
+            entity_id: select.monthly_grid_import
+            option: "offpeak"
+    ######################################################
+
+    - trigger:
+        - trigger: state
+          entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+          from: "off"
+          to: "on"
+      action:
+        - event: octopus_tariff
+          event_data:
+            tariff: "offpeak"
+            time: >
+              {{now()|as_datetime}}
+        - service: select.select_option
+          data:
+            entity_id: select.daily_grid_import
+            option: "offpeak"
+        - service: select.select_option
+          data:
+            entity_id: select.monthly_grid_import
+            option: "offpeak"
+
+    - trigger:
+        - trigger: state
+          entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+          from: "on"
+          to: "off"
+      action:
+        - event: octopus_tariff
+          event_data:
+            tariff: "peak"
+            time: >
+              {{now()|as_datetime}}
+        - service: select.select_option
+          data:
+            entity_id: select.daily_grid_import
+            option: "peak"
+        - service: select.select_option
+          data:
+            entity_id: select.monthly_grid_import
+            option: "peak"
+######################################################
+

@@ -1,0 +1,14 @@
+solax_zappi_octopus_input_text:
+  input_text:
+    ####### not used yet
+    mobile_device_selected:
+      name: Mobile Device Selected
+      min: 0
+      max: 50
+      mode: text
+    ####### list of devices
+    mobile_device_list:
+      name: Mobile Device List
+      min: 0
+      max: 500
+      mode: text

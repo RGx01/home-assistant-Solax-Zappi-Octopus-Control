@@ -1,0 +1,96 @@
+- id: "5005"
+  alias: Solax Zappi Octopus Control - Notifier
+  description: "# 5005 - Solax Zappi Octopus Control - Notifier
+
+    Allows for notification of activity such as EV Connected, EV charging started,
+    amount Octopus will dispatch, Solax battery forced discharge events etc
+
+
+    # Initial installation instructions
+
+    1. Copy to your automations.yaml and reload yaml from developer tools
+
+
+    # Change Log
+
+    v2.1.3 Simplications
+
+    v2.0 Initial production release
+
+    v1.0 Initial"
+  triggers:
+    - trigger: event
+      event_type: Solax Zappi Octopus Control
+      event_data:
+        class: normal
+      id: Normal
+    - trigger: event
+      event_type: Solax Zappi Octopus Control
+      event_data:
+        class: high
+      id: High
+  conditions: []
+  actions:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id:
+                - High
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: input_boolean.solax_zappi_octopus_control_notifications
+                  state: "off"
+                - condition: state
+                  entity_id: input_boolean.nofify_mobile
+                  state: "off"
+          sequence:
+            - action: persistent_notification.create
+              data:
+                title: "{{trigger.event.data.title}}"
+                message: "{{trigger.event.data.message}}"
+            - if:
+                - condition: template
+                  value_template:
+                    "{{states('input_text.mobile_device_selected') != 'None
+                    Selected'}}"
+              then:
+                - action:
+                    '{% set notify = "notify." + states(''input_select.solax_automation_notification_devices'')
+                    -%} {{notify}}'
+                  metadata: {}
+                  data:
+                    title: "{{trigger.event.data.title}}"
+                    message: "{{trigger.event.data.message}}"
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: trigger
+                  id:
+                    - Normal
+                - condition: trigger
+                  id:
+                    - High
+            - condition: state
+              entity_id: input_boolean.solax_zappi_octopus_control_notifications
+              state: "on"
+          sequence:
+            - action: persistent_notification.create
+              data:
+                title: "{{trigger.event.data.title}}"
+                message: "{{trigger.event.data.message}}"
+            - if:
+                - condition: template
+                  value_template:
+                    "{{states('input_text.mobile_device_selected') != 'None
+                    Selected'}}"
+              then:
+                - action:
+                    '{% set notify = "notify." + states(''input_select.solax_automation_notification_devices'')
+                    -%} {{notify}}'
+                  metadata: {}
+                  data:
+                    title: "{{trigger.event.data.title}}"
+                    message: "{{trigger.event.data.message}}"
+  mode: queued
+  max: 10

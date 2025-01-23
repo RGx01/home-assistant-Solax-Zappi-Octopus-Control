@@ -1,0 +1,54 @@
+- id: '4002'
+  alias: Set Vehicle Tariff
+  description: Set Vehicle to log how much energy is put in each vehicle
+  triggers:
+  - entity_id:
+    - binary_sensor.ariya_plugged_in
+    from: 'off'
+    to: 'on'
+    variables:
+      tariff: Ariya
+    trigger: state
+  - entity_id:
+    - binary_sensor.ariya_charging
+    from: 'off'
+    to: 'on'
+    variables:
+      tariff: Ariya
+    trigger: state
+  - entity_id:
+    - binary_sensor.psa_plugged_in
+    from: 'off'
+    to: 'on'
+    variables:
+      tariff: Corsa
+    trigger: state
+  - entity_id:
+    - sensor.psa_charging_status
+    to: InProgress
+    variables:
+      tariff: Corsa
+    trigger: state
+  - trigger: state
+    entity_id:
+    - select.ev_charging_daily_vehicle
+    to: Guest
+    variables:
+      tariff: Guest
+  conditions:
+  - condition: zone
+    entity_id: device_tracker.ariya_location
+    zone: zone.home
+    enabled: false
+  actions:
+  - target:
+      entity_id: select.ev_charging_daily_vehicle
+    data:
+      option: '{{ tariff }}'
+    action: select.select_option
+  - target:
+      entity_id: select.ev_charging_monthly_vehicle
+    data:
+      option: '{{ tariff }}'
+    action: select.select_option
+  mode: single

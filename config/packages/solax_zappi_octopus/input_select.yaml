@@ -1,0 +1,34 @@
+solax_zappi_octopus_input_select:
+  input_select:
+    # automations rely on the order and index position for Self Use, Feed In and Manual.
+    # Do not change unless you really know what you are doing
+    solax_work_mode:
+      name: Work Mode
+      options:
+        - Self Use
+        - Feed In Priority
+        - Backup Mode
+        - Manual
+        - Peakshaving
+        - Enhanced TOU
+      #  initial: Feed In Priority
+      icon: mdi:auto-mode
+    solax_default_mode:
+      name: Default Mode After Discharge
+      options:
+        - Self Use
+        - Feed In Priority
+      initial: Self Use
+      icon: mdi:weather-sunny-alert
+    solax_manual_modes:
+      name: Manual Modes
+      options:
+        - Do Nothing
+        - Force Charge
+        - Force Discharge
+      icon: mdi:battery-outline
+    solax_automation_notification_devices:
+      name: Notify Mobile Device
+      options:
+        - None
+      icon: mdi:cellphone-sound

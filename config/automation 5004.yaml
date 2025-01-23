@@ -1,0 +1,215 @@
+- id: "5004"
+  alias: Solax Reload Settings
+  description:
+    "Populate UI with Solax Settings v2.1\n\n# AUTOMATION 5004\n 1. This
+    is 5004 only you need 5001 5002 5003 and 5005. files are kept separate in repo
+    for ease of maintenance\n 2. Paste into your automations.yaml\n\n# Change log\n
+    v2.1 Battery Warmer\n v2.0 Revamp\n"
+  triggers:
+    - trigger: time_pattern
+      minutes: /12
+    - trigger: state
+      entity_id:
+        - input_boolean.solax_automation_running
+      from: "on"
+      to: "off"
+      enabled: true
+      for:
+        hours: 0
+        minutes: 0
+        seconds: 10
+    - entity_id:
+        - input_button.refresh
+      trigger: state
+  conditions:
+    - condition: state
+      entity_id: input_boolean.solax_automation_running
+      state: "off"
+  actions:
+    - variables:
+        mode_delay: 15
+        settings_delay: 10
+        refresh_settings_delay: 10
+    - action: automation.turn_off
+      metadata: {}
+      data:
+        stop_actions: true
+      target:
+        entity_id: automation.solax_set_ui_options
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 1
+        milliseconds: 0
+    - action: homeassistant.update_entity
+      data:
+        entity_id:
+          - sensor.solax_rest_local_settings
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: "{{refresh_settings_delay}}"
+    - metadata: {}
+      data:
+        option: "{{states('sensor.solax_local_inverter_mode')}}"
+      target:
+        entity_id: input_select.solax_work_mode
+      action: input_select.select_option
+    - metadata: {}
+      data:
+        option: "{{states('sensor.solax_local_manual_mode_behaviour')}}"
+      target:
+        entity_id: input_select.solax_manual_modes
+      action: input_select.select_option
+    - metadata: {}
+      data:
+        value: "{{states('sensor.solax_local_feed_in_battery_min_soc')|int}}"
+      target:
+        entity_id: input_number.solax_feed_in_battery_min_soc
+      action: input_number.set_value
+    - metadata: {}
+      data:
+        value: "{{states('sensor.solax_local_feed_in_battery_charge_from_grid_to')|int}}"
+      target:
+        entity_id: input_number.solax_feed_in_charge_to_soc
+      action: input_number.set_value
+    - metadata: {}
+      data:
+        value: "{{states('sensor.solax_local_selfuse_battery_chrg_frm_grd_to')|int}}"
+      target:
+        entity_id: input_number.solax_selfuse_charge_to_soc
+      action: input_number.set_value
+      enabled: true
+    - metadata: {}
+      data:
+        value: "{{states('sensor.solax_local_selfuse_battery_min_soc')|int}}"
+      target:
+        entity_id: input_number.solax_selfuse_battery_min_soc
+      action: input_number.set_value
+      enabled: true
+    - if:
+        - condition: state
+          entity_id: sensor.solax_local_battery_chd2_enabled
+          state: "True"
+      then:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.solaxchargeperiod2
+          data: {}
+    - if:
+        - condition: state
+          entity_id: sensor.solax_local_battery_chd2_enabled
+          state: "False"
+      then:
+        - action: input_boolean.turn_off
+          target:
+            entity_id:
+              - input_boolean.solaxchargeperiod2
+          data: {}
+    - if:
+        - condition: state
+          entity_id: sensor.solax_local_self_use_battery_charge_from_grid
+          state: "1"
+      then:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.self_use_enable_charge_from_grid
+          data: {}
+    - if:
+        - condition: state
+          entity_id: sensor.solax_local_self_use_battery_charge_from_grid
+          state: "0"
+      then:
+        - action: input_boolean.turn_off
+          target:
+            entity_id:
+              - input_boolean.self_use_enable_charge_from_grid
+          data: {}
+    - action: input_datetime.set_datetime
+      metadata: {}
+      data:
+        time: "{{states('sensor.solax_local_battery_setting_start_charge')}}"
+      target:
+        entity_id: input_datetime.solax_battery_start_charge_time
+    - action: input_datetime.set_datetime
+      metadata: {}
+      data:
+        time: "{{states('sensor.solax_local_battery_setting_stop_charge')}}"
+      target:
+        entity_id: input_datetime.solax_battery_stop_charge_time
+    - action: input_datetime.set_datetime
+      metadata: {}
+      data:
+        time: "{{states('sensor.solax_local_battery_setting_start_discharge')}}"
+      target:
+        entity_id: input_datetime.solax_battery_start_discharge_time
+    - action: input_datetime.set_datetime
+      metadata: {}
+      data:
+        time: "{{states('sensor.solax_local_battery_setting_stop_discharge')}}"
+      target:
+        entity_id: input_datetime.solax_battery_stop_discharge_time
+    - action: input_datetime.set_datetime
+      metadata: {}
+      data:
+        time: "{{states('sensor.solax_local_battery_setting_start_charge_2')}}"
+      target:
+        entity_id: input_datetime.solax_start_charge_2
+    - action: input_datetime.set_datetime
+      metadata: {}
+      data:
+        time: "{{states('sensor.solax_local_battery_setting_stop_charge_2')}}"
+      target:
+        entity_id: input_datetime.solax_stop_charge_2
+    - if:
+        - condition: state
+          entity_id: sensor.solax_local_battery_heat_enabled
+          state: "True"
+      then:
+        - action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.battery_heat_enable
+          data: {}
+      else:
+        - action: input_boolean.turn_off
+          target:
+            entity_id:
+              - input_boolean.battery_heat_enable
+          data: {}
+    - action: input_datetime.set_datetime
+      metadata: {}
+      data:
+        time: "{{states('sensor.solax_local_battery_heat_start')}}"
+      target:
+        entity_id: input_datetime.solax_battery_start_heat_time
+    - action: input_datetime.set_datetime
+      metadata: {}
+      data:
+        time: "{{states('sensor.solax_local_battery_heat_stop')}}"
+      target:
+        entity_id: input_datetime.solax_battery_stop_heat_time
+    - action: input_datetime.set_datetime
+      metadata: {}
+      data:
+        time: "{{states('sensor.solax_local_battery_heat_start_2')}}"
+      target:
+        entity_id: input_datetime.solax_start_heat_2
+    - action: input_datetime.set_datetime
+      metadata: {}
+      data:
+        time: "{{states('sensor.solax_local_battery_heat_stop_2')}}"
+      target:
+        entity_id: input_datetime.solax_stop_heat_2
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 1
+        milliseconds: 0
+    - action: automation.turn_on
+      metadata: {}
+      data: {}
+      target:
+        entity_id: automation.solax_set_ui_options
+  trace:
+    stored_traces: 20
+  mode: single

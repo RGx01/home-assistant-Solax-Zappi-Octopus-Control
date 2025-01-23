@@ -1,0 +1,53 @@
+solax_zappi_octopus_input_boolean:
+  input_boolean:
+    ###########################################
+    # Solax Zappi Octopus UI
+    # v2.1 Battery Warmer
+    ###########################################
+    # mute notifications
+    solax_zappi_octopus_control_notifications:
+      name: Automation Notifications
+      icon: mdi:bell
+    #zappi_eco_mode_overriden switch if you switch this on automations will ignore other criteria like scheduled charge time and allow Octopus to create schedules during the day
+    #Use this when you want to charge the car during the day when octopus has surplus.
+    zappi_eco_mode_override:
+      name: Full Octopus Control
+      icon: mdi:ev-station
+    #Prevent EV charging before sunset
+    solar_export_priority:
+      name: Solar Export Priority
+      icon: mdi:solar-power
+    #Prevent EV discharging Solax Battery
+    ev_solax_battery_drain:
+      name: Prevent Zappi Draining Battery
+      icon: mdi:battery-10
+    #use grid during octopus dispatch
+    use_grid_during_octopus_dispatch:
+      name: Use Grid During Octopus Dispatch
+      icon: mdi:transmission-tower-import
+    #Solax automation running
+    solax_automation_running:
+      name: Solax Automation Running
+      icon: mdi:robot-angry
+    #A secondary charge period usually left off
+    solaxchargeperiod2:
+      name: Charge Period 2
+      icon: mdi:battery-clock
+    #A secondary charge period usually left off
+    self_use_enable_charge_from_grid:
+      name: Self Use Enable Charge From Grid
+      icon: mdi:transmission-tower-import
+    #A secondary charge period usually left off
+    battery_heat_enable:
+      name: Battery Heating
+      icon: mdi:radiator
+    #Export battery switch is used to determine if the remainder of solax battery can be dumped back to the grid during off peak
+    export_battery:
+      name: Daily Battery Export
+      icon: mdi:battery-arrow-down
+    #Notify a mobile device_tracker
+    nofify_mobile:
+      name: Notify mobile?
+      icon: mdi:bell-plus
+
+    ###########################################

@@ -1,0 +1,21 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+logger:
+  default: info
+  logs:
+    homeassistant.components.rest: info
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+##############################################
+# Enable packages for solax to work and copy the 
+# packages directory into the same directory as 
+# configuration.yaml
+##############################################
+homeassistant:
+  packages: !include_dir_merge_named packages/
+  
+automation: !include automations.yaml
+
