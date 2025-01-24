@@ -1,417 +1,418 @@
-- id: "5003"
+- id: '5003'
   alias: Solax Set UI Options
-  description:
-    "Populate UI with Solax Settings\n\n# AUTOMATION 5003 \n1. This is
+  description: "Populate UI with Solax Settings\n\n# AUTOMATION 5003 \n1. This is
     5003 only you need 5001 5002 5004 and 5005. files are kept seperate in repo for
     ease of maintenance\n2. Copy and Paste into your automations.yaml\n\n# Change
     log\nv2.1.0 \n*Allow queued runs so UI looks a bit more seemless when updating
     the inverter settings\n*Added battery warmer controls\nV2.0 Revamp\nv1.0 Initial"
   triggers:
-    - entity_id:
-        - input_number.solax_feed_in_battery_min_soc
-      id: Set Feed in Min SoC
-      trigger: state
-    - entity_id:
-        - input_number.solax_selfuse_battery_min_soc
-      id: Solax Self Use Min SoC
-      trigger: state
-    - entity_id:
-        - input_number.solax_feed_in_charge_to_soc
-      id: Set Feed in Charge to SoC
-      trigger: state
-    - entity_id:
-        - input_number.solax_selfuse_charge_to_soc
-      id: Solax Self Use Charge to SoC
-      trigger: state
-    - entity_id:
-        - input_boolean.self_use_enable_charge_from_grid
-      id: Set Self Use Charge From Grid
-      trigger: state
-    - entity_id:
-        - input_select.solax_manual_modes
-      id: Set Manual Mode
-      trigger: state
-    - entity_id:
-        - input_select.solax_work_mode
-      id: Set Work Mode
-      trigger: state
-    - entity_id:
-        - input_boolean.solaxchargeperiod2
-      id: Chargeperiod2
-      trigger: state
-    - trigger: state
-      entity_id:
-        - input_datetime.solax_start_charge_2
-      id: Charge Period 2 Start
-    - trigger: state
-      entity_id:
-        - input_datetime.solax_stop_charge_2
-      id: Charge Period 2 Stop
-    - trigger: state
-      entity_id:
-        - input_datetime.solax_battery_start_charge_time
-      id: Solax Battery Start Charge Time
-    - trigger: state
-      entity_id:
-        - input_datetime.solax_battery_stop_charge_time
-      id: Solax Battery Stop Charge Time
-    - trigger: state
-      entity_id:
-        - input_datetime.solax_battery_start_discharge_time
-      id: Solax Battery Start Discharge Time
-    - trigger: state
-      entity_id:
-        - input_datetime.solax_battery_stop_discharge_time
-      id: Solax Battery Stop Discharge Time
-    - entity_id:
-        - input_boolean.battery_heat_enable
-      id: heat enable
-      trigger: state
-    - trigger: state
-      entity_id:
-        - input_datetime.solax_battery_start_heat_time
-      id: Heat Period Start
-    - trigger: state
-      entity_id:
-        - input_datetime.solax_battery_stop_heat_time
-      id: Heat Period Stop
-    - trigger: state
-      entity_id:
-        - input_datetime.solax_start_heat_2
-      id: Heat Period Start 2
-    - trigger: state
-      entity_id:
-        - input_datetime.solax_stop_heat_2
-      id: Heat Period Stop 2
+  - entity_id:
+    - input_number.solax_feed_in_battery_min_soc
+    id: Set Feed in Min SoC
+    trigger: state
+  - entity_id:
+    - input_number.solax_selfuse_battery_min_soc
+    id: Solax Self Use Min SoC
+    trigger: state
+  - entity_id:
+    - input_number.solax_feed_in_charge_to_soc
+    id: Set Feed in Charge to SoC
+    trigger: state
+  - entity_id:
+    - input_number.solax_selfuse_charge_to_soc
+    id: Solax Self Use Charge to SoC
+    trigger: state
+  - entity_id:
+    - input_boolean.self_use_enable_charge_from_grid
+    id: Set Self Use Charge From Grid
+    trigger: state
+  - entity_id:
+    - input_select.solax_manual_modes
+    id: Set Manual Mode
+    trigger: state
+  - entity_id:
+    - input_select.solax_work_mode
+    id: Set Work Mode
+    trigger: state
+  - entity_id:
+    - input_boolean.solaxchargeperiod2
+    id: Chargeperiod2
+    trigger: state
+  - trigger: state
+    entity_id:
+    - input_datetime.solax_start_charge_2
+    id: Charge Period 2 Start
+  - trigger: state
+    entity_id:
+    - input_datetime.solax_stop_charge_2
+    id: Charge Period 2 Stop
+  - trigger: state
+    entity_id:
+    - input_datetime.solax_battery_start_charge_time
+    id: Solax Battery Start Charge Time
+  - trigger: state
+    entity_id:
+    - input_datetime.solax_battery_stop_charge_time
+    id: Solax Battery Stop Charge Time
+  - trigger: state
+    entity_id:
+    - input_datetime.solax_battery_start_discharge_time
+    id: Solax Battery Start Discharge Time
+  - trigger: state
+    entity_id:
+    - input_datetime.solax_battery_stop_discharge_time
+    id: Solax Battery Stop Discharge Time
+  - entity_id:
+    - input_boolean.battery_heat_enable
+    id: heat enable
+    trigger: state
+  - trigger: state
+    entity_id:
+    - input_datetime.solax_battery_start_heat_time
+    id: Heat Period Start
+  - trigger: state
+    entity_id:
+    - input_datetime.solax_battery_stop_heat_time
+    id: Heat Period Stop
+  - trigger: state
+    entity_id:
+    - input_datetime.solax_start_heat_2
+    id: Heat Period Start 2
+  - trigger: state
+    entity_id:
+    - input_datetime.solax_stop_heat_2
+    id: Heat Period Stop 2
   conditions:
-    - condition: state
-      entity_id: input_boolean.solax_automation_running
-      state: "off"
+  - condition: state
+    entity_id: input_boolean.solax_automation_running
+    state: 'off'
   actions:
-    - action: input_boolean.turn_on
-      metadata: {}
-      data: {}
-      target:
-        entity_id: input_boolean.solax_automation_running
-    - choose:
-        - conditions:
-            - condition: trigger
-              id:
-                - Set Feed in Min SoC
-          sequence:
-            - data:
-                level: "{{states('input_number.solax_feed_in_battery_min_soc')}}"
-              action: rest_command.solax_local_set_feedin_battery_min_soc
-        - conditions:
-            - condition: trigger
-              id:
-                - Solax Self Use Min SoC
-          sequence:
-            - data:
-                level: "{{states('input_number.solax_selfuse_battery_min_soc')}}"
-              action: rest_command.solax_local_set_selfuse_battery_min_soc
-        - conditions:
-            - condition: trigger
-              id:
-                - Set Feed in Charge to SoC
-          sequence:
-            - data:
-                level: "{{states('input_number.solax_feed_in_charge_to_soc')}}"
-              action: rest_command.solax_local_set_feedin_charge_battery_from_grid
-        - conditions:
-            - condition: trigger
-              id:
-                - Solax Self Use Charge to SoC
-          sequence:
-            - data:
-                level: "{{states('input_number.solax_selfuse_charge_to_soc')}}"
-              action: rest_command.solax_local_set_charge_battery_from_grid
-        - conditions:
-            - condition: trigger
-              id:
-                - Self Use Enable Charge From Grid
-          sequence:
-            - action: rest_command.solax_local_set_selfuse_charge_from_grid_enable
-              data:
-                enabled:
-                  "{% if states('input_boolean.self_use_enable_charge_from_grid')
-                  == 'on' %}{{1}}{% else%}{{0}}{% endif%}"
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: 5
-                milliseconds: 0
-            - action: rest_command.solax_local_set_forced_charge_start
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_battery_start_charge_time',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: 5
-                milliseconds: 0
-            - action: rest_command.solax_local_set_forced_charge_stop
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_battery_stop_charge_time',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Set Manual Mode
-          sequence:
-            - data:
-                value: "{{state_attr(trigger.entity_id,'options').index(states(trigger.entity_id))}}"
-              action: rest_command.solax_local_set_manual_mode_behaviour
-        - conditions:
-            - condition: trigger
-              id:
-                - Set Work Mode
-          sequence:
-            - if:
-                - condition: template
-                  value_template:
-                    "{{state_attr(trigger.entity_id,'options').index(states(trigger.entity_id))==0
+  - action: input_boolean.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.solax_automation_running
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - Set Feed in Min SoC
+      sequence:
+      - data:
+          level: '{{states(''input_number.solax_feed_in_battery_min_soc'')}}'
+        action: rest_command.solax_local_set_feedin_battery_min_soc
+    - conditions:
+      - condition: trigger
+        id:
+        - Solax Self Use Min SoC
+      sequence:
+      - data:
+          level: '{{states(''input_number.solax_selfuse_battery_min_soc'')}}'
+        action: rest_command.solax_local_set_selfuse_battery_min_soc
+    - conditions:
+      - condition: trigger
+        id:
+        - Set Feed in Charge to SoC
+      sequence:
+      - data:
+          level: '{{states(''input_number.solax_feed_in_charge_to_soc'')}}'
+        action: rest_command.solax_local_set_feedin_charge_battery_from_grid
+    - conditions:
+      - condition: trigger
+        id:
+        - Solax Self Use Charge to SoC
+      sequence:
+      - data:
+          level: '{{states(''input_number.solax_selfuse_charge_to_soc'')}}'
+        action: rest_command.solax_local_set_charge_battery_from_grid
+    - conditions:
+      - condition: trigger
+        id:
+        - Self Use Enable Charge From Grid
+      sequence:
+      - action: rest_command.solax_local_set_selfuse_charge_from_grid_enable
+        data:
+          enabled: '{% if states(''input_boolean.self_use_enable_charge_from_grid'')
+            == ''on'' %}{{1}}{% else%}{{0}}{% endif%}'
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+      - action: rest_command.solax_local_set_forced_charge_start
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_battery_start_charge_time'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+      - action: rest_command.solax_local_set_forced_charge_stop
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_battery_stop_charge_time'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Set Manual Mode
+      sequence:
+      - data:
+          value: '{{state_attr(trigger.entity_id,''options'').index(states(trigger.entity_id))}}'
+        action: rest_command.solax_local_set_manual_mode_behaviour
+    - conditions:
+      - condition: trigger
+        id:
+        - Set Work Mode
+      sequence:
+      - if:
+        - condition: template
+          value_template: '{{state_attr(trigger.entity_id,''options'').index(states(trigger.entity_id))==0
 
-                    or
+            or
 
-                    state_attr(trigger.entity_id,'options').index(states(trigger.entity_id))==1
+            state_attr(trigger.entity_id,''options'').index(states(trigger.entity_id))==1
 
-                    or
+            or
 
-                    state_attr(trigger.entity_id,'options').index(states(trigger.entity_id))==3
+            state_attr(trigger.entity_id,''options'').index(states(trigger.entity_id))==3
 
-                    }}"
-              then:
-                - data:
-                    value: "{{state_attr(trigger.entity_id,'options').index(states(trigger.entity_id))}}"
-                  action: rest_command.solax_local_set_inverter_mode
-            - if:
-                - condition: template
-                  value_template: "{{state_attr(trigger.entity_id,'options').index(states(trigger.entity_id))==1}}"
-              then:
-                - action: input_number.set_value
-                  metadata: {}
-                  data:
-                    value: 1
-                  target:
-                    entity_id: input_number.solax_default_operation_mode
-                  enabled: false
-                - action: input_select.select_option
-                  metadata: {}
-                  data:
-                    option: Feed In Priority
-                  target:
-                    entity_id: input_select.solax_default_mode
-              enabled: false
-            - if:
-                - condition: template
-                  value_template: "{{state_attr(trigger.entity_id,'options').index(states(trigger.entity_id))==0}}"
-              then:
-                - action: input_number.set_value
-                  metadata: {}
-                  data:
-                    value: 0
-                  target:
-                    entity_id: input_number.solax_default_operation_mode
-                  enabled: false
-                - action: input_select.select_option
-                  metadata: {}
-                  data:
-                    option: Self Use
-                  target:
-                    entity_id: input_select.solax_default_mode
-              enabled: false
-        - conditions:
-            - condition: trigger
-              id:
-                - Chargeperiod2
-          sequence:
-            - action: rest_command.solax_local_set_period2_enable
-              data:
-                enabled:
-                  "{% if states('input_boolean.solaxchargeperiod2') == 'on' %}{{1}}{%
-                  else%}{{0}}{% endif%}"
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: 5
-                milliseconds: 0
-            - action: rest_command.solax_local_set_forced_charge_stop2
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_stop_charge_2',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: 5
-                milliseconds: 0
-            - action: rest_command.solax_local_set_forced_charge_start2
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_start_charge_2',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Charge Period 2 Start
-          sequence:
-            - action: rest_command.solax_local_set_forced_charge_start2
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_start_charge_2',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Charge Period 2 Stop
-          sequence:
-            - action: rest_command.solax_local_set_forced_charge_stop2
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_stop_charge_2',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Solax Battery Start Charge Time
-          sequence:
-            - action: rest_command.solax_local_set_forced_charge_start
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_battery_start_charge_time',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Solax Battery Stop Charge Time
-          sequence:
-            - action: rest_command.solax_local_set_forced_charge_stop
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_battery_stop_charge_time',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Solax Battery Start Discharge Time
-          sequence:
-            - action: rest_command.solax_local_set_allowed_discharge_start
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_battery_start_discharge_time',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Solax Battery Stop Discharge Time
-          sequence:
-            - action: rest_command.solax_local_set_allowed_discharge_end
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_battery_stop_discharge_time',
-                  'timestamp') -0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - heat enable
-          sequence:
-            - action: rest_command.solax_local_heat_enable
-              data:
-                enabled:
-                  "{% if states('input_boolean.battery_heat_enable') == 'on'
-                  %}{{1}}{% else%}{{0}}{% endif%}"
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: 5
-                milliseconds: 0
-            - action: rest_command.solax_local_set_heat_start
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_battery_start_heat_time',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: 5
-                milliseconds: 0
-            - action: rest_command.solax_local_set_heat_stop
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_battery_stop_heat_time',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: 5
-                milliseconds: 0
-            - action: rest_command.solax_local_set_heat_start2
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_start_heat_2',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: 5
-                milliseconds: 0
-            - action: rest_command.solax_local_set_heat_stop2
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_stop_heat_2',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Heat Period Start
-          sequence:
-            - action: rest_command.solax_local_set_heat_start
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_battery_start_heat_time',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Heat Period Stop
-          sequence:
-            - action: rest_command.solax_local_set_heat_stop
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_battery_stop_heat_time',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Heat Period Start 2
-          sequence:
-            - action: rest_command.solax_local_set_heat_start2
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_start_heat_2',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-        - conditions:
-            - condition: trigger
-              id:
-                - Heat Period Stop 2
-          sequence:
-            - action: rest_command.solax_local_set_heat_stop2
-              data:
-                value:
-                  "{% set end_time = as_datetime(state_attr('input_datetime.solax_stop_heat_2',
-                  'timestamp') - 0) %}{{ end_time.hour + end_time.minute * 256 }}"
-    - delay:
-        hours: 0
-        minutes: 0
-        seconds: 10
-      enabled: false
-    - action: input_boolean.turn_off
-      metadata: {}
-      data: {}
-      target:
-        entity_id: input_boolean.solax_automation_running
+            }}'
+        then:
+        - data:
+            value: '{{state_attr(trigger.entity_id,''options'').index(states(trigger.entity_id))}}'
+          action: rest_command.solax_local_set_inverter_mode
+      - if:
+        - condition: template
+          value_template: '{{state_attr(trigger.entity_id,''options'').index(states(trigger.entity_id))==1}}'
+        then:
+        - action: input_number.set_value
+          metadata: {}
+          data:
+            value: 1
+          target:
+            entity_id: input_number.solax_default_operation_mode
+          enabled: false
+        - action: input_select.select_option
+          metadata: {}
+          data:
+            option: Feed In Priority
+          target:
+            entity_id: input_select.solax_default_mode
+        enabled: false
+      - if:
+        - condition: template
+          value_template: '{{state_attr(trigger.entity_id,''options'').index(states(trigger.entity_id))==0}}'
+        then:
+        - action: input_number.set_value
+          metadata: {}
+          data:
+            value: 0
+          target:
+            entity_id: input_number.solax_default_operation_mode
+          enabled: false
+        - action: input_select.select_option
+          metadata: {}
+          data:
+            option: Self Use
+          target:
+            entity_id: input_select.solax_default_mode
+        enabled: false
+    - conditions:
+      - condition: trigger
+        id:
+        - Chargeperiod2
+      sequence:
+      - action: rest_command.solax_local_set_period2_enable
+        data:
+          enabled: '{% if states(''input_boolean.solaxchargeperiod2'') == ''on'' %}{{1}}{%
+            else%}{{0}}{% endif%}'
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+      - action: rest_command.solax_local_set_forced_charge_stop2
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_stop_charge_2'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+      - action: rest_command.solax_local_set_forced_charge_start2
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_start_charge_2'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Charge Period 2 Start
+      sequence:
+      - action: rest_command.solax_local_set_forced_charge_start2
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_start_charge_2'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Charge Period 2 Stop
+      sequence:
+      - action: rest_command.solax_local_set_forced_charge_stop2
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_stop_charge_2'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Solax Battery Start Charge Time
+      sequence:
+      - action: rest_command.solax_local_set_forced_charge_start
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_battery_start_charge_time'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Solax Battery Stop Charge Time
+      sequence:
+      - action: rest_command.solax_local_set_forced_charge_stop
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_battery_stop_charge_time'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Solax Battery Start Discharge Time
+      sequence:
+      - action: rest_command.solax_local_set_allowed_discharge_start
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_battery_start_discharge_time'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Solax Battery Stop Discharge Time
+      sequence:
+      - action: rest_command.solax_local_set_allowed_discharge_end
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_battery_stop_discharge_time'',
+            ''timestamp'') -0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - heat enable
+      sequence:
+      - if:
+        - condition: state
+          entity_id: input_boolean.battery_heat_enable
+          state: 'off'
+        then:
+        - action: rest_command.solax_local_set_heat_start
+          data:
+            value: '{{ 0 }}'
+          enabled: true
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 5
+            milliseconds: 0
+          enabled: true
+        - action: rest_command.solax_local_set_heat_stop
+          data:
+            value: '{{ 0 }}'
+          enabled: true
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 5
+            milliseconds: 0
+          enabled: true
+        - action: rest_command.solax_local_set_heat_start2
+          data:
+            value: '{{ 0 }}'
+          enabled: true
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 5
+            milliseconds: 0
+          enabled: true
+        - action: rest_command.solax_local_set_heat_stop2
+          data:
+            value: '{{ 0 }}'
+          enabled: true
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 5
+            milliseconds: 0
+          enabled: true
+        - action: rest_command.solax_local_heat_enable
+          data:
+            enabled: '{% if states(''input_boolean.battery_heat_enable'') == ''on''
+              %}{{1}}{% else%}{{0}}{% endif%}'
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 5
+            milliseconds: 0
+        else:
+        - action: rest_command.solax_local_heat_enable
+          data:
+            enabled: '{% if states(''input_boolean.battery_heat_enable'') == ''on''
+              %}{{1}}{% else%}{{0}}{% endif%}'
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 5
+            milliseconds: 0
+    - conditions:
+      - condition: trigger
+        id:
+        - Heat Period Start
+      sequence:
+      - action: rest_command.solax_local_set_heat_start
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_battery_start_heat_time'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Heat Period Stop
+      sequence:
+      - action: rest_command.solax_local_set_heat_stop
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_battery_stop_heat_time'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Heat Period Start 2
+      sequence:
+      - action: rest_command.solax_local_set_heat_start2
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_start_heat_2'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Heat Period Stop 2
+      sequence:
+      - action: rest_command.solax_local_set_heat_stop2
+        data:
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_stop_heat_2'',
+            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    enabled: false
+  - action: input_boolean.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.solax_automation_running
   mode: queued
   max: 9
