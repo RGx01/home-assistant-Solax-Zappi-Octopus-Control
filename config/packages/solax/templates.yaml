@@ -376,12 +376,12 @@ solax_templates:
         - name: "Solax Local Battery In From Solar"
           unique_id: solax_local_battery_in_from_solar
           state: >
-            {% set bat = states('sensor.solax_local_battery_power')|int(default=0) %}
+            {% set bat = states('sensor.solax_local_battery_use_in')|int(default=0) %}
             {% set invPwr = states('sensor.solax_local_inverter_power')|int(default=0) %} 
             {% set pvPwr = states('sensor.solax_local_pv_output')|int(default=0) %} 
             {% set gridPwr = states('sensor.solax_local_grid_power')|int(default=0) %} 
             {% set gridExpPwr = states('sensor.solax_local_grid_export_power')|int(default=0) %} 
-            {{ (bat-gridExpPwr) if (bat > invPwr) and (pvPwr > invPwr) and (gridPwr > -100 and gridPwr < 100) else 0 }}
+            {{ (bat) if  (pvPwr > 0) else 0 }}
           unit_of_measurement: "W"
           state_class: measurement
           device_class: power

@@ -21,6 +21,8 @@ sections:
               - condition: state
                 entity: sensor.zappi_plug_status
                 state_not: EV Disconnected
+            tap_action:
+              action: more-info
           - type: entity
             show_state: true
             show_icon: true
@@ -52,6 +54,8 @@ sections:
             name: Planned
             state_content: state
             color: green
+            tap_action:
+              action: more-info
           - type: entity
             show_state: true
             show_icon: false
@@ -65,6 +69,8 @@ sections:
               - condition: state
                 entity: sensor.zappi_plug_status
                 state: EV Connected
+            tap_action:
+              action: more-info
           - type: entity
             show_state: true
             show_icon: true
@@ -73,6 +79,8 @@ sections:
               - condition: state
                 entity: sensor.zappi_plug_status
                 state: Charging
+            tap_action:
+              action: more-info
       - type: entities
         entities:
           - entity: input_boolean.zappi_eco_mode_override
@@ -169,10 +177,17 @@ sections:
         entities:
           - entity: input_boolean.battery_heat_enable
             state_color: true
+      - type: entities
+        show_header_toggle: false
+        entities:
           - entity: input_datetime.solax_battery_start_heat_time
           - entity: input_datetime.solax_battery_stop_heat_time
           - entity: input_datetime.solax_start_heat_2
           - entity: input_datetime.solax_stop_heat_2
+        visibility:
+          - condition: state
+            entity: input_boolean.battery_heat_enable
+            state: "on"
   - type: grid
     cards:
       - type: heading
