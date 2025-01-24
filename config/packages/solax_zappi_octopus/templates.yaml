@@ -277,7 +277,7 @@ solax_zappi_octopus_templates:
               {{now().strftime('%H:%M')}}. 
               {{states('sensor.octopus_total_planned_dispatch')}}kWh.
             title: Octopus Dispatch
-            class: normal
+            class: high
 
     ######################################################
     # Mobile device list
