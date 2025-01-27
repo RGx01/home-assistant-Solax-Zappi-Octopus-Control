@@ -1,35 +1,13 @@
 # Solax-Zappi-Octopus-Control
-## Revision Log
-| Version | Date | Files updated |Description |
-|:-----|:--------:|:------|:------|
-| v2.1.3 | **23/1/25** | packages/octopus_saving_sessions/input_datetime.yaml <br />packages/octopus_saving_sessions/input_number.yaml <br /> packages/octopus_saving_sessions/templates.yaml <br /> packages/solax/templates.yaml <br />  packages/solax_zappi_octopus/templates.yaml <br /> automation 600x.yaml removed <br /> automation 6001.yaml added <br /> automation 6002.yaml added <br /> dashboard/Solax & Octopus Settings.yaml added <br /> dashboard/Octopus Saving Sessions.yaml  |1. Fixed bug with free electric <br /> 2. Fixed bug with battery in from solar calcs <br /> 3. Enhanced Octopus Saving Session Options with prep time and prep SoC with checks to stop charging when the target SoC is reached <br /> 4. Tidier Notifications <br /> |
-| v2.1.1 | **19/1/25** | packages/solax_zappi_octopus/templates.yaml |1. Fixed bug with tariff select|
-| v2.1  | **19/1/25** | All |1. Revised Dashboards <br /> 2. Added Battery Warming controls <br /> 3. Added Mobile Notifications <br /> 4. New template sensors to switch utility meter tariffs peak/offpeak <br /> 5. General bug fixes in template sensors|
-
-  
-## Introduction
-This started out as a Home Assistant project to create a UI to control my Solax inverter locally. It's now a project to automate the contol of the my Solax inverter, Zappi EV charger and Octopus Energy interactions including Octoplus Saving Sessions and Free Electric sessions. The idea isn't entirely new (see credits below) but the project now goes beyond my original idea and now provides the opportunity to automatically contol for scenarios (decribed in the requirements below). 
-
-The project is split into 3 parts:
-* The first part is to simplify previous efforts by Kamil Baczkowicz into a single Home Assistant Package (with some updated parts).
-	* config/packages/solax.
-* The second, is to create an interactive dashboard/ui to control how energy is used with Octopus Energy and Zappi EV charger.
-	* config/packages/solax_zappi_octopus
- 	* Automations 5001-5005
-  	* Dashboard Solax & Octopus Settings.yaml	 
-* The third part is a reworking of work done by Kamil Baczkowicz to improve working with Octoplus Saving Sessions and Free Electric Sessions.
-	* config/packages/octopus_saving_sessions
- 	* Automations 6001-6002
-  	* Dashboard Octopus Saving Sessions.yaml
 
 * [Introduction](#introduction)
+* [Revision Log](#revision-log)
 * [Screenshots](#screenshots-of-dashboards)
 * [Credits and Acknowledgments](#credits-and-acknowledgments)
-* [Prerequisite Integrations](#prerequisite-integrations)
-* [Mandatory Manual Adjustments to Config Yaml-Dashboard Yaml](#mandatory-manual-adjustments-to-config-yaml-dashboard-yaml)
-* [Adding the Dashboards](#adding-the-dashboards)
-* [Still to be Tested](#still-to-be-tested)
-	* [6002 - Octopus - Saving Sessions Automation](#6002---octopus---saving-sessions-automation)
+* [INSTALL INSTRUCTIONS](#install-instructions)
+	* [Prerequisite Integrations](#prerequisite-integrations)
+	* [Mandatory Manual Adjustments to Config Yaml & Dashboard Yaml](#mandatory-manual-adjustments-to-config-yaml--dashboard-yaml)
+	* [Adding the Dashboards](#adding-the-dashboards)
 * [Automation Function Summary](#automation-function-summary)
 	* [5001 - Solax Zappi Octopus Control](#5001---solax-zappi-octopus-control)
 	* [5002 - Solax Reset Mode After Manual Discharge](#5002---solax-reset-mode-after-manual-discharge)
@@ -42,8 +20,28 @@ The project is split into 3 parts:
 * [Future Dev Work](#future-dev-work)
 * [Problems Found During Development](#problems-found-during-development)
 * [Equipment Used During Development](#equipment-used-during-development)
+  
+## Introduction
+This started out as a Home Assistant project to create a UI to control my Solax inverter locally. It's now a project to automate the contol of the my Solax inverter, Zappi EV charger and Octopus Energy interactions including Octoplus Saving Sessions and Free Electric sessions. The idea isn't entirely new (see credits below) but the project now goes beyond my original idea and now provides the opportunity to automatically contol for scenarios (decribed in the requirements below). 
 
+The project is split into 3 parts:
+* The first part is to simplify previous efforts by Kamil Baczkowicz into a single Home Assistant Package (with some updated parts).
+	* config/packages/solax.
+* The second, is to create an interactive dashboard/ui to control how energy is used with Octopus Energy and Zappi EV charger.
+	* config/packages/solax_zappi_octopus
+ 	* Automations 5001-5005
+  	* Dashboard Solax & Octopus Settings.yaml	 
+* The third part provides integration with Octoplus Saving Sessions and Free Electric Sessions.
+	* config/packages/octopus_saving_sessions
+ 	* Automations 6001-6002
+  	* Dashboard Octopus Saving Sessions.yaml
 
+## Revision Log
+| Version | Date | Files updated |Description |
+|:-----|:--------:|:------|:------|
+| v2.1.3 | **23/1/25** | packages/octopus_saving_sessions/input_datetime.yaml <br />packages/octopus_saving_sessions/input_number.yaml <br /> packages/octopus_saving_sessions/templates.yaml <br /> packages/solax/templates.yaml <br />  packages/solax_zappi_octopus/templates.yaml <br /> automation 600x.yaml removed <br /> automation 6001.yaml added <br /> automation 6002.yaml added <br /> dashboard/Solax & Octopus Settings.yaml added <br /> dashboard/Octopus Saving Sessions.yaml  |1. Fixed bug with free electric <br /> 2. Fixed bug with battery in from solar calcs <br /> 3. Enhanced Octopus Saving Session Options with prep time and prep SoC with checks to stop charging when the target SoC is reached <br /> 4. Tidier Notifications <br /> |
+| v2.1.1 | **19/1/25** | packages/solax_zappi_octopus/templates.yaml |1. Fixed bug with tariff select|
+| v2.1  | **19/1/25** | All |1. Revised Dashboards <br /> 2. Added Battery Warming controls <br /> 3. Added Mobile Notifications <br /> 4. New template sensors to switch utility meter tariffs peak/offpeak <br /> 5. General bug fixes in template sensors|
 
 ## Screenshots of Dashboards
 <img width="1355" alt="Screenshot 2025-01-23 at 18 05 48" src="https://github.com/user-attachments/assets/b1d88b66-31ac-4388-a4b3-1117d4caf2ee" />
@@ -61,14 +59,15 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 </li>
 </ol>
 
-## Prerequisite Integrations
+# INSTALL INSTRUCTIONS
+### Prerequisite Integrations
 * HACS
 * Octopus Energy (by bottlecapdave) v13.5.0 
 * Myenergi
 * Uptime
 * Powercalc
 
-## Mandatory Manual Adjustments to Config Yaml-Dashboard Yaml
+### Mandatory Manual Adjustments to Config Yaml & Dashboard Yaml
 You must edit and replace instances of Zappi number, Solax registration number, Octopus account details & IP address :
 * automations.yaml (automation files need to be cut and paste into your single automation.yaml)
 * templates.yaml
@@ -80,7 +79,7 @@ If you have previous used similar Solax automations/config be aware that some re
 ### Other Adjustments needed
 * In the solax package templates.yaml you must adjust the battery size to your battery size and set a flag indicating where your solax CT clamp is. (notes are in the yaml)
 
-## Adding the Dashboards
+### Adding the Dashboards
 * Copy the contents of Solax & Octopus Settings.yaml
 * Replace zappi_XXXXXXXX with your Zappi number
 * Replace z_ZZZZZZZZ with your Octopus account number
@@ -93,12 +92,6 @@ If you have previous used similar Solax automations/config be aware that some re
 * Replace the contents with your prepared yaml
 * Click Save
 * Click Done
-
-## Still to be Tested
-### 6001 - Octopus - Free Electric Automation
-Limited testing due to the amount of Free Electric Sessions I've been able to participate in. Use at own risk but reasonably confident it should work.
-### 5001 - Solax Zappi Octopus Control
-I've been unable to test what happens when Octopus Dispatches have multiple gaps where daily battery export may get fired. I suspect that the trigger for Zappi Plug Status Charging would fire and stop the discharge.
 
 ## Automation Function Summary
 Automations can take a long time to run. I wish it could be made to be more snappy but the rest_commands aren't reliable. The automations make use of an input_boolean.solax_automation_running set to true to indicate in the UI (and to other automations) that an automation is running. Please be patient and wait for the input_boolean to go off before assuming the automation failed. On the dashboard it should turn red whilst something is running.
@@ -232,6 +225,7 @@ Automations can take a long time to run. I wish it could be made to be more snap
 <li>I've seen a Zappi plug status 'Fault' twice during the development. The first time it occurred the Zappi required physical interaction. Myenergi ignored my request of support but googling led me to conclude the fault was due to the connecter interface lead between the main board and the display wasn't properly connected. The second time it recovered and plug status went from 'Fault' to 'Charging'. Both instances occurred whilst attempting to start charging. Whilst I've attempted to account for these scenarios in the automations, no guarantees.</li>
 <li>Solax rest commands are slow and somewhat unreliable, stacking them is tricky, methods to tackle this have already been demonstrated in https://community.home-assistant.io/t/solax-x1-hybrid-g4-local-cloud-api/506172<br />solax_local_settings_payload and solax_local_realtime_payload sometimes returns empty or 0's in the payload. Not sure how to overcome this but it can cause some unreliability in automations. Even with the loop retry methods employed, failures to correctly set the inverter can slip past the loop protection undetected. An attempt to protect from failures are the delays introduced in the top of the automation variables (saves searching through and adjusting every instance)</li>
 <li>Reboots/restarts can trigger the main automation, I've used an integration called "uptime" to check if the last reboot was within last 80 seconds.</li>
+<li>Battery Warming - Even through the official web ui I've seen issues/errors which won't allow the setting times or enabling/disabling the option. The first time I paniced and thought my rest command had broken the inverter so tried rebooting it. This didn't work. After leaving it alone for sometime (about 12 hours) everything was back to normal and settings could be adjusted again. Strange</li>
 </ol>
 
 ## Equipment Used During Development
