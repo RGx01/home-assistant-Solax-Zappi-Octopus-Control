@@ -3,8 +3,9 @@
 # replace zappi serial number zappi_XXXXXXXX
 #
 # Change log
-# v2.1.3 Moved the free elecreic tarriff template to octopus saving sessions package
-# v2.1.1 Fixed template bug with tariff select
+# v2.1.4 Updated ev_start_time logic.
+# v2.1.3 moved the free elecreic tarriff template to octopus saving sessions package
+# v2.1.1 fixed template bug with tariff select
 # v2.1 Added template triggers for tariffs
 # v2.0 Added mobile notifications
 ###############################################
@@ -93,9 +94,10 @@ solax_zappi_octopus_templates:
         - name: EV Start Time
           unique_id: ev_start_time
           device_class: "timestamp"
+          # {% set starttime = [states('sensor.don_t_charge_ev_before_time_wobble'),states('sensor.solar_export_threshold')] | max %}
           state: >
             {% if states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'on' %}
-              {% set starttime = [states('sensor.don_t_charge_ev_before_time_wobble'),states('sensor.solar_export_threshold')] | max %}
+              {% set starttime = states('sensor.solar_export_threshold') %}
             {% elif states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'off' %}
               {% set starttime = states('sensor.don_t_charge_ev_before_time_wobble') %}
             {%else %}
