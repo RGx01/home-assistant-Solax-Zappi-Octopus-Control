@@ -1,15 +1,16 @@
 - id: '5001'
-  alias: Solax Zappi Octopus Control
+  alias: 5001 - Solax Zappi Octopus Control
   description: "# 5001 - Solax Zappi Octopus Control\nSee documentation in repo.\n\n#
     Initial installation instructions\n1. This is 5001 only you need 5002 5003 5004
     and 5005. files are kept seperate in repo for ease of maintenance\n2. Find and
     replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus account\n3.
-    Paste into your automations.yaml\n\n# Change Log\nv2.1.3.1 fixed missing scenario
-    where min_SoC would not be set properly at 23:30 or if FAST charging was selected.\nv2.1.3
-    More readable notifications\nv2.1.1 Update dispatch trigger for octopus dispatch
-    from on to off rather than just to off. false triggers when sensor is unavailable
-    \nv2.1 updated setting of modes and SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0
-    Remove legacy dev work"
+    Paste into your automations.yaml\n\n# Change Log\nv2.1.4 Renamed automation\nv2.1.3.1
+    fixed missing scenario where min_SoC would not be set properly at 23:30 or if
+    FAST charging was selected.\nv2.1.3 More readable notifications\nv2.1.1 Update
+    dispatch trigger for octopus dispatch from on to off rather than just to off.
+    false triggers when sensor is unavailable \nv2.1 updated setting of modes and
+    SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0 Remove legacy dev
+    work"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status

@@ -12,7 +12,13 @@ sections:
         heading_style: title
         badges:
           - type: entity
+            show_state: true
+            show_icon: true
+            color: yellow
             entity: sensor.octopus_energy_z_ZZZZZZZZ_octoplus_points
+            tap_action:
+              action: url
+              url_path: https://octopus.energy/dashboard/new/octopoints
           - type: entity
             show_state: false
             show_icon: true
@@ -24,9 +30,12 @@ sections:
       - type: entities
         entities:
           - entity: automation.octopus_saving_sessions_automation
+            state_color: true
           - entity: input_number.octopus_saving_session_prep_time
           - entity: input_number.octopus_saving_session_target_battery_charge_soc
           - entity: input_number.octopus_saving_session_target_battery_soc
+          - entity: input_boolean.octopus_saving_session_get_dispatch_in_prep
+          - entity: input_boolean.octopus_saving_session_get_dispatch_after
           - entity: input_select.saving_session_today
           - entity: input_datetime.saving_session_start
           - entity: input_datetime.saving_session_end
@@ -53,6 +62,7 @@ sections:
       - type: entities
         entities:
           - entity: automation.octopus_free_electric_automation
+            state_color: true
           - entity: input_datetime.octopus_free_electricity_start
           - entity: sensor.octopus_free_electric_stop
             secondary_info: none

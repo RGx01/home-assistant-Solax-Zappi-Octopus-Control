@@ -1,10 +1,11 @@
 - id: '5003'
-  alias: Solax Set UI Options
+  alias: 5003 - Solax Set UI Options
   description: "Populate UI with Solax Settings\n\n# AUTOMATION 5003 \n1. This is
     5003 only you need 5001 5002 5004 and 5005. files are kept seperate in repo for
     ease of maintenance\n2. Copy and Paste into your automations.yaml\n\n# Change
-    log\nv2.1.0 \n*Allow queued runs so UI looks a bit more seemless when updating
-    the inverter settings\n*Added battery warmer controls\nV2.0 Revamp\nv1.0 Initial"
+    log\nv2.1.4 Renamed automation\nv2.1.0 \n*Allow queued runs so UI looks a bit
+    more seemless when updating the inverter settings\n*Added battery warmer controls\nV2.0
+    Revamp\nv1.0 Initial"
   triggers:
   - entity_id:
     - input_number.solax_feed_in_battery_min_soc
