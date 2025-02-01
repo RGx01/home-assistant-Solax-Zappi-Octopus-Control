@@ -3,6 +3,7 @@
 # replace zappi serial number zappi_XXXXXXXX
 #
 # Change log
+# v3.0.0 Event based trigger for solax discharge to handle discharging before an EV Charge
 # v2.1.4 Updated ev_start_time logic.
 # v2.1.3 moved the free elecreic tarriff template to octopus saving sessions package
 # v2.1.1 fixed template bug with tariff select
@@ -33,6 +34,20 @@ solax_zappi_octopus_templates:
           state: >
             {% set wobble = states('sensor.wobble')|int(default=0)%}
             {{((today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_timestamp + (wobble|int*60))|as_datetime).isoformat()}}
+
+    ######################################################
+    # Earliest EV Start Time
+    ######################################################
+    - sensor:
+        - name: Earliest EV start time 
+          unique_id: 3d61ba31-cdf6-4c86-86ea-98c70dee849f
+          device_class: "timestamp"
+          state: >
+            {%set target_time = states('sensor.intelligent_target_time')|as_timestamp%}
+            {%set target_percentage = states('number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target')%}
+            {%set ev_size = states('input_number.ev_battery_size')|int(default=10) %}
+            {%set delta_time = ((ev_size|int/7)*(target_percentage|int/100))*60*60%}
+            {{(target_time-delta_time)|as_datetime}}
 
     ######################################################
     # Solar threshold calcs
@@ -431,4 +446,30 @@ solax_zappi_octopus_templates:
             entity_id: select.monthly_grid_import
             option: "peak"
 ######################################################
+
+    ######################################################
+    # Binary Sensor triggered by events to allow Solax discharge
+    # to occur prior to getting a dispatch
+    # 5001 check if input_boolean.daily_battery_export_before_ev_charge
+    # is on when it's time to start charging. If it is on, 5001 selects a path to start
+    # discharging and an event is fired that sets this binary_senor to on.
+    # When 5002 catches the min SoC, it also confirms if this binary_sensor is on,
+    # if it is then it sets it to off.
+    # Setting this binary sensor from on to off is a trigger in 5001 to start charging.
+    ######################################################
+
+    - trigger:
+        - trigger: event
+          event_type: solax_discharge
+          event_data:
+            battery_discharge: "discharge before EV charge"
+        - trigger: event
+          event_type: solax_discharge
+          event_data:
+            battery_discharge: "do nothing"
+      binary_sensor:
+        - name: Solax Discharge Before EV Charge
+          unique_id: 2e2346fe-8a52-4465-b3b4-4445fe9632a5
+          state: >
+            {{true if trigger.event.data.battery_discharge == "discharge before EV charge" else false}}
 

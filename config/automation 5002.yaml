@@ -7,8 +7,10 @@
     Initial installation instructions\n1. This is 5002 only you need 5001 5003 5004
     and 5005. files are kept seperate in repo for ease of maintenance\n2. replace
     z_ZZZZZZZZ with your Octopus Account Number\n3. Copy and Paste into your automations.yaml\n\n#
-    Change log\nv2.1.4 Renamed automation\nv2.1.0 - Changes to limits to catch the
-    battery closer to the required threshold set by user\nv2.0.0 -productionisation\n"
+    Change log\nv3.0.0 Set an event to trigger EV charging if binary_sensor.\nSolax
+    Discharge Before EV Charge is on to off\nv2.1.4 Renamed automation\nv2.1.0 - Changes
+    to limits to catch the battery closer to the required threshold set by user\nv2.0.0
+    -productionisation\n"
   triggers:
   - entity_id:
     - sensor.solax_local_battery_soc
@@ -148,6 +150,19 @@
           title: Battery Export
           class: normal
         enabled: true
+      - if:
+        - condition: state
+          entity_id: binary_sensor.solax_discharge_before_ev_charge
+          state: 'on'
+        then:
+        - delay:
+            hours: 0
+            minutes: 1
+            seconds: 0
+        - event: solax_discharge
+          event_data:
+            battery_discharge: do nothing
+          enabled: true
     - conditions:
       - condition: trigger
         id:

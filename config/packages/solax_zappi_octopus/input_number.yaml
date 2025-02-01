@@ -68,3 +68,13 @@ solax_zappi_octopus_input_number:
       step: 1
       mode: box
       icon: mdi:battery-90
+    # ev_battery size (used for checking if it's possible to get a dispatch if you want to discharge battery prior to charging EV)
+    ev_battery_size:
+      name: Registered EV Battery Size
+      unit_of_measurement: "kWh"
+      #initial: 87
+      min: 10
+      max: 200
+      step: 1
+      mode: box
+      icon: mdi:car-battery
