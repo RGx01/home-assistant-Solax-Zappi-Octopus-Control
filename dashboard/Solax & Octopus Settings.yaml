@@ -100,6 +100,7 @@ sections:
             name: Intelligent Smart Charge
           - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
             name: Zappi Charge Mode
+          - entity: input_number.ev_battery_size
         show_header_toggle: false
         state_color: true
         header:
@@ -111,6 +112,7 @@ sections:
         entities:
           - entity: input_boolean.solax_zappi_octopus_control_notifications
             name: All Automation Notifications
+            state_color: true
           - entity: input_select.solax_automation_notification_devices
   - type: grid
     cards:
@@ -159,6 +161,8 @@ sections:
           - entity: input_boolean.ev_solax_battery_drain
             state_color: true
           - entity: input_boolean.export_battery
+            state_color: true
+          - entity: input_boolean.export_battery_prior
             state_color: true
           - entity: input_select.solax_default_mode
           - entity: input_number.solax_default_discharge_limit_soc
@@ -239,6 +243,10 @@ sections:
           - entity: input_datetime.solax_battery_stop_charge_time
           - entity: input_boolean.solaxchargeperiod2
             state_color: true
+        header:
+          type: graph
+          entity: sensor.solax_local_house_load_power
+          detail: 2
       - type: entities
         show_header_toggle: false
         entities:
@@ -349,6 +357,11 @@ sections:
           - entity: input_datetime.solax_battery_stop_charge_time
           - entity: input_boolean.solaxchargeperiod2
             state_color: true
+        header:
+          type: graph
+          entity: sensor.solax_local_house_load_power
+          detail: 2
+        state_color: true
       - type: entities
         show_header_toggle: false
         entities:
