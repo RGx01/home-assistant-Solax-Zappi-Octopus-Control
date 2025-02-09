@@ -53,7 +53,7 @@ solax_templates:
                 {{ (state_attr('sensor.solax_local', 'type')) }}
               {% endif %}
             Data: >-
-              {% if state_attr('sensor.solax_rest_local', 'Data')|length > 0 or states('sensor.solax_rest_local') not in ['unknown', 'unavailable','none'] %}
+              {% if state_attr('sensor.solax_rest_local', 'Data')|length > 30 or states('sensor.solax_rest_local') not in ['unknown', 'unavailable','none'] %}
                 {{ (state_attr('sensor.solax_rest_local', 'Data')) }}
               {% else %}
                 {{ (state_attr('sensor.solax_local', 'Data')) }}

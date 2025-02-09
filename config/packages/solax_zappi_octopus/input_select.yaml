@@ -30,5 +30,12 @@ solax_zappi_octopus_input_select:
     solax_automation_notification_devices:
       name: Notify Mobile Device
       options:
-        - None
+        - None Selected
       icon: mdi:cellphone-sound
+    zappi_default_behaviour:
+      name: Zappi Default Behaviour
+      options:
+        - Full Octopus Control
+        - Charge After Sunset
+        - Charge After Set Time
+      icon: mdi:ev-station

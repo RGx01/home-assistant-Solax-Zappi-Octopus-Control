@@ -1,6 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
-# v2.1.3 Various enhancments to go with the release
+# v3.0.0 Various enhancments to go with the release
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -83,13 +83,13 @@ sections:
               action: more-info
       - type: entities
         entities:
+          - entity: sensor.ev_start_time
+            format: time
           - entity: input_boolean.zappi_eco_mode_override
             state_color: true
           - entity: input_boolean.solar_export_priority
             state_color: true
           - entity: input_number.sun_degrees_above_horizon
-          - entity: sensor.solar_export_threshold
-            format: time
           - entity: input_datetime.don_t_charge_ev_before_time
           - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
             name: Intelligent Charge Target
@@ -100,7 +100,6 @@ sections:
             name: Intelligent Smart Charge
           - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
             name: Zappi Charge Mode
-          - entity: input_number.ev_battery_size
         show_header_toggle: false
         state_color: true
         header:
@@ -160,18 +159,19 @@ sections:
             state_color: true
           - entity: input_boolean.ev_solax_battery_drain
             state_color: true
-          - entity: input_boolean.export_battery
-            state_color: true
           - entity: input_boolean.export_battery_prior
             state_color: true
+          - entity: input_number.solax_discharge_limit_soc_before_ev
+          - entity: input_boolean.export_battery
+            state_color: true
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
           - entity: input_select.solax_default_mode
           - entity: input_number.solax_default_discharge_limit_soc
           - entity: input_number.solax_default_charge_to_limit_soc
       - type: entities
         entities:
-          - entity: input_button.solax_stop_discharge
           - entity: input_button.solax_force_discharge
-          - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: input_button.solax_stop_discharge
         grid_options:
           columns: 18
           rows: auto
