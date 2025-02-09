@@ -448,26 +448,31 @@ sections:
             color: accent
             tap_action:
               action: more-info
+      - type: history-graph
+        entities:
+          - entity: select.daily_grid_import
+            name: Log
+        fit_y_data: true
+        hours_to_show: 48
+        grid_options:
+          columns: 36
+          rows: auto
       - title: Solax Energy
         type: history-graph
         hours_to_show: 48
         entities:
-          - entity: sensor.solax_local_battery_remain_energy
-          - entity: sensor.daily_manual_battery_export
-          - entity: sensor.export_daily
           - entity: sensor.daily_grid_stored
-          - entity: sensor.daily_self_consumed
-          - entity: sensor.daily_battery_use
           - entity: sensor.daily_solar_stored
           - entity: sensor.daily_house_load
+          - entity: sensor.daily_self_consumed
+          - entity: sensor.daily_battery_use
+          - entity: sensor.daily_manual_battery_export
+          - entity: sensor.export_daily
+          - entity: sensor.solax_local_battery_remain_energy
         grid_options:
           columns: 36
           rows: auto
         fit_y_data: true
-    column_span: 3
-  - cards:
-      - type: heading
-        heading_style: title
       - title: SoC
         type: history-graph
         hours_to_show: 48
