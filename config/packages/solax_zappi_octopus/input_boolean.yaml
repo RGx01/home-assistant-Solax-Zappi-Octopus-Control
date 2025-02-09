@@ -48,7 +48,7 @@ solax_zappi_octopus_input_boolean:
       icon: mdi:battery-arrow-down
     #Attempt to discharge battery before charging EV
     export_battery_prior:
-      name: Daily Battery Export Before EV Charge
+      name: Export Battery Before Charging EV
       icon: mdi:battery-arrow-down
     #Notify a mobile device_tracker
     nofify_mobile:

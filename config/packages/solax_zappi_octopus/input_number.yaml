@@ -43,7 +43,16 @@ solax_zappi_octopus_input_number:
       icon: mdi:battery-charging-20
     #Manual forced discharge limit
     solax_manual_forced_discharge_limit_soc:
-      name: Forced Discharge SoC
+      name: Daily/Forced Discharge SoC
+      #initial: 18
+      min: 20
+      max: 80
+      step: 1
+      mode: box
+      icon: mdi:battery-20
+    #Manual forced discharge limit
+    solax_discharge_limit_soc_before_ev:
+      name: Discharge to SoC (Before charging EV)
       #initial: 18
       min: 20
       max: 80
