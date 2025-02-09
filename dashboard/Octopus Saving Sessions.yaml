@@ -1,5 +1,5 @@
 # replace z_ZZZZZZZZ with your octopus account
-# v2.1.3 
+# v3.0.0
 type: sections
 path: octopus-saving-sessions
 max_columns: 4
