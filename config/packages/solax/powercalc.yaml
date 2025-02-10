@@ -1,5 +1,6 @@
 # Local SOLAX #
 # Note: power_sensor_id is specified to avoid duplicating the power sensor
+# v3.0.0 Added battery in from grid (stored from grid)
 solax_powercalc:
   powercalc:
     sensors:
@@ -32,6 +33,12 @@ solax_powercalc:
         name: Solax Local Battery In From Solar Aggregated
         fixed:
           power: "{{states('sensor.solax_local_battery_in_from_solar')}}"
+
+      - entity_id: sensor.solax_local_battery_use_in_from_grid
+        power_sensor_id: sensor.solax_local_battery_use_in_from_grid
+        name: Solax Local Battery In From Grid Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_battery_use_in_from_grid')}}"
 
       - entity_id: sensor.solax_local_battery_use_in
         power_sensor_id: sensor.solax_local_battery_use_in

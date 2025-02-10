@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v3.0.1 Added new charting params
 # v3.0.0 Various enhancments to go with the release
 type: sections
 max_columns: 3
@@ -461,6 +462,7 @@ sections:
         type: history-graph
         hours_to_show: 48
         entities:
+          - entity: sensor.daily_total_stored
           - entity: sensor.daily_grid_stored
           - entity: sensor.daily_solar_stored
           - entity: sensor.daily_house_load
@@ -473,6 +475,23 @@ sections:
           columns: 36
           rows: auto
         fit_y_data: true
+      - title: Solax Power
+        type: history-graph
+        hours_to_show: 48
+        entities:
+          - entity: sensor.solax_local_battery_use_in
+          - entity: sensor.solax_local_battery_use_in_from_grid
+          - entity: sensor.solax_local_battery_in_from_solar
+          - entity: sensor.solax_local_load_power
+          - entity: sensor.solax_local_self_consumption_power
+          - entity: sensor.solax_local_battery_power
+          - entity: sensor.solax_local_battery_dump_power
+          - entity: sensor.solax_local_grid_export_power
+          - entity: sensor.solax_local_grid_used_power
+          - entity: sensor.solax_local_pv_output
+        grid_options:
+          columns: 36
+          rows: auto
       - title: SoC
         type: history-graph
         hours_to_show: 48

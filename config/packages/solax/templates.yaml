@@ -12,6 +12,7 @@ solax_templates:
     ######################################################
     # Change log
     ######################################################
+    # v3.0.0 Added calc for battery in from grid
     # v2.1.4 Improved resilience to sensors reporting defaults/template warnings in logs
     #        due to invalid/empty rest responses.
     # v2.1.3.1 Tidy yaml
@@ -372,12 +373,24 @@ solax_templates:
           state_class: measurement
           device_class: "power"
 
-        # Battery in power (charing)
+        # Battery in power (charging)
         - name: "Solax Local Battery Use In"
           unique_id: solax_local_battery_use_in
           state: >
             {% set bat = states('sensor.solax_local_battery_power')|int(default=0) %}
             {{ bat if is_number(bat) and (bat|int > 0) else 0 }}
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+          icon: mdi:battery
+
+        # Battery in power (charging from grid)
+        - name: "Solax Local Battery Use In From Grid"
+          unique_id: solax_local_battery_use_in_from_grid
+          state: >
+            {% set bat = states('sensor.solax_local_battery_power')|int(default=0) %}
+            {% set gridPwr = states('sensor.solax_local_grid_power')|int(default=0) %} 
+            {{ bat if is_number(bat) and (bat|int > 0 and gridPwr > 0) else 0 }}
           unit_of_measurement: "W"
           state_class: measurement
           device_class: "power"

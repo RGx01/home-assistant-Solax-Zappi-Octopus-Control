@@ -12,6 +12,8 @@
 # Automations should be added to detect which EV is plugged in and switch tariff
 # Automations should be added to detect which tariff is applicable and apply tariff to the meter
 ##############################################################
+# v3.0.0 utility meter for battery in from grid (grid stored renamed to AC stored)
+##############################################################
 
 solax_utilitymeter:
   utility_meter:
@@ -156,15 +158,43 @@ solax_utilitymeter:
     ##########################################################
     # Battery Storage Meters
     ##########################################################
+    daily_grid_ac_stored:
+      unique_id: 63db6613-5e94-4491-b395-068f46609a4b
+      source: sensor.solax_local_inverter_in_aggregated_energy
+      name: Daily Grid AC Stored
+      cycle: daily
+
+    monthly_grid_ac_stored:
+      unique_id: a6892fe5-0de5-4020-b2ed-4ad493ec0f17
+      source: sensor.solax_local_inverter_in_aggregated_energy
+      name: Monthly Grid AC Stored
+      cycle: monthly
+      offset:
+        days: 2
+
+    daily_total_stored:
+      unique_id: 5ac3f1f7-0551-4228-a005-fdb62eb0e260
+      source: sensor.solax_local_battery_in_aggregated_energy
+      name: Daily Total Stored
+      cycle: daily
+
+    monthly_total_stored:
+      unique_id: c59d79e1-8bd6-4767-b5de-a1fdfa18930a
+      source: sensor.solax_local_battery_in_aggregated_energy
+      name: Monthly Total Stored
+      cycle: monthly
+      offset:
+        days: 2
+
     daily_grid_stored:
       unique_id: 6fd43d8e-fe8e-41a0-9d8d-db0ad3771e97
-      source: sensor.solax_local_inverter_in_aggregated_energy
+      source: sensor.solax_local_battery_in_from_grid_aggregated_energy
       name: Daily Grid Stored
       cycle: daily
 
     monthly_grid_stored:
       unique_id: 5f2b788b-54ca-4ccb-b5fb-074ad96dce7e
-      source: sensor.solax_local_inverter_in_aggregated_energy
+      source: sensor.solax_local_battery_in_from_grid_aggregated_energy
       name: Monthly Grid Stored
       cycle: monthly
       offset:
