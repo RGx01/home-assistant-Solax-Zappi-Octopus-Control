@@ -1,3 +1,6 @@
+###############################
+# V3.0.0 Added Units
+###############################
 solax_zappi_octopus_input_number:
   input_number:
     # Solax UI
@@ -11,6 +14,7 @@ solax_zappi_octopus_input_number:
       icon: mdi:weather-sunset-down
     solax_feed_in_charge_to_soc:
       name: Feed In Charge to SoC
+      unit_of_measurement: "%"
       #initial: 90
       min: 30
       max: 100
@@ -19,6 +23,7 @@ solax_zappi_octopus_input_number:
       icon: mdi:battery-charging-100
     solax_feed_in_battery_min_soc:
       name: Feed In Min SoC
+      unit_of_measurement: "%"
       #initial: 15
       min: 15
       max: 100
@@ -27,6 +32,7 @@ solax_zappi_octopus_input_number:
       icon: mdi:battery-charging-20
     solax_selfuse_charge_to_soc:
       name: Self Use Charge to SoC
+      unit_of_measurement: "%"
       #initial: 90
       min: 30
       max: 100
@@ -35,6 +41,7 @@ solax_zappi_octopus_input_number:
       icon: mdi:battery-charging-100
     solax_selfuse_battery_min_soc:
       name: Self Use Min SoC
+      unit_of_measurement: "%"
       #initial: 15
       min: 15
       max: 100
@@ -44,6 +51,7 @@ solax_zappi_octopus_input_number:
     #Manual forced discharge limit
     solax_manual_forced_discharge_limit_soc:
       name: Daily/Forced Discharge SoC
+      unit_of_measurement: "%"
       #initial: 18
       min: 20
       max: 80
@@ -53,6 +61,7 @@ solax_zappi_octopus_input_number:
     #Manual forced discharge limit
     solax_discharge_limit_soc_before_ev:
       name: Discharge to SoC (Before charging EV)
+      unit_of_measurement: "%"
       #initial: 18
       min: 20
       max: 80
@@ -62,6 +71,7 @@ solax_zappi_octopus_input_number:
     #Default Min SoC discharge limit
     solax_default_discharge_limit_soc:
       name: Default Minimum SoC
+      unit_of_measurement: "%"
       #initial: 18
       min: 15
       max: 100
@@ -71,6 +81,7 @@ solax_zappi_octopus_input_number:
     #Default Charge to SoC
     solax_default_charge_to_limit_soc:
       name: Default Charge to SoC
+      unit_of_measurement: "%"
       #initial: 18
       min: 15
       max: 100

@@ -495,11 +495,15 @@ sections:
         type: history-graph
         hours_to_show: 48
         entities:
-          - sensor.solax_local_battery_soc
-          - sensor.solax_local_selfuse_battery_min_soc
-          - sensor.solax_local_feed_in_battery_min_soc
-          - sensor.solax_local_selfuse_battery_chrg_frm_grd_to
-          - sensor.solax_local_feed_in_battery_charge_from_grid_to
+          - entity: sensor.solax_local_selfuse_battery_min_soc
+          - entity: sensor.solax_local_feed_in_battery_min_soc
+          - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to
+          - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
+          - entity: input_number.solax_default_charge_to_limit_soc
+          - entity: input_number.solax_default_discharge_limit_soc
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: input_number.solax_discharge_limit_soc_before_ev
+          - entity: sensor.solax_local_battery_soc
         grid_options:
           columns: 36
           rows: auto
