@@ -1161,95 +1161,100 @@
       - condition: trigger
         id:
         - Normal Stop Discharge
+      - condition: state
+        entity_id: input_boolean.export_battery_prior
+        state: 'on'
       sequence:
-      - if:
-        - condition: state
-          entity_id: binary_sensor.solax_discharge_before_ev_charge
-          state: 'on'
-        then:
-        - repeat:
-            sequence:
-            - data:
-                value: '{{default_mode}}'
-              action: rest_command.solax_local_set_inverter_mode
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{mode_delay}}'
-                milliseconds: 0
-            - data:
-                value: 0
-              action: rest_command.solax_local_set_manual_mode_behaviour
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{mode_delay}}'
-                milliseconds: 0
-            - action: homeassistant.update_entity
-              data:
-                entity_id:
-                - sensor.solax_rest_local_settings
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{refresh_settings_delay}}'
-                milliseconds: 0
-            until:
-            - condition: template
-              value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-                == default_mode) or repeat.index == 3 }}'
-        - event: Solax Zappi Octopus Control
-          event_data:
-            message: 'Discharge finished @ {{now().strftime(''%H:%M'')}}. '
-            title: Battery Export
-            class: normal
-          enabled: true
-        - delay:
-            hours: 0
-            minutes: 1
-            seconds: 0
-        - event: solax_discharge
-          event_data:
-            battery_discharge: do nothing
-          enabled: true
-        else:
-        - repeat:
-            sequence:
-            - data:
-                value: '{{default_mode}}'
-              action: rest_command.solax_local_set_inverter_mode
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{mode_delay}}'
-                milliseconds: 0
-            - data:
-                value: 0
-              action: rest_command.solax_local_set_manual_mode_behaviour
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{mode_delay}}'
-                milliseconds: 0
-            - action: homeassistant.update_entity
-              data:
-                entity_id:
-                - sensor.solax_rest_local_settings
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: '{{refresh_settings_delay}}'
-                milliseconds: 0
-            until:
-            - condition: template
-              value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-                == default_mode) or repeat.index == 3 }}'
-        - event: Solax Zappi Octopus Control
-          event_data:
-            message: 'Discharge finished @ {{now().strftime(''%H:%M'')}}. '
-            title: Battery Export
-            class: normal
-          enabled: true
+      - repeat:
+          sequence:
+          - data:
+              value: '{{default_mode}}'
+            action: rest_command.solax_local_set_inverter_mode
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{mode_delay}}'
+              milliseconds: 0
+          - data:
+              value: 0
+            action: rest_command.solax_local_set_manual_mode_behaviour
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{mode_delay}}'
+              milliseconds: 0
+          - action: homeassistant.update_entity
+            data:
+              entity_id:
+              - sensor.solax_rest_local_settings
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{refresh_settings_delay}}'
+              milliseconds: 0
+          until:
+          - condition: template
+            value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
+              == default_mode) or repeat.index == 3 }}'
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: 'Discharge finished @ {{now().strftime(''%H:%M'')}}. '
+          title: Battery Export
+          class: normal
+        enabled: true
+      - delay:
+          hours: 0
+          minutes: 1
+          seconds: 0
+      - event: solax_discharge
+        event_data:
+          battery_discharge: do nothing
+        enabled: true
+    - conditions:
+      - condition: trigger
+        id:
+        - Normal Stop Discharge
+      - condition: state
+        entity_id: binary_sensor.solax_discharge_before_ev_charge
+        state: 'off'
+      sequence:
+      - repeat:
+          sequence:
+          - data:
+              value: '{{default_mode}}'
+            action: rest_command.solax_local_set_inverter_mode
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{mode_delay}}'
+              milliseconds: 0
+          - data:
+              value: 0
+            action: rest_command.solax_local_set_manual_mode_behaviour
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{mode_delay}}'
+              milliseconds: 0
+          - action: homeassistant.update_entity
+            data:
+              entity_id:
+              - sensor.solax_rest_local_settings
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{refresh_settings_delay}}'
+              milliseconds: 0
+          until:
+          - condition: template
+            value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
+              == default_mode) or repeat.index == 3 }}'
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: 'Discharge finished @ {{now().strftime(''%H:%M'')}}. '
+          title: Battery Export
+          class: normal
+        enabled: true
     - conditions:
       - condition: trigger
         id:
