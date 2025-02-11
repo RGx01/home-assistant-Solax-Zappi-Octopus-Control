@@ -2495,12 +2495,16 @@
     before session.\nDischarges Battery in the session and stops Zappi.\nReturns to
     normal operation.\n\n# Initial config instructions\n1. Find and replace:\nzappi_XXXXXXXX
     with your zappi number, \nz_ZZZZZZZZ with Octopus account\n2. Paste into your
-    automations.yaml\n\n# Change log\nv2.1.4 - Renamed automation\n            - Added
-    ability to optionally try for a Dispatch during battery prep.\n             -
-    Added ability to optionally try for a Dispatch once the Saving Session finishes.\nv2.1.3
-    - Added Prep options and ability to stop the battery prep once battery is at target
-    SoC\nv2.1 - Removed legacy dev work\nv2.0 - Rework for manual joining\nv1.1 -
-    Initial"
+    automations.yaml\n\n# Change log\nv3.0.0 - Fixed bug where if someone uses charge
+    period 2 outside of a saving session and the EV is charging, when charge period
+    2 ends the EV stops charging. I've purposefully left the functionality to disable
+    charge period 2 when it ends as it's quite useful if users forget to disable it
+    for the next day. I've made the assumption that most users only use charge period
+    1 for daily charging.\nv2.1.4 - Renamed automation\n            - Added ability
+    to optionally try for a Dispatch during battery prep.\n             - Added ability
+    to optionally try for a Dispatch once the Saving Session finishes.\nv2.1.3 - Added
+    Prep options and ability to stop the battery prep once battery is at target SoC\nv2.1
+    - Removed legacy dev work\nv2.0 - Rework for manual joining\nv1.1 - Initial"
   triggers:
   - event_type: octopus_energy_new_octoplus_saving_session
     trigger: event
@@ -2843,6 +2847,14 @@
         - condition: state
           entity_id: sensor.zappi_plug_status
           state: Charging
+        - condition: or
+          conditions:
+          - condition: state
+            entity_id: input_select.saving_session_today
+            state: 'yes'
+          - condition: state
+            entity_id: input_boolean.octopus_saving_session_manual
+            state: 'on'
         then:
         - metadata: {}
           data:
