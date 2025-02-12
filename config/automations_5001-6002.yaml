@@ -1310,14 +1310,19 @@
       - condition: trigger
         id:
         - Saving Session Stop Discharge
-      - condition: state
-        entity_id: input_select.saving_session_today
-        state: 'yes'
       - condition: time
         after: 05:30:00
         before: '23:30:00'
       - condition: time
         after: input_datetime.saving_session_start
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: input_boolean.octopus_saving_session_manual
+          state: 'on'
+        - condition: state
+          entity_id: input_select.saving_session_today
+          state: 'yes'
       sequence:
       - repeat:
           sequence:
@@ -2569,12 +2574,17 @@
       mode_delay: 15
       settings_delay: 15
       refresh_settings_delay: 10
+      saving_session_event_entity: event.octopus_energy_z_ZZZZZZZZ_octoplus_saving_session_events
   - choose:
     - conditions:
       - condition: trigger
         id:
         - Octopus New Saving Session
       sequence:
+      - condition: template
+        value_template: '{{ state_attr(saving_session_event_entity, ''available_events'')
+          != None and state_attr(saving_session_event_entity, ''available_events'')
+          | length > 0 }}'
       - data:
           event_code: '{{ state_attr(saving_session_event_entity, ''available_events'')[0][''code'']
             }}'
@@ -2698,13 +2708,19 @@
               seconds: '{{refresh_settings_delay}}'
           until:
           - condition: template
-            value_template: "{% set end_time = as_datetime(state_attr('input_datetime.saving_session_start',
-              'timestamp') - 60).strftime('%H:%M') %} \n{% set start_time =\n    as_datetime(state_attr('input_datetime.saving_session_start',
-              'timestamp') -\n    states('input_number.octopus_saving_session_prep_time')|int*60)
-              %} {{\n    start_time.hour + start_time.minute * 256 }}\n{{ (states('sensor.solax_local_battery_chd2_enabled')|bool==true
+            value_template: "    {% set end_time = as_datetime(state_attr('input_datetime.saving_session_start',
+              'timestamp') - 60).strftime('%H:%M') %} \n{% set start_time = as_datetime(state_attr('input_datetime.saving_session_start',
+              'timestamp') -60 - states('input_number.octopus_saving_session_prep_time')|int*60).strftime('%H:%M')
+              \ %} \n\n{{ (states('sensor.solax_local_battery_chd2_enabled')|bool==true
               \n    and states('sensor.solax_local_battery_setting_stop_charge_2')
               == end_time\n    and states('sensor.solax_local_battery_setting_start_charge_2')
               == start_time)\n    or repeat.index == 3 }}"
+      - action: select.select_option
+        metadata: {}
+        data:
+          option: 'yes'
+        target:
+          entity_id: input_select.saving_session_today
       - action: input_boolean.turn_off
         metadata: {}
         data: {}
