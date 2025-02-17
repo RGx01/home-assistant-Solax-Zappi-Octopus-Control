@@ -2672,7 +2672,7 @@
           - if:
             - condition: numeric_state
               entity_id: input_number.octopus_saving_session_prep_time
-              above: 5
+              above: 4
             then:
             - data:
                 enabled: '{{ 1 }}
