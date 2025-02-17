@@ -3039,14 +3039,8 @@
           entity_id: input_boolean.octopus_saving_session_manual
       - event: Solax Zappi Octopus Control
         event_data:
-          message: 'Octopus Saving Session ended @ {{now().strftime(''%H:%M'')}}.
-            Battery @
-
-            {{states(''sensor.solax_local_battery_soc'')}}%. Some Octopus/inverter
-
-            settings may need updating. Please check.
-
-            '
+          message: "Octopus Saving Session ended @ {{now().strftime('%H:%M')}}. Battery
+            @\n{{states('sensor.solax_local_battery_soc')}}%. \n"
           title: Saving Session Ended
           class: high
         enabled: true
