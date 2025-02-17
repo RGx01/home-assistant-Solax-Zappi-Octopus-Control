@@ -74,3 +74,4 @@ sections:
           - entity: sensor.solax_local_battery_setting_stop_charge_2
           - entity: binary_sensor.free_electricity_today
     column_span: 1
+

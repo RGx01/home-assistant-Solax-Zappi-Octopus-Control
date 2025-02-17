@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v3.0.4 Tidy up of charts
 # v3.0.3 Chart presentation improvement
 # v3.0.1 Added new charting params
 # v3.0.0 Various enhancments to go with the release
@@ -129,15 +130,6 @@ sections:
           - type: entity
             show_state: true
             show_icon: true
-            entity: input_boolean.solax_zappi_octopus_control_notifications
-            tap_action:
-              action: toggle
-            color: accent
-            name: Notifications
-            state_content: name
-          - type: entity
-            show_state: true
-            show_icon: true
             entity: sensor.solax_local_battery_soc
             state_content:
               - name
@@ -152,6 +144,10 @@ sections:
             entity: sensor.solax_local_battery_temperature
             tap_action:
               action: more-info
+            name: Battery Temp
+            state_content:
+              - name
+              - state
       - title: Solax Control
         type: entities
         show_header_toggle: false
@@ -417,6 +413,7 @@ sections:
             state_content:
               - name
               - state
+            name: Battery Temp
           - type: entity
             show_state: true
             show_icon: true
@@ -452,14 +449,14 @@ sections:
               action: more-info
       - title: Solax Energy
         type: history-graph
-        hours_to_show: 48
+        hours_to_show: 36
         entities:
           - entity: sensor.daily_total_stored
           - entity: sensor.daily_grid_stored
           - entity: sensor.daily_solar_stored
-          - entity: sensor.daily_house_load
-          - entity: sensor.daily_self_consumed
           - entity: sensor.daily_battery_use
+          - entity: sensor.daily_self_consumed
+          - entity: sensor.daily_house_load
           - entity: sensor.daily_manual_battery_export
           - entity: sensor.export_daily
           - entity: sensor.solax_local_battery_remain_energy
@@ -472,20 +469,20 @@ sections:
           - entity: select.daily_grid_import
             name: Log
         fit_y_data: true
-        hours_to_show: 48
+        hours_to_show: 36
         grid_options:
           columns: 36
           rows: auto
       - title: Solax Power
         type: history-graph
-        hours_to_show: 48
+        hours_to_show: 36
         entities:
           - entity: sensor.solax_local_battery_use_in
           - entity: sensor.solax_local_battery_use_in_from_grid
           - entity: sensor.solax_local_battery_in_from_solar
-          - entity: sensor.solax_local_house_load_power
-          - entity: sensor.solax_local_self_consumption_power
           - entity: sensor.solax_local_battery_power
+          - entity: sensor.solax_local_self_consumption_power
+          - entity: sensor.solax_local_house_load_power
           - entity: sensor.solax_local_battery_dump_power
           - entity: sensor.solax_local_grid_export_power
         grid_options:
@@ -493,7 +490,7 @@ sections:
           rows: auto
       - title: SoC
         type: history-graph
-        hours_to_show: 48
+        hours_to_show: 36
         entities:
           - entity: sensor.solax_local_selfuse_battery_min_soc
           - entity: sensor.solax_local_feed_in_battery_min_soc
@@ -524,7 +521,7 @@ sections:
         grid_options:
           columns: 36
           rows: auto
-        hours_to_show: 48
+        hours_to_show: 36
     column_span: 3
 cards: []
 badges: []

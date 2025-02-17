@@ -110,7 +110,7 @@ solax_zappi_octopus_templates:
     # Calculates the actual time to start EV based on various input_bool options
     ######################################################
     - sensor:
-        - name: EV Start Time
+        - name: Octopus Will Provide Next Schedule At
           unique_id: ev_start_time
           device_class: "timestamp"
           # {% set starttime = [states('sensor.don_t_charge_ev_before_time_wobble'),states('sensor.solar_export_threshold')] | max %}

@@ -93,21 +93,21 @@ solax_utilitymeter:
     ##########################################################
     # Self Use Meters
     ##########################################################
-    daily_self_use:
-      unique_id: 914793ba-642e-4bd1-a905-24355d68dd3b
-      source: sensor.solax_local_self_use_aggregated_energy
-      name: Daily Self Use
-      cycle: daily
-      net_consumption: true
+#    daily_self_use:
+#      unique_id: 914793ba-642e-4bd1-a905-24355d68dd3b
+#      source: sensor.solax_local_self_use_aggregated_energy
+#      name: Daily Self Use
+#      cycle: daily
+#      net_consumption: true
 
-    monthly_self_use:
-      unique_id: 725fe2a6-2bba-4c0b-acd0-fbc06794baaa
-      source: sensor.solax_local_self_use_aggregated_energy
-      name: Monthly Self Use
-      cycle: monthly
-      offset:
-        days: 2
-      net_consumption: true
+#    monthly_self_use:
+#      unique_id: 725fe2a6-2bba-4c0b-acd0-fbc06794baaa
+#      source: sensor.solax_local_self_use_aggregated_energy
+#      name: Monthly Self Use
+#      cycle: monthly
+#      offset:
+#        days: 2
+#      net_consumption: true
 
     daily_self_consumed:
       unique_id: 742374d5-2686-407c-b57d-c824f0b58636
@@ -301,7 +301,7 @@ solax_utilitymeter:
       periodically_resetting: true
       always_available: false
       tariffs:
-        - Corsa
+        - car1
         - Ariya
         - Guest
 
@@ -317,7 +317,7 @@ solax_utilitymeter:
       offset:
         days: 2
       tariffs:
-        - Corsa
+        - car1
         - Ariya
         - Guest
 

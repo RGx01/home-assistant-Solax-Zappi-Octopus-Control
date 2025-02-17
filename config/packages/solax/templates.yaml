@@ -306,6 +306,30 @@ solax_templates:
           device_class: "power"
           icon: mdi:battery
 
+     ### Estimated self-use energy ###
+#        - name: "Solax Local Self Use Aggregated Energy"
+#          unique_id: solax_local_self_use_aggregated_energy
+#          state: "{{ states('sensor.solax_local_inverter_aggregated_energy') | float(default=0) - states('sensor.solax_local_grid_export_aggregated_energy') | float(default=0) }}"
+#          unit_of_measurement: "kWh"
+#          device_class: "energy"
+#          state_class: total
+
+        # Self use Power
+#        - name: "Solax Local Self Use Power"
+#          unique_id: solax_local_self_use_power
+#          state: >
+#            {% if states('sensor.solax_local_inverter_power')|int(default=0) < 1000 and states('sensor.solax_local_inverter_power')|int(default=0) >0%}
+#            {% set invloss = 75 %}
+#            {% else %}
+#            {% set invloss =0 %}
+#            {% endif%}
+#            {% set val = states('sensor.solax_local_inverter_power')|int(default=0) + invloss - states('sensor.solax_local_grid_export_power')|int(default=0)%}
+#            {{ val if is_number(val) and (val|int > 0) else 0 }}
+#          unit_of_measurement: "W"
+#          state_class: measurement
+#          device_class: "power"
+#          icon: mdi:battery
+
         ### Battery current, voltage and temperature ###
         - name: "Solax Local Battery Voltage"
           unique_id: solax_local_battery_voltage
@@ -518,13 +542,7 @@ solax_templates:
           device_class: "power"
           state_class: measurement
 
-        ### Estimated self-use energy ###
-        - name: "Solax Local Self Use Aggregated Energy"
-          unique_id: solax_local_self_use_aggregated_energy
-          state: "{{ states('sensor.solax_local_inverter_aggregated_energy') | float(default=0) - states('sensor.solax_local_grid_export_aggregated_energy') | float(default=0) }}"
-          unit_of_measurement: "kWh"
-          device_class: "energy"
-          state_class: total
+   
 
         # Solar forecast for next day or current day (16:00 is cutover for next day)
         - name: energy_production_upcoming
