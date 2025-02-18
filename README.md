@@ -47,7 +47,8 @@ The project is split into 3 parts:
 | v2.1  | **19/1/25** | All |1. Revised Dashboards <br /> 2. Added Battery Warming controls <br /> 3. Added Mobile Notifications <br /> 4. New template sensors to switch utility meter tariffs peak/offpeak <br /> 5. General bug fixes in template sensors|
 
 ## Screenshots of Dashboards
-<img width="1441" alt="Screenshot 2025-02-18 at 05 55 03" src="https://github.com/user-attachments/assets/72c59812-8dec-4910-be2e-25464fdc1a8d" />
+<img wid![solaxzappioctopus](https://github.com/user-attachments/assets/bfd409ae-57bb-4a41-afd9-6ca7eb2dcd9b)
+th="1441" alt="Screenshot 2025-02-18 at 05 55 03" src="https://github.com/user-attachments/assets/72c59812-8dec-4910-be2e-25464fdc1a8d" />
 <img width="1375" alt="Screenshot 2025-02-09 at 15 58 07" src="https://github.com/user-attachments/assets/a092e4d9-3ecf-4916-aeb1-5000dc16c2dd" />
 <img width="1383" alt="Screenshot 2025-01-28 at 00 06 56" src="https://github.com/user-attachments/assets/ceebc259-8b7b-4d51-866f-246c647efdd2" />
 <img width="525" alt="Screenshot 2025-01-29 at 17 01 42" src="https://github.com/user-attachments/assets/4413fdbe-e1ce-46bd-a021-929edd766c1f" />
