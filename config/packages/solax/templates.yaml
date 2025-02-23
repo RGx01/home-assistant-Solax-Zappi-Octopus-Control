@@ -306,29 +306,6 @@ solax_templates:
           device_class: "power"
           icon: mdi:battery
 
-     ### Estimated self-use energy ###
-#        - name: "Solax Local Self Use Aggregated Energy"
-#          unique_id: solax_local_self_use_aggregated_energy
-#          state: "{{ states('sensor.solax_local_inverter_aggregated_energy') | float(default=0) - states('sensor.solax_local_grid_export_aggregated_energy') | float(default=0) }}"
-#          unit_of_measurement: "kWh"
-#          device_class: "energy"
-#          state_class: total
-
-        # Self use Power
-#        - name: "Solax Local Self Use Power"
-#          unique_id: solax_local_self_use_power
-#          state: >
-#            {% if states('sensor.solax_local_inverter_power')|int(default=0) < 1000 and states('sensor.solax_local_inverter_power')|int(default=0) >0%}
-#            {% set invloss = 75 %}
-#            {% else %}
-#            {% set invloss =0 %}
-#            {% endif%}
-#            {% set val = states('sensor.solax_local_inverter_power')|int(default=0) + invloss - states('sensor.solax_local_grid_export_power')|int(default=0)%}
-#            {{ val if is_number(val) and (val|int > 0) else 0 }}
-#          unit_of_measurement: "W"
-#          state_class: measurement
-#          device_class: "power"
-#          icon: mdi:battery
 
         ### Battery current, voltage and temperature ###
         - name: "Solax Local Battery Voltage"
@@ -520,14 +497,6 @@ solax_templates:
           device_class: "power"
           state_class: measurement
 
-        #        ### Expected household load (negative not expected as it only consumes energy) uses zappi voltage ###
-        #        - name: "Solax Local Load Amps"
-        #          unique_id: solax_local_load_amps
-        #          state: "{{ (states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | float(default=0))/states('sensor.myenergi_drive_voltage_grid')| float(default=240) }}"
-        #          unit_of_measurement: "A"
-        #          device_class: "current"
-        #          state_class: measurement
-
         - name: "Solax Local House Load Power"
           unique_id: solax_local_house_load_power
           # if your solax system can see load from zappi then set solax_can_see_zappi_load =1 elso set it to 0
@@ -541,8 +510,6 @@ solax_templates:
           unit_of_measurement: "W"
           device_class: "power"
           state_class: measurement
-
-   
 
         # Solar forecast for next day or current day (16:00 is cutover for next day)
         - name: energy_production_upcoming

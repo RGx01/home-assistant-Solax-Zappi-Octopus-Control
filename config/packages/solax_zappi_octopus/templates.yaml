@@ -239,9 +239,14 @@ solax_zappi_octopus_templates:
           attributes:
             Octopus_total_charge: >
               {% set ns = namespace( total_dispatch = 0 ) %}
+              {% if states('sensor.zappi_last_disconnected') in ['unknown', 'unavailable','none'] %}
+                {% set disconnected = now() %}
+              {% else %}
+                {% set disconnected = states('sensor.zappi_last_disconnected') %}
+              {%- endif-%}
                 {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') | length > 0) -%}
                   {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') -%}
-                    {%- if dispatch.start|as_timestamp > states('sensor.zappi_last_disconnected')|as_timestamp and dispatch.start|as_timestamp < states('sensor.zappi_last_connected')|as_timestamp-%}
+                    {%- if dispatch.start|as_timestamp > disconnected|as_timestamp and dispatch.start|as_timestamp < states('sensor.zappi_last_connected')|as_timestamp-%}
                       {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float%}
                     {%- endif-%}
                   {%- endfor -%}
