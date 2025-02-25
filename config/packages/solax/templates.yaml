@@ -291,6 +291,7 @@ solax_templates:
           icon: mdi:battery
 
         # Self Consumption Power
+        # {% set val = states('sensor.solax_local_inverter_power')|int(default=0) + invloss - states('sensor.solax_local_battery_dump_power')|int(default=0) - states('sensor.solax_local_grid_export_power')|int(default=0)%}
         - name: "Solax Local Self Consumption Power"
           unique_id: solax_local_self_consumption_power
           state: >
@@ -299,7 +300,7 @@ solax_templates:
             {% else %}
             {% set invloss =0 %}
             {% endif%}
-            {% set val = states('sensor.solax_local_inverter_power')|int(default=0) + invloss - states('sensor.solax_local_battery_dump_power')|int(default=0) - states('sensor.solax_local_grid_export_power')|int(default=0)%}
+            {% set val = states('sensor.solax_local_inverter_power')|int(default=0) + invloss - states('sensor.solax_local_grid_export_power')|int(default=0)%}
             {{ val if is_number(val) and (val|int > 0) else 0 }}
           unit_of_measurement: "W"
           state_class: measurement
