@@ -53,7 +53,7 @@ solax_zappi_octopus_input_number:
       name: Daily/Forced Discharge SoC
       unit_of_measurement: "%"
       #initial: 18
-      min: 20
+      min: 15
       max: 80
       step: 1
       mode: box

@@ -444,9 +444,20 @@ sections:
             state_content:
               - name
               - state
-            color: accent
+            color: green
             tap_action:
               action: more-info
+          - type: entity
+            show_state: true
+            show_icon: true
+            entity: sensor.solax_local_grid_power
+            color: red
+            state_content:
+              - name
+              - state
+            tap_action:
+              action: more-info
+            name: Grid Power
       - title: Solax Energy
         type: history-graph
         hours_to_show: 36
@@ -460,6 +471,7 @@ sections:
           - entity: sensor.daily_manual_battery_export
           - entity: sensor.export_daily
           - entity: sensor.solax_local_battery_remain_energy
+          - entity: sensor.daily_grid_ac_stored
         grid_options:
           columns: 36
           rows: auto
@@ -485,6 +497,7 @@ sections:
           - entity: sensor.solax_local_house_load_power
           - entity: sensor.solax_local_battery_dump_power
           - entity: sensor.solax_local_grid_export_power
+          - entity: sensor.solax_local_inverter_in_power
         grid_options:
           columns: 36
           rows: auto
@@ -509,7 +522,7 @@ sections:
           - entity: select.daily_grid_import
             name: Log
         fit_y_data: true
-        hours_to_show: 48
+        hours_to_show: 36
         grid_options:
           columns: 36
           rows: auto
@@ -522,6 +535,441 @@ sections:
           columns: 36
           rows: auto
         hours_to_show: 36
+      - type: heading
+        heading: Stats
+        heading_style: title
+      - type: vertical-stack
+        cards:
+          - type: statistic
+            entity: sensor.monthly_grid_import_peak
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: Peak Import
+          - type: statistic
+            entity: sensor.monthly_grid_import_offpeak
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: Off peak Import
+          - type: statistic
+            entity: sensor.solax_local_grid_export_aggregated_energy
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: Total Export
+          - type: statistic
+            entity: sensor.solax_local_battery_dump_aggregated_energy
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: Forced Battery Export
+          - type: statistic
+            entity: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: Zappi
+          - type: statistic
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: House Usage
+            entity: sensor.solax_local_house_load_aggregated_energy
+          - type: statistic
+            entity: sensor.solax_local_self_consumption_aggregated_energy
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: Solax Self Consumption
+          - type: statistic
+            entity: sensor.solax_local_battery_out_aggregated_energy
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: Battery Used for House
+          - type: statistic
+            entity: sensor.solax_local_inverter_in_aggregated_energy
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: AC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: DC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_solar_aggregated_energy
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: Solar Stored
+        title: Today
+        grid_options:
+          columns: 6
+      - type: vertical-stack
+        cards:
+          - type: statistic
+            entity: sensor.monthly_grid_import_peak
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: Peak Import
+          - type: statistic
+            entity: sensor.monthly_grid_import_offpeak
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: Off peak Import
+          - type: statistic
+            entity: sensor.solax_local_grid_export_aggregated_energy
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: Total Export
+          - type: statistic
+            entity: sensor.solax_local_battery_dump_aggregated_energy
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: Forced Battery Export
+          - type: statistic
+            entity: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: Zappi
+          - type: statistic
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: House Usage
+            entity: sensor.solax_local_house_load_aggregated_energy
+          - type: statistic
+            entity: sensor.solax_local_self_consumption_aggregated_energy
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: Solax Self Consumption
+          - type: statistic
+            entity: sensor.solax_local_battery_out_aggregated_energy
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: Battery Used for House
+          - type: statistic
+            entity: sensor.solax_local_inverter_in_aggregated_energy
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: AC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: DC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_solar_aggregated_energy
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: Solar Stored
+        grid_options:
+          columns: 6
+        title: Yesterday
+      - type: vertical-stack
+        cards:
+          - type: statistic
+            entity: sensor.monthly_grid_import_peak
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: Peak Import
+          - type: statistic
+            entity: sensor.monthly_grid_import_offpeak
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: Off peak Import
+          - type: statistic
+            entity: sensor.solax_local_grid_export_aggregated_energy
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: Total Export
+          - type: statistic
+            entity: sensor.solax_local_battery_dump_aggregated_energy
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: Forced Battery Export
+          - type: statistic
+            entity: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: Zappi
+          - type: statistic
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: House Usage
+            entity: sensor.solax_local_house_load_aggregated_energy
+          - type: statistic
+            entity: sensor.solax_local_self_consumption_aggregated_energy
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: Solax Self Consumption
+          - type: statistic
+            entity: sensor.solax_local_battery_out_aggregated_energy
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: Battery Used for House
+          - type: statistic
+            entity: sensor.solax_local_inverter_in_aggregated_energy
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: AC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: DC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_solar_aggregated_energy
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: Solar Stored
+        grid_options:
+          columns: 6
+        title: This Month
+      - type: vertical-stack
+        cards:
+          - type: statistic
+            entity: sensor.monthly_grid_import_peak
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: Peak Import
+          - type: statistic
+            entity: sensor.monthly_grid_import_offpeak
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: Off peak Import
+          - type: statistic
+            entity: sensor.solax_local_grid_export_aggregated_energy
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: Total Export
+          - type: statistic
+            entity: sensor.solax_local_battery_dump_aggregated_energy
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: Forced Battery Export
+          - type: statistic
+            entity: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: Zappi
+          - type: statistic
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: House Usage
+            entity: sensor.solax_local_house_load_aggregated_energy
+          - type: statistic
+            entity: sensor.solax_local_self_consumption_aggregated_energy
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: Solax Self Consumption
+          - type: statistic
+            entity: sensor.solax_local_battery_out_aggregated_energy
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: Battery Used for House
+          - type: statistic
+            entity: sensor.solax_local_inverter_in_aggregated_energy
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: AC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: DC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_solar_aggregated_energy
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: Solar Stored
+        grid_options:
+          columns: 6
+        title: Last Month
+      - type: vertical-stack
+        cards:
+          - type: statistic
+            entity: sensor.monthly_grid_import_peak
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: Peak Import
+          - type: statistic
+            entity: sensor.monthly_grid_import_offpeak
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: Off peak Import
+          - type: statistic
+            entity: sensor.solax_local_grid_export_aggregated_energy
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: Total Export
+          - type: statistic
+            entity: sensor.solax_local_battery_dump_aggregated_energy
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: Forced Battery Export
+          - type: statistic
+            entity: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: Zappi
+          - type: statistic
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: House Usage
+            entity: sensor.solax_local_house_load_aggregated_energy
+          - type: statistic
+            entity: sensor.solax_local_self_consumption_aggregated_energy
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: Solax Self Consumption
+          - type: statistic
+            entity: sensor.solax_local_battery_out_aggregated_energy
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: Battery Used for House
+          - type: statistic
+            entity: sensor.solax_local_inverter_in_aggregated_energy
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: AC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: DC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_solar_aggregated_energy
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: Solar Stored
+        grid_options:
+          columns: 6
+        title: This Year
     column_span: 3
 cards: []
 badges: []
