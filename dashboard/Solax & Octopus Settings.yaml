@@ -101,6 +101,9 @@ sections:
           - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
             state_color: true
             name: Intelligent Smart Charge
+          - entity: input_boolean.zappi_eco_always
+          - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
+            name: Minimum Green Level
           - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
             name: Zappi Charge Mode
         show_header_toggle: false
@@ -976,3 +979,4 @@ badges: []
 dense_section_placement: true
 icon: ""
 subview: false
+

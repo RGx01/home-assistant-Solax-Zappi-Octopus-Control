@@ -54,5 +54,13 @@ solax_zappi_octopus_input_boolean:
     nofify_mobile:
       name: Notify mobile?
       icon: mdi:bell-plus
+    # Zappi always left in ECO mode when connected
+    zappi_eco_always:
+      name: Zappi always in ECO+ Mode (when connected)
+      icon: mdi:leaf
+    # Switch to indicate if a saving session is in progress
+    saving_session_active:
+      name: Saving Session In Progress
+      icon: mdi:leaf
 
     ###########################################

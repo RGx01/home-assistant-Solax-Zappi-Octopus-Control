@@ -4,7 +4,7 @@
     Initial installation instructions\n1. This is 5001 only you need 5002 5003 5004
     and 5005. files are kept seperate in repo for ease of maintenance\n2. Find and
     replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus account\n3.
-    Paste into your automations.yaml\n\n# Change Log\nv3.0.11 further fixes to 3.0.1\nv3.0.1
+    Paste into your automations.yaml\n\n# Change Log\nv3.0.2 further fixes to 3.0.1\nv3.0.1
     Fixed issue that if user plugs in during a saving session a charge could be initiated\nv3.0.0
     Allow discharge battery before charging EV\nv2.1.4.1 Spotted a potential bug if
     user starts charge at 23:30 where it could clash with tail battery export\nv2.1.4
@@ -136,6 +136,19 @@
     from: 'on'
     to: 'off'
     id: Solax Discharge Prior to EV
+  - trigger: time
+    at:
+      entity_id: sensor.intelligent_target_time
+      offset: '-1'
+    id: Dispatch Finished
+  - trigger: state
+    entity_id:
+    - input_boolean.zappi_eco_always
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+    id: Zappi eco mode
   conditions: []
   actions:
   - choose:
@@ -278,8 +291,12 @@
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}}
         {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
-        == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on' and states('input_boolean.zappi_eco_always')==
+        'off'-%}  {{100}} {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
+        == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on' and states('input_boolean.zappi_eco_always')==
+        'on'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
+        \ {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
         {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
@@ -481,6 +498,9 @@
       - condition: state
         entity_id: sensor.zappi_plug_status
         state: EV Connected
+      - condition: state
+        entity_id: input_boolean.saving_session_active
+        state: 'off'
       sequence:
       - if:
         - condition: template
@@ -492,6 +512,7 @@
           - condition: time
             after: input_datetime.saving_session_start
             before: input_datetime.saving_session_end
+        enabled: false
       - choose:
         - conditions:
           - condition: or
@@ -592,6 +613,12 @@
                 above: input_number.solax_discharge_limit_soc_before_ev
                 value_template: '{{ state.state | float(0)  - 14 }}'
               then:
+              - action: select.select_option
+                metadata: {}
+                data:
+                  option: Stopped
+                target:
+                  entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
               - repeat:
                   sequence:
                   - data:
@@ -707,12 +734,24 @@
         id:
         - Disconnected To Connected
       sequence:
-      - metadata: {}
-        data:
-          option: Stopped
-        target:
-          entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
-        action: select.select_option
+      - if:
+        - condition: state
+          entity_id: input_boolean.zappi_eco_always
+          state: 'on'
+        then:
+        - action: select.select_option
+          metadata: {}
+          data:
+            option: Eco+
+          target:
+            entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
+        else:
+        - action: select.select_option
+          metadata: {}
+          data:
+            option: Stopped
+          target:
+            entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
       - metadata: {}
         data: {}
         target:
@@ -754,12 +793,24 @@
         - Connected to Disconnected
         - Charging to Disconnected
       sequence:
-      - metadata: {}
-        data:
-          option: Stopped
-        target:
-          entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
-        action: select.select_option
+      - if:
+        - condition: state
+          entity_id: input_boolean.zappi_eco_always
+          state: 'on'
+        then:
+        - action: select.select_option
+          metadata: {}
+          data:
+            option: Eco+
+          target:
+            entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
+        else:
+        - action: select.select_option
+          metadata: {}
+          data:
+            option: Stopped
+          target:
+            entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
       - metadata: {}
         data: {}
         target:
@@ -1075,8 +1126,63 @@
           title: Battery Flat
           class: high
         enabled: true
-    - conditions: []
-      sequence: []
+    - conditions:
+      - condition: trigger
+        id:
+        - Dispatch Finished
+      - condition: numeric_state
+        entity_id: sensor.octopus_total_planned_dispatch
+        below: 1
+      sequence:
+      - action: switch.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+      - if:
+        - condition: state
+          entity_id: input_boolean.zappi_eco_always
+          state: 'on'
+        then:
+        - action: select.select_option
+          metadata: {}
+          data:
+            option: Eco+
+          target:
+            entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
+        else:
+        - action: select.select_option
+          metadata: {}
+          data:
+            option: Stopped
+          target:
+            entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
+    - conditions:
+      - condition: trigger
+        id:
+        - Zappi eco mode
+      - condition: state
+        entity_id: sensor.zappi_plug_status
+        state: EV Connected
+      sequence:
+      - if:
+        - condition: state
+          entity_id: input_boolean.zappi_eco_always
+          state: 'on'
+        then:
+        - action: select.select_option
+          metadata: {}
+          data:
+            option: Eco+
+          target:
+            entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
+        else:
+        - action: select.select_option
+          metadata: {}
+          data:
+            option: Stopped
+          target:
+            entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
     enabled: true
   - action: input_boolean.turn_off
     metadata: {}
@@ -2508,16 +2614,17 @@
     before session.\nDischarges Battery in the session and stops Zappi.\nReturns to
     normal operation.\n\n# Initial config instructions\n1. Find and replace:\nzappi_XXXXXXXX
     with your zappi number, \nz_ZZZZZZZZ with Octopus account\n2. Paste into your
-    automations.yaml\n\n# Change log\nv3.0.0 - Fixed bug where if someone uses charge
-    period 2 outside of a saving session and the EV is charging, when charge period
-    2 ends the EV stops charging. I've purposefully left the functionality to disable
-    charge period 2 when it ends as it's quite useful if users forget to disable it
-    for the next day. I've made the assumption that most users only use charge period
-    1 for daily charging.\nv2.1.4 - Renamed automation\n            - Added ability
-    to optionally try for a Dispatch during battery prep.\n             - Added ability
-    to optionally try for a Dispatch once the Saving Session finishes.\nv2.1.3 - Added
-    Prep options and ability to stop the battery prep once battery is at target SoC\nv2.1
-    - Removed legacy dev work\nv2.0 - Rework for manual joining\nv1.1 - Initial"
+    automations.yaml\n\n# Change log\nv3.0.1 - Fixed mangled joined a session message\nv3.0.0
+    - Fixed bug where if someone uses charge period 2 outside of a saving session
+    and the EV is charging, when charge period 2 ends the EV stops charging. I've
+    purposefully left the functionality to disable charge period 2 when it ends as
+    it's quite useful if users forget to disable it for the next day. I've made the
+    assumption that most users only use charge period 1 for daily charging.\nv2.1.4
+    - Renamed automation\n            - Added ability to optionally try for a Dispatch
+    during battery prep.\n             - Added ability to optionally try for a Dispatch
+    once the Saving Session finishes.\nv2.1.3 - Added Prep options and ability to
+    stop the battery prep once battery is at target SoC\nv2.1 - Removed legacy dev
+    work\nv2.0 - Rework for manual joining\nv1.1 - Initial"
   triggers:
   - event_type: octopus_energy_new_octoplus_saving_session
     trigger: event
@@ -2602,9 +2709,9 @@
       - event: Solax Zappi Octopus Control
         event_data:
           message: "{% set event = state_attr(saving_session_event_entity,\n  'available_events')[0]
-            %} {% set event_start = event['start'] %} Joined a\n  new Octopus Energy
-            saving session. It starts at {{\n  event_start.strftime('%H:%M') }} on
-            {{ event_start.day }}/{{\n  event_start.month }} for {{ event.duration_in_minutes
+            %} {% set event_start = event['start'] %} Joined a new Octopus Energy
+            saving session. It starts at {{event_start.strftime('%H:%M') }} on {{
+            event_start.day }}/{{event_start.month }} for {{ event.duration_in_minutes
             | int }} minutes.\n"
           title: Octopus Saving Sessions Updated
           class: high
@@ -2923,10 +3030,15 @@
         data: {}
         target:
           entity_id: input_boolean.solax_automation_running
+      - action: input_boolean.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.saving_session_active
       - if:
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
-          above: input_number.solax_manual_forced_discharge_limit_soc
+          above: input_number.octopus_saving_session_target_battery_soc
           value_template: '{{ state.state | float(0)  - 4 }}'
         then:
         - repeat:
@@ -2997,6 +3109,16 @@
           entity_id: input_boolean.octopus_saving_session_manual
           state: 'on'
       sequence:
+      - action: input_boolean.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
+      - action: input_boolean.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.saving_session_active
       - repeat:
           sequence:
           - data:
@@ -3052,6 +3174,11 @@
           title: Saving Session Ended
           class: high
         enabled: true
+      - action: input_boolean.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
     - conditions:
       - condition: trigger
         id:
