@@ -39,6 +39,7 @@ The project is split into 3 parts:
 ## Revision Log
 | Version | Date | Files updated |Description |
 |:-----|:--------:|:------|:------|
+| v3.0.2 | **6/3/25**| All | Added "Zappi always in ECO+ Mode (when connected)" to allow for EV charging from excess solar |
 | v3.0.0 | **9/2/25** | All | Primarily this release is aimed at large capacity EV users that also want to export Solax battery on a daily basis. <br /> The feature will be most used in the summer where solar export is higher leaving less hours to charge EV and reducing window over night to discharge and recharge the Solax battery.
 | v2.1.4 | **29/1/25** | packages/octopus_saving_sessions/input_boolean.yaml <br/> packages/solax_zappi_octopus/templates.yaml <br/> All automations <br/> Octopus Saving Sessions.yaml (Dashboard)| 1. Added new controls to Saving Sessions Dashboard to attempt to get a dispatch during battery prep and also attempt to get a dispatch straight after session. <br /> 2. Updated EV Start Time logic <br /> 3. Renamed all automations
 | v2.1.4 | **28/1/25** | packages/solax/templates.yaml | Improved resilience to sensors reporting defaults/template warnings in logs due to invalid/empty rest responses.
@@ -47,10 +48,11 @@ The project is split into 3 parts:
 | v2.1  | **19/1/25** | All |1. Revised Dashboards <br /> 2. Added Battery Warming controls <br /> 3. Added Mobile Notifications <br /> 4. New template sensors to switch utility meter tariffs peak/offpeak <br /> 5. General bug fixes in template sensors|
 
 ## Screenshots of Dashboards
-![solaxzappioctopus](https://github.com/user-attachments/assets/bfd409ae-57bb-4a41-afd9-6ca7eb2dcd9b)
-<img width="1441" alt="Screenshot 2025-02-18 at 05 55 03" src="https://github.com/user-attachments/assets/72c59812-8dec-4910-be2e-25464fdc1a8d" />
-<img width="1375" alt="Screenshot 2025-02-09 at 15 58 07" src="https://github.com/user-attachments/assets/a092e4d9-3ecf-4916-aeb1-5000dc16c2dd" />
+![solaxzappioctopus](https://github.com/user-attachments/assets/ed80306d-c862-40f7-ad16-47ee9838e429)
+<img width="1207" alt="Screenshot 2025-03-06 at 20 11 55" src="https://github.com/user-attachments/assets/44013fc3-7c7b-41c9-ab21-6778dde9abfe" />
+
 <img width="1383" alt="Screenshot 2025-01-28 at 00 06 56" src="https://github.com/user-attachments/assets/ceebc259-8b7b-4d51-866f-246c647efdd2" />
+<img width="1182" alt="Screenshot 2025-03-06 at 20 12 22" src="https://github.com/user-attachments/assets/23123dff-883c-4e59-9e33-f15392cab157" />
 <img width="525" alt="Screenshot 2025-01-29 at 17 01 42" src="https://github.com/user-attachments/assets/4413fdbe-e1ce-46bd-a021-929edd766c1f" />
 
 
@@ -107,9 +109,10 @@ Automations can take a long time to run. I wish it could be made to be more snap
 * Manages the inverter behaviour when Zappi is plugged/unplugged/charging.
 * Exports Solax battery on demand or daily during offpeak periods down to 20% SoC.
 * Creates Events that can be notified with 5005.
-* By selecting "Full Octopus Control" in the UI, as soon as an EV is plugged in Octopus should provide a dispatch.
-* By selecting "Solar Export Priority" in the UI, Zappi won't be controlled by Octopus until the sun is below a configurable elevation.
-* If neither "Full Octopus Control" or "Solar Export Priority" is on then Octopus won't start control until a configured time.
+* By selecting "Full Octopus Control" in the UI, as soon as an EV is plugged in Octopus should provide a schedule.
+* By selecting "Solar Export Priority" in the UI, Zappi won't get an Octopus schedule until the sun is below a configurable elevation.
+* If neither "Full Octopus Control" or "Solar Export Priority" is on then Octopus won't get a schedule until the configured time.
+* Zappi always in ECO+ Mode (when connected). This allows excess solar to charge EV.
 * "Intelligent Charge Target" amount of energy % of car battery size to be dispatched by Octopus.
 * "Intelligent Target Time" target EV ready time.
 * "Intelligent Smart Charge" Indicates if Octopus is in control of charging (leave alone and let automation work)
