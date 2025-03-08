@@ -291,17 +291,10 @@
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}}
         {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
-        == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on' and states('input_boolean.zappi_eco_always')==
-        'off'-%}  {{100}} {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
-        == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
-        == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on' and states('input_boolean.zappi_eco_always')==
-        'on'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        \ {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
-        == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
-        == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
+        == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on' -%} {{100}}
         {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
-        == 'off' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
+        == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
         {%-endif %}\n{%-endif %}\n"
       mode_delay: 15
       settings_delay: 15
@@ -503,16 +496,23 @@
         state: 'off'
       sequence:
       - if:
-        - condition: template
-          value_template: '{{ states.input_boolean.octopus_saving_session_manual.state
-            is defined == true}}'
+        - condition: state
+          entity_id: input_boolean.zappi_eco_always
+          state: 'on'
         then:
-        - condition: not
-          conditions:
-          - condition: time
-            after: input_datetime.saving_session_start
-            before: input_datetime.saving_session_end
-        enabled: false
+        - action: select.select_option
+          metadata: {}
+          data:
+            option: Eco+
+          target:
+            entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
+        else:
+        - action: select.select_option
+          metadata: {}
+          data:
+            option: Stopped
+          target:
+            entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
       - choose:
         - conditions:
           - condition: or
