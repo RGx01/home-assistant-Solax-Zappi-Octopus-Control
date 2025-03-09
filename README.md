@@ -227,7 +227,6 @@ Automations can take a long time to run. I wish it could be made to be more snap
 ## Future Dev Work
 <ol>
 <li>Add functionality to set the 'Charge to Target SoC' dynamically based on a solar forecast. Currently low priority as Octopus offer 15p export rate where import is 7p so it makes sense to dump the battery before charging.</li>
-<li>Add functionality to discharge Solax battery prior to getting an Octopus dispatch. This will be particularly useful in summer months with large EV batteries that have less day light hours to charge overnight whilst maximising solar export during the day</li>
 </ol>
 
 ## Problems Found During Development
