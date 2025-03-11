@@ -4,16 +4,18 @@
     Initial installation instructions\n1. This is 5001 only you need 5002 5003 5004
     and 5005. files are kept seperate in repo for ease of maintenance\n2. Find and
     replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus account\n3.
-    Paste into your automations.yaml\n\n# Change Log\nv3.0.2 further fixes to 3.0.1\nv3.0.1
-    Fixed issue that if user plugs in during a saving session a charge could be initiated\nv3.0.0
-    Allow discharge battery before charging EV\nv2.1.4.1 Spotted a potential bug if
-    user starts charge at 23:30 where it could clash with tail battery export\nv2.1.4
-    Renamed automation\nv2.1.3.1 fixed missing scenario where min_SoC would not be
-    set properly at 23:30 or if FAST charging was selected.\nv2.1.3 More readable
-    notifications\nv2.1.1 Update dispatch trigger for octopus dispatch from on to
-    off rather than just to off. false triggers when sensor is unavailable \nv2.1
-    updated setting of modes and SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0
-    Remove legacy dev work"
+    Paste into your automations.yaml\n\n# Change Log\nv3.0.3 Added When Condition
+    to ensure inverter mode is reset to default mode when it's time to start charging
+    the solax battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1 Fixed issue that if
+    user plugs in during a saving session a charge could be initiated\nv3.0.0 Allow
+    discharge battery before charging EV\nv2.1.4.1 Spotted a potential bug if user
+    starts charge at 23:30 where it could clash with tail battery export\nv2.1.4 Renamed
+    automation\nv2.1.3.1 fixed missing scenario where min_SoC would not be set properly
+    at 23:30 or if FAST charging was selected.\nv2.1.3 More readable notifications\nv2.1.1
+    Update dispatch trigger for octopus dispatch from on to off rather than just to
+    off. false triggers when sensor is unavailable \nv2.1 updated setting of modes
+    and SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0 Remove legacy
+    dev work"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -149,6 +151,20 @@
       minutes: 0
       seconds: 30
     id: Zappi eco mode
+  - trigger: state
+    entity_id:
+    - sensor.solax_local_manual_mode_behaviour
+    to: Do Nothing
+    for:
+      hours: 0
+      minutes: 3
+      seconds: 0
+    id: Check Discharge Mode
+    from: Force Discharge
+    enabled: true
+  - trigger: time
+    at: input_datetime.solax_battery_start_charge_time
+    id: Charge Solax
   conditions: []
   actions:
   - choose:
@@ -297,6 +313,7 @@
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
         {%-endif %}\n{%-endif %}\n"
       mode_delay: 15
+      manual_mode_delay: 30
       settings_delay: 15
       refresh_settings_delay: 10
   - action: input_boolean.turn_on
@@ -428,12 +445,6 @@
           value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
             != 3)}}'
         then:
-        - action: input_number.set_value
-          target:
-            entity_id: input_number.solax_manual_forced_discharge_limit_soc
-          data:
-            value: 20
-          enabled: false
         - repeat:
             sequence:
             - data:
@@ -442,7 +453,7 @@
             - delay:
                 hours: 0
                 minutes: 0
-                seconds: '{{mode_delay}}'
+                seconds: '{{manual_mode_delay}}'
                 milliseconds: 0
             - data:
                 value: 2
@@ -450,7 +461,7 @@
             - delay:
                 hours: 0
                 minutes: 0
-                seconds: '{{mode_delay}}'
+                seconds: '{{manual_mode_delay}}'
                 milliseconds: 0
             - action: homeassistant.update_entity
               data:
@@ -627,7 +638,7 @@
                   - delay:
                       hours: 0
                       minutes: 0
-                      seconds: '{{mode_delay}}'
+                      seconds: '{{manual_mode_delay}}'
                       milliseconds: 0
                   - data:
                       value: 2
@@ -635,7 +646,7 @@
                   - delay:
                       hours: 0
                       minutes: 0
-                      seconds: '{{mode_delay}}'
+                      seconds: '{{manual_mode_delay}}'
                       milliseconds: 0
                   - action: homeassistant.update_entity
                     data:
@@ -1034,7 +1045,7 @@
             - delay:
                 hours: 0
                 minutes: 0
-                seconds: '{{mode_delay}}'
+                seconds: '{{manual_mode_delay}}'
                 milliseconds: 0
             - data:
                 value: 2
@@ -1042,7 +1053,7 @@
             - delay:
                 hours: 0
                 minutes: 0
-                seconds: '{{mode_delay}}'
+                seconds: '{{manual_mode_delay}}'
                 milliseconds: 0
             - action: homeassistant.update_entity
               data:
@@ -1183,6 +1194,103 @@
             option: Stopped
           target:
             entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
+    - conditions:
+      - condition: state
+        entity_id: sensor.solax_local_inverter_mode
+        state: Manual
+        for:
+          hours: 0
+          minutes: 2
+          seconds: 0
+      - condition: numeric_state
+        entity_id: sensor.solax_local_battery_soc
+        value_template: '{{ state.state | float(0)  - 14 }}'
+        above: input_number.solax_manual_forced_discharge_limit_soc
+      - condition: time
+        after: '23:30:00'
+        before: input_datetime.solax_battery_start_charge_time
+      - condition: state
+        entity_id: input_boolean.export_battery
+        state: 'on'
+      sequence:
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: Manual discharge failure @ {{now().strftime('%H:%M')}}. Setting
+            modes issue. Attempting to recover.
+          title: Manual Discharge Failure
+          class: high
+        enabled: true
+      - repeat:
+          sequence:
+          - data:
+              value: 3
+            action: rest_command.solax_local_set_inverter_mode
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{mode_delay}}'
+              milliseconds: 0
+          - data:
+              value: 2
+            action: rest_command.solax_local_set_manual_mode_behaviour
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{mode_delay}}'
+              milliseconds: 0
+          - action: homeassistant.update_entity
+            data:
+              entity_id:
+              - sensor.solax_rest_local_settings
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{refresh_settings_delay}}'
+              milliseconds: 0
+          - if:
+            - condition: template
+              value_template: '{{repeat.index == 3}}'
+            then:
+            - event: Solax Zappi Octopus Control
+              event_data:
+                message: Manual discharge failure @ {{now().strftime('%H:%M')}}. Setting
+                  modes issue.
+                title: Manual Discharge Failure
+                class: high
+              enabled: true
+          until:
+          - condition: template
+            value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
+              == 3 and state_attr(''sensor.solax_local_settings'', ''Data'')[11] ==
+              2) or repeat.index == 3 }}'
+    - conditions:
+      - condition: template
+        value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]|int
+          !=  states(''sensor.solax_default_operation_mode'')|int) }}'
+      sequence:
+      - repeat:
+          sequence:
+          - data:
+              value: '{{default_mode}}'
+            action: rest_command.solax_local_set_inverter_mode
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{mode_delay}}'
+              milliseconds: 0
+          - action: homeassistant.update_entity
+            data:
+              entity_id:
+              - sensor.solax_rest_local_settings
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{refresh_settings_delay}}'
+              milliseconds: 0
+          until:
+          - condition: template
+            value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
+              == default_mode) or repeat.index == 3 }}'
     enabled: true
   - action: input_boolean.turn_off
     metadata: {}
