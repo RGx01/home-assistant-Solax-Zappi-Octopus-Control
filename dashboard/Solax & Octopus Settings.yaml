@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v3.0.5 Added missing titles to load chart
 # v3.0.4 Tidy up of charts
 # v3.0.3 Chart presentation improvement
 # v3.0.1 Added new charting params
@@ -534,10 +535,21 @@ sections:
           - entity: sensor.solax_local_load_power
           - entity: sensor.solax_local_grid_power
           - entity: sensor.solax_local_pv_output
+          - entity: sensor.solax_local_pv_output_string_1
+          - entity: sensor.solax_local_pv_output_string_2
         grid_options:
           columns: 36
           rows: auto
         hours_to_show: 36
+        title: Load In/Out
+      - title: Battery Temperature
+        type: history-graph
+        hours_to_show: 36
+        entities:
+          - entity: sensor.solax_local_battery_temperature
+        grid_options:
+          columns: 36
+          rows: auto
       - type: heading
         heading: Stats
         heading_style: title
@@ -979,4 +991,3 @@ badges: []
 dense_section_placement: true
 icon: ""
 subview: false
-
