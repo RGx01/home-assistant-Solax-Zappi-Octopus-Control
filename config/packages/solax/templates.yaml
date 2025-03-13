@@ -504,7 +504,7 @@ solax_templates:
           state: >
             {%set solax_can_see_zappi_load = 1%}
             {%if solax_can_see_zappi_load|bool == true%}
-              {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) - states('sensor.myenergi_zappi_XXXXXXXX_internal_load_ct1') | float(default=0) }}
+              {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) - states('sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load') | float(default=0) }}
             {%else%}
               {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) }}
             {%endif%}
