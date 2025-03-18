@@ -1084,7 +1084,7 @@
         - event: Solax Zappi Octopus Control
           event_data:
             message: 'Attempting Discharge @ {{now().strftime(''%H:%M'')}}. '
-            title: Daily Battery Export
+            title: Battery Export Started
             class: normal
           enabled: true
         else:
@@ -1418,7 +1418,7 @@
       - event: Solax Zappi Octopus Control
         event_data:
           message: 'Discharge finished @ {{now().strftime(''%H:%M'')}}. '
-          title: Battery Export
+          title: Battery Export Finished
           class: normal
         enabled: true
       - delay:
@@ -1471,7 +1471,7 @@
       - event: Solax Zappi Octopus Control
         event_data:
           message: 'Discharge finished @ {{now().strftime(''%H:%M'')}}. '
-          title: Battery Export
+          title: Battery Export Finished
           class: normal
         enabled: true
     - conditions:
@@ -2245,6 +2245,10 @@
 
     # Change Log
 
+    v3.1 Better notification management
+
+    v2.2 Added Alert Exclusions
+
     v2.1.4 Renamed automation
 
     v2.1.3 Simplications
@@ -2288,12 +2292,18 @@
           value_template: '{{states(''input_text.mobile_device_selected'') != ''None
             Selected''}}'
         then:
-        - action: '{% set notify = "notify." + states(''input_select.solax_automation_notification_devices'')
-            -%} {{notify}}'
-          metadata: {}
-          data:
-            title: '{{trigger.event.data.title}}'
-            message: '{{trigger.event.data.message}}'
+        - repeat:
+            for_each: '{{state_attr(''sensor.solax_zappi_octopus_devices_to_notify'',
+              ''mobile_devices'') | map(attribute=''device'') | reject(''match'',"
+              ")|list}}
+
+              '
+            sequence:
+            - action: notify.{{repeat.item}}
+              metadata: {}
+              data:
+                title: '{{trigger.event.data.title}}'
+                message: '{{trigger.event.data.message}}'
     - conditions:
       - condition: or
         conditions:
@@ -2307,21 +2317,32 @@
         entity_id: input_boolean.solax_zappi_octopus_control_notifications
         state: 'on'
       sequence:
-      - action: persistent_notification.create
-        data:
-          title: '{{trigger.event.data.title}}'
-          message: '{{trigger.event.data.message}}'
       - if:
         - condition: template
-          value_template: '{{states(''input_text.mobile_device_selected'') != ''None
-            Selected''}}'
+          value_template: '{{trigger.event.data.title not in state_attr(''sensor.solax_zappi_octopus_alerts_to_exclude'',''alert_list'')
+            | map(attribute=''alert'') | list}}'
         then:
-        - action: '{% set notify = "notify." + states(''input_select.solax_automation_notification_devices'')
-            -%} {{notify}}'
-          metadata: {}
+        - action: persistent_notification.create
           data:
             title: '{{trigger.event.data.title}}'
             message: '{{trigger.event.data.message}}'
+        - if:
+          - condition: template
+            value_template: '{{states(''input_text.mobile_device_selected'') != ''None
+              Selected''}}'
+          then:
+          - repeat:
+              for_each: '{{state_attr(''sensor.solax_zappi_octopus_devices_to_notify'',
+                ''mobile_devices'') | map(attribute=''device'') | reject(''match'',"
+                ")|list}}
+
+                '
+              sequence:
+              - action: notify.{{repeat.item}}
+                metadata: {}
+                data:
+                  title: '{{trigger.event.data.title}}'
+                  message: '{{trigger.event.data.message}}'
   mode: queued
   max: 10
 

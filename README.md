@@ -39,6 +39,7 @@ The project is split into 3 parts:
 ## Revision Log
 | Version | Date | Files updated |Description |
 |:-----|:--------:|:------|:------|
+| v3.1 |**18/03/25**| automations_5001-6002.yaml <br /> Solax & Octopus Settings.yaml  <br /> packages/solax_zappi_octopus |Better notification management & new dashboard additions
 | v3.0.4 | **12/3/25** | automations_5001-6002.yaml <br /> Solax & Octopus Settings.yaml | 5001 Added a condition to prevent inverter reverting back to default if vehicle was charging prior to a saving session starting. <br /> Added a chart title to dashboard|
 | v3.0.3 | **11/3/25** |automations_5001-6002.yaml| 5001 - Added When Condition to ensure inverter mode is reset to default mode when it's time to start charging the solax battery.|
 | v3.0.2 | **6/3/25**| All | Added "Zappi always in ECO+ Mode (when connected)" to allow for EV charging from excess solar |

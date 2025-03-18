@@ -30,7 +30,7 @@ solax_zappi_octopus_input_select:
     solax_automation_notification_devices:
       name: Notify Mobile Device
       options:
-        - None Selected
+        - ' '
       icon: mdi:cellphone-sound
     zappi_default_behaviour:
       name: Zappi Default Behaviour
@@ -39,3 +39,30 @@ solax_zappi_octopus_input_select:
         - Charge After Sunset
         - Charge After Set Time
       icon: mdi:ev-station
+    solax_zappi_octopus_notification_list:
+      name: Notification to Exclude
+      options:
+        - ' '
+        - EV Charging Started
+        - EV Stopped Charging - Attempting Battery Export.
+        - EV Stopped Charging.
+        - EV Connected - Waiting for Octopus schedule
+        - EV Connected - Waiting for Solax to Discharge before getting Octopus schedule
+        - EV Connected - Waiting for Octopus schedule & Solax to Discharge
+        - EV Connected - Waiting for Octopus schedule - Solax Discharge Unavailable
+        - EV Connected - No Charge Plan
+        - EV Disconnected
+        - Manual Discharge Started
+        - Manual Discharge Stopped
+        - Battery Export Started
+        - Battery Export Finished
+        - Cheap Rate
+        - Peak Rate
+        - Octopus Dispatch
+      icon: mdi:alert
+
+
+
+
+
+

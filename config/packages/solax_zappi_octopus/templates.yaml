@@ -3,6 +3,7 @@
 # replace zappi serial number zappi_XXXXXXXX
 #
 # Change log
+# v3.1   Better Notification Management
 # v3.0.0 Event based trigger for solax discharge to handle discharging before an EV Charge
 #        Zappi last disconnect sensor - added a from condition
 # v2.1.4 Updated ev_start_time logic.
@@ -308,70 +309,106 @@ solax_zappi_octopus_templates:
               {{now().strftime('%H:%M')}}. 
               {{states('sensor.octopus_total_planned_dispatch')}}kWh.
             title: Octopus Dispatch
-            class: high
-
-    ######################################################
-    # Mobile device list
-    ######################################################
+            class: normal
 
     - trigger:
         - trigger: homeassistant
           event: start
           id: "HA_START"
         - trigger: time_pattern
-          minutes: /10
-        # - trigger:
-        #   platform: homeassistant
-        #   event: start
-        # - trigger: state
-        #   entity_id: input_select.solax_automation_notification_devices
-        #   to:
-        #     - none
-      action:
-        - service: input_text.set_value
-          target:
-            entity_id: "input_text.mobile_device_list"
-          data:
-            value: >
-              {% set ns= namespace(val ="None Selected")%}
+          minutes: /1
+      sensor:
+        - name: Solax Zappi Octopus Device List
+          unique_id: solax_zappi_octopus_device_list
+          state: "{{ now().timestamp() | timestamp_custom() }}"
+          attributes:
+            mobile_devices: >
+              {% set ns= namespace(members=[]) %}
               {% if  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list |length >0%}
               {% for item in  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list %}
-              {% set ns.val = ns.val+"," + item %}
+              {% set ns.members = ns.members + [{"device": item}] %}
               {%- endfor -%}
               {%- endif  -%}
-              {{ns.val}}
+              {% set ns.members =  [{"device": " "}]+ns.members  %}
+              {{ns.members}}
+    
+    - trigger: 
+        - trigger: state
+          entity_id: 
+            - sensor.solax_zappi_octopus_device_list
+          attribute: mobile_devices
+        - trigger: homeassistant
+          event: start
+          id: "HA_START"
+        - trigger: time_pattern
+          minutes: /1
+      action:
         - service: input_select.set_options
-          data:
+          target:
             entity_id: input_select.solax_automation_notification_devices
+          data:
             options: >
-              {{states('input_text.mobile_device_list').split(',')|list}}
-        - service: input_select.select_option
-          data:
-            entity_id: input_select.solax_automation_notification_devices
-            option: >
-              {% if states('input_text.mobile_device_selected') == ""%}
-              {{"None Selected"}}
-              {%else%}
-              {{states('input_text.mobile_device_selected')}}
-              {%endif%}
+              {{(state_attr('sensor.solax_zappi_octopus_device_list', 'mobile_devices')) | map(attribute='device') | list }}
 
-    ######################################################
-    # Mobile device list
-    ######################################################
-
-    - trigger:
+    - trigger: 
         - trigger: state
           entity_id: input_select.solax_automation_notification_devices
-          not_to:
-            - unknown
-            - unavailable
-      action:
-        - service: input_text.set_value
-          target:
-            entity_id: "input_text.mobile_device_selected"
-          data:
-            value: >
-              {{states('input_select.solax_automation_notification_devices')}}
+        - trigger: state
+          entity_id: input_button.solax_zappi_octopus_reset_device_list
+      sensor:
+        - name: Solax Zappi Octopus Devices to Notify
+          unique_id: solax_zappi_octopus_devices_to_notify
+          state: "{{ now().timestamp() | timestamp_custom() }}"
+          attributes:
+            mobile_devices: >
+              {% if trigger.entity_id == 'input_select.solax_automation_notification_devices' %}
+                {% set current = this.attributes.get('mobile_devices', []) | map(attribute='device') | list %}
+                {% set current1 = this.attributes.get('mobile_devices', []) %}
+                {% if states('input_select.solax_automation_notification_devices') not in current and states('input_select.solax_automation_notification_devices') != ' ' %}
+                    {% set new = [{"device": states('input_select.solax_automation_notification_devices')}] %}
+                    {{ new + current1 }}
+                {% else %}
+                  {% if states('input_select.solax_automation_notification_devices') != ' ' %}}
+                    {% set old = {"device": states('input_select.solax_automation_notification_devices')} %}
+                    {% set current1 = state_attr('sensor.solax_zappi_octopus_devices_to_notify', 'device')| reject("equalto", old) |list  %}
+                  {% endif %}
+                  
+                  {{ current1 }}
+                {% endif %}
+              {% else %}
+                {{[{"device": " "}]}}
+              {% endif %}
+
+
+    ######################################################
+    ### Notification list
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: input_select.solax_zappi_octopus_notification_list
+        - trigger: state
+          entity_id: input_button.solax_zappi_octopus_reset_notification_exclusions
+      sensor:
+        - name: Solax Zappi Octopus Notification to Exclude
+          unique_id: solax_zappi_octopus_notification_to_exclude
+          state: "{{ now().timestamp() | timestamp_custom() }}"
+          attributes:
+            notification_list: >
+              {% if trigger.entity_id == 'input_select.solax_zappi_octopus_notification_list' %}
+                {% set current = this.attributes.get('notification_list', []) | map(attribute='notification') | list %}
+                {% set current1 = this.attributes.get('notification_list', []) %}
+                {% if states('input_select.solax_zappi_octopus_notification_list') not in current and states('input_select.solax_zappi_octopus_notification_list') != ' ' %}
+                    {% set new = [{"notification": states('input_select.solax_zappi_octopus_notification_list')}] %}
+                    {{ new + current1 }}
+                {% else %}
+                    {% set old = {"notification": states('input_select.solax_zappi_octopus_notification_list')} %}
+                    {% set current1 = state_attr('sensor.solax_zappi_octopus_notification_to_exclude', 'notification_list')| reject("equalto", old) |list  %}
+                    {{ current1 }}
+                {% endif %}
+              {% else %}
+                {{[{"notification": " "}]}}
+              {% endif %}
+          icon: mdi:alert
 
     ######################################################
     # Generate tariff events and selects utility meter settings when:
@@ -486,3 +523,40 @@ solax_zappi_octopus_templates:
           unique_id: 2e2346fe-8a52-4465-b3b4-4445fe9632a5
           state: >
             {{true if trigger.event.data.battery_discharge == "discharge before EV charge" else false}}
+
+
+
+
+    # - trigger:
+    #     - trigger: homeassistant
+    #       event: start
+    #       id: "HA_START"
+    #     - trigger: time_pattern
+    #       minutes: /1
+    #   sensor:    
+    #     - name: "Solax Zappi Octopus Alerts"
+    #       unique_id: solax_zappi_octopus_alerts
+    #       state: "{{ now().timestamp() | timestamp_custom() }}"
+    #       attributes:
+    #         alert_list: >
+    #           {% set new = 
+    #           [{"alert": " "}]+
+    #           [{"alert": "EV Charging Started"}]+
+    #           [{"alert": "EV Stopped Charging - Attempting Battery Export."}]+
+    #           [{"alert": "EV Stopped Charging."}]+
+    #           [{"alert": "EV Connected - Waiting for Octopus schedule"}]+
+    #           [{"alert": "EV Connected - Waiting for Solax to Discharge before getting Octopus schedule"}]+
+    #           [{"alert": "EV Connected - Waiting for Octopus schedule & Solax to Discharge"}]+
+    #           [{"alert": "EV Connected - Waiting for Octopus schedule - Solax Discharge Unavailable"}]+
+    #           [{"alert": "EV Connected - No Charge Plan"}]+
+    #           [{"alert": "EV Disconnected"}]+
+    #           [{"alert": "Manual Discharge Started"}]+
+    #           [{"alert": "Manual Discharge Stopped"}]+
+    #           [{"alert": "Battery Export Started"}]+
+    #           [{"alert": "Battery Export Finished"}]+
+    #           [{"alert": "Cheap Rate"}]+
+    #           [{"alert": "Peak Rate"}]
+    #           %}
+    #           {{(new)}}
+    #       icon: mdi:alert
+
