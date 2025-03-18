@@ -2319,7 +2319,7 @@
       sequence:
       - if:
         - condition: template
-          value_template: '{{trigger.event.data.title not in state_attr(''sensor.solax_zappi_octopus_alerts_to_exclude'',''alert_list'')
+          value_template: '{{trigger.event.data.title not in state_attr(''sensor.solax_zappi_octopus_notification_to_exclude'',''notification_list'')
             | map(attribute=''alert'') | list}}'
         then:
         - action: persistent_notification.create
