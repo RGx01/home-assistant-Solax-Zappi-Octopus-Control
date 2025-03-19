@@ -1436,6 +1436,9 @@
       - condition: state
         entity_id: binary_sensor.solax_discharge_before_ev_charge
         state: 'off'
+      - condition: state
+        entity_id: input_boolean.saving_session_active
+        state: 'off'
       sequence:
       - repeat:
           sequence:
