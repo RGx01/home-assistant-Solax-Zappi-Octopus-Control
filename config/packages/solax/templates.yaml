@@ -13,6 +13,7 @@ solax_templates:
     # Change log
     ######################################################
     # v3.1   Added system on/off sensor
+    #        Added sensor to compare string voltages
     # v3.0.0 Added calc for battery in from grid
     # v2.1.4 Improved resilience to sensors reporting defaults/template warnings in logs
     #        due to invalid/empty rest responses.

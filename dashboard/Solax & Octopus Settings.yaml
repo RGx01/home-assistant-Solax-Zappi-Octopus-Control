@@ -1,6 +1,7 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
 # v3.1   Added better notification options and cell voltage
+#        Added Solax System On/Off
 # v3.0.5 Added missing titles to load chart
 # v3.0.4 Tidy up of charts
 # v3.0.3 Chart presentation improvement
@@ -210,6 +211,7 @@ sections:
         type: entities
         show_header_toggle: false
         entities:
+          - entity: input_boolean.solax_system_enable
           - entity: input_select.solax_work_mode
           - entity: input_boolean.use_grid_during_octopus_dispatch
             state_color: true

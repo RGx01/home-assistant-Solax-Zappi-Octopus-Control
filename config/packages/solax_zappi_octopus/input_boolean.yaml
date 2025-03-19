@@ -2,7 +2,7 @@ solax_zappi_octopus_input_boolean:
   input_boolean:
     ###########################################
     # Solax Zappi Octopus UI
-    # v3.1 System State
+    # v3.1 Solax System on/off State
     # v3.0 Discharge Solax before EV charge
     # v2.1 Battery Warmer
     ###########################################
