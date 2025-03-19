@@ -4,6 +4,8 @@
 #
 # Change log
 # v3.1   Better Notification Management
+#        Added system on off functionality
+#        Added new sensor to check PV string power difference
 # v3.0.0 Event based trigger for solax discharge to handle discharging before an EV Charge
 #        Zappi last disconnect sensor - added a from condition
 # v2.1.4 Updated ev_start_time logic.
@@ -523,40 +525,4 @@ solax_zappi_octopus_templates:
           unique_id: 2e2346fe-8a52-4465-b3b4-4445fe9632a5
           state: >
             {{true if trigger.event.data.battery_discharge == "discharge before EV charge" else false}}
-
-
-
-
-    # - trigger:
-    #     - trigger: homeassistant
-    #       event: start
-    #       id: "HA_START"
-    #     - trigger: time_pattern
-    #       minutes: /1
-    #   sensor:    
-    #     - name: "Solax Zappi Octopus Alerts"
-    #       unique_id: solax_zappi_octopus_alerts
-    #       state: "{{ now().timestamp() | timestamp_custom() }}"
-    #       attributes:
-    #         alert_list: >
-    #           {% set new = 
-    #           [{"alert": " "}]+
-    #           [{"alert": "EV Charging Started"}]+
-    #           [{"alert": "EV Stopped Charging - Attempting Battery Export."}]+
-    #           [{"alert": "EV Stopped Charging."}]+
-    #           [{"alert": "EV Connected - Waiting for Octopus schedule"}]+
-    #           [{"alert": "EV Connected - Waiting for Solax to Discharge before getting Octopus schedule"}]+
-    #           [{"alert": "EV Connected - Waiting for Octopus schedule & Solax to Discharge"}]+
-    #           [{"alert": "EV Connected - Waiting for Octopus schedule - Solax Discharge Unavailable"}]+
-    #           [{"alert": "EV Connected - No Charge Plan"}]+
-    #           [{"alert": "EV Disconnected"}]+
-    #           [{"alert": "Manual Discharge Started"}]+
-    #           [{"alert": "Manual Discharge Stopped"}]+
-    #           [{"alert": "Battery Export Started"}]+
-    #           [{"alert": "Battery Export Finished"}]+
-    #           [{"alert": "Cheap Rate"}]+
-    #           [{"alert": "Peak Rate"}]
-    #           %}
-    #           {{(new)}}
-    #       icon: mdi:alert
 

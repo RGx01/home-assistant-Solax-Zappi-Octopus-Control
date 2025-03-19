@@ -12,6 +12,7 @@ solax_templates:
     ######################################################
     # Change log
     ######################################################
+    # v3.1   Added system on/off sensor
     # v3.0.0 Added calc for battery in from grid
     # v2.1.4 Improved resilience to sensors reporting defaults/template warnings in logs
     #        due to invalid/empty rest responses.
@@ -81,6 +82,13 @@ solax_templates:
         ######################################################
         # Solax Local Settings
         ######################################################
+        
+        ### System on/off 
+        - name: "Solax Local System State"
+          unique_id: solax_local_system_state
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[19] == 1 | bool(default=false)}}"
+          icon: mdi:home-switch
+
         ### Battery discharge min (%) (Self Use Mode)
         - name: "Solax Local SelfUse Battery Min SoC"
           unique_id: solax_local_selfuse_battery_min_soc
@@ -254,6 +262,14 @@ solax_templates:
         - name: "Solax Local PV Output String 2"
           unique_id: solax_local_pv_output_2
           state: "{{ (state_attr('sensor.solax_local', 'Data')[9]) | int(default=0) }}"
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+
+        #### Dev Sensor to detect string failure
+        - name: "Solax Local PV diff"
+          unique_id: solax_local_pv_diff
+          state: "{{ (((state_attr('sensor.solax_local', 'Data')[8] - state_attr('sensor.solax_local', 'Data')[9]))|abs)| int(default=0) }}"
           unit_of_measurement: "W"
           state_class: measurement
           device_class: "power"

@@ -101,3 +101,8 @@ solax_rest_command:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_heat_stop2_payload
+
+    solax_local_set_system_state:
+      url: !secret solax_local_ip
+      method: post
+      payload: !secret solax_local_set_system_state_payload

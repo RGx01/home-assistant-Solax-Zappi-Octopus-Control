@@ -2,6 +2,7 @@ solax_zappi_octopus_input_boolean:
   input_boolean:
     ###########################################
     # Solax Zappi Octopus UI
+    # v3.1 System State
     # v3.0 Discharge Solax before EV charge
     # v2.1 Battery Warmer
     ###########################################
@@ -50,6 +51,11 @@ solax_zappi_octopus_input_boolean:
     export_battery_prior:
       name: Export Battery Before Charging EV
       icon: mdi:battery-arrow-down
+    # solax System on/off
+    solax_system_enable:
+      name: Solax System Enable
+      icon: mdi:home-battery
+
     #Notify a mobile device_tracker
     nofify_mobile:
       name: Notify mobile?
