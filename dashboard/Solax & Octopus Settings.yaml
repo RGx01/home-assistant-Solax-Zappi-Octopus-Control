@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v3.2   Dashboard tidy
 # v3.1   Added better notification options and cell voltage
 #        Added Solax System On/Off
 # v3.0.5 Added missing titles to load chart
@@ -111,10 +112,6 @@ sections:
             name: Zappi Charge Mode
         show_header_toggle: false
         state_color: true
-        header:
-          type: graph
-          entity: sensor.myenergi_drive_power_grid
-          detail: 2
         title: Octopus Device Settings
       - type: vertical-stack
         cards:
@@ -313,10 +310,6 @@ sections:
           - entity: input_datetime.solax_battery_stop_charge_time
           - entity: input_boolean.solaxchargeperiod2
             state_color: true
-        header:
-          type: graph
-          entity: sensor.solax_local_house_load_power
-          detail: 2
         state_color: true
       - type: entities
         show_header_toggle: false
@@ -327,6 +320,57 @@ sections:
           - condition: state
             entity: input_boolean.solaxchargeperiod2
             state: "on"
+      - type: custom:power-flow-card-plus
+        entities:
+          battery:
+            entity: sensor.solax_local_battery_power
+            state_of_charge: sensor.solax_local_battery_soc
+            invert_state: true
+          grid:
+            entity:
+              consumption: sensor.solax_local_grid_used_power
+              production: sensor.solax_local_grid_export_power
+          home:
+            entity: sensor.solax_local_load_power
+            color_value: true
+            name: Home
+            use_metadata: true
+          individual:
+            - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
+              secondary_info: {}
+              name: Zappi
+              use_metadata: false
+          fossil_fuel_percentage:
+            state_type: power
+            entity: sensor.electricity_maps_grid_fossil_fuel_percentage
+            color_value: true
+            color_icon: true
+            display_zero: true
+            name: Low Carbon
+            unit_white_space: true
+            use_metadata: true
+            display_zero_state: false
+          solar:
+            entity: sensor.solax_local_pv_output
+            color_value: true
+            color_icon: true
+        clickable_entities: true
+        display_zero_lines:
+          mode: transparency
+          transparency: 50
+          grey_color:
+            - 189
+            - 189
+            - 189
+        use_new_flow_rate_model: true
+        w_decimals: 0
+        kw_decimals: 1
+        min_flow_rate: 0.75
+        max_expected_power: 6000
+        min_expected_power: 0.01
+        watt_threshold: 1000
+        transparency_zero_lines: 0
+        max_flow_rate: 10
     visibility:
       - condition: state
         entity: input_select.solax_work_mode
@@ -383,10 +427,6 @@ sections:
           - entity: input_datetime.solax_battery_stop_charge_time
           - entity: input_boolean.solaxchargeperiod2
             state_color: true
-        header:
-          type: graph
-          entity: sensor.solax_local_house_load_power
-          detail: 2
       - type: entities
         show_header_toggle: false
         entities:
@@ -396,6 +436,57 @@ sections:
           - condition: state
             entity: input_boolean.solaxchargeperiod2
             state: "on"
+      - type: custom:power-flow-card-plus
+        entities:
+          battery:
+            entity: sensor.solax_local_battery_power
+            state_of_charge: sensor.solax_local_battery_soc
+            invert_state: true
+          grid:
+            entity:
+              consumption: sensor.solax_local_grid_used_power
+              production: sensor.solax_local_grid_export_power
+          home:
+            entity: sensor.solax_local_load_power
+            color_value: true
+            name: Home
+            use_metadata: true
+          individual:
+            - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
+              secondary_info: {}
+              name: Zappi
+              use_metadata: false
+          fossil_fuel_percentage:
+            state_type: power
+            entity: sensor.electricity_maps_grid_fossil_fuel_percentage
+            color_value: true
+            color_icon: true
+            display_zero: true
+            name: Low Carbon
+            unit_white_space: true
+            use_metadata: true
+            display_zero_state: false
+          solar:
+            entity: sensor.solax_local_pv_output
+            color_value: true
+            color_icon: true
+        clickable_entities: true
+        display_zero_lines:
+          mode: transparency
+          transparency: 50
+          grey_color:
+            - 189
+            - 189
+            - 189
+        use_new_flow_rate_model: true
+        w_decimals: 0
+        kw_decimals: 1
+        min_flow_rate: 0.75
+        max_expected_power: 6000
+        min_expected_power: 0.01
+        watt_threshold: 1000
+        transparency_zero_lines: 0
+        max_flow_rate: 10
     visibility:
       - condition: state
         entity: input_select.solax_work_mode
@@ -440,6 +531,57 @@ sections:
           entity: sensor.solax_local_battery_dump_power
           detail: 2
           hours_to_show: 24
+      - type: custom:power-flow-card-plus
+        entities:
+          battery:
+            entity: sensor.solax_local_battery_power
+            state_of_charge: sensor.solax_local_battery_soc
+            invert_state: true
+          grid:
+            entity:
+              consumption: sensor.solax_local_grid_used_power
+              production: sensor.solax_local_grid_export_power
+          home:
+            entity: sensor.solax_local_load_power
+            color_value: true
+            name: Home
+            use_metadata: true
+          individual:
+            - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
+              secondary_info: {}
+              name: Zappi
+              use_metadata: false
+          fossil_fuel_percentage:
+            state_type: power
+            entity: sensor.electricity_maps_grid_fossil_fuel_percentage
+            color_value: true
+            color_icon: true
+            display_zero: true
+            name: Low Carbon
+            unit_white_space: true
+            use_metadata: true
+            display_zero_state: false
+          solar:
+            entity: sensor.solax_local_pv_output
+            color_value: true
+            color_icon: true
+        clickable_entities: true
+        display_zero_lines:
+          mode: transparency
+          transparency: 50
+          grey_color:
+            - 189
+            - 189
+            - 189
+        use_new_flow_rate_model: true
+        w_decimals: 0
+        kw_decimals: 1
+        min_flow_rate: 0.75
+        max_expected_power: 6000
+        min_expected_power: 0.01
+        watt_threshold: 1000
+        transparency_zero_lines: 0
+        max_flow_rate: 10
     visibility:
       - condition: state
         entity: input_select.solax_work_mode
@@ -600,6 +742,7 @@ sections:
         entities:
           - entity: sensor.solax_local_load_power
           - entity: sensor.solax_local_grid_power
+          - entity: sensor.solax_local_inverter_power
           - entity: sensor.solax_local_pv_output
           - entity: sensor.solax_local_pv_output_string_1
           - entity: sensor.solax_local_pv_output_string_2
