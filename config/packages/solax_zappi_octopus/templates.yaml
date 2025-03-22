@@ -54,7 +54,7 @@ solax_zappi_octopus_templates:
             {%set target_percentage = states('number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target')%}
             {%set ev_size = states('input_number.ev_battery_size')|int(default=10) %}
             {%set delta_time = ((ev_size|int/7)*(target_percentage|int/100))*60*60%}
-            {{(target_time-delta_time)|as_datetime}}
+            {{(target_time-delta_time)|as_datetime (default=(now()|as_timestamp-delta_time)|as_datetime)}}
 
     ######################################################
     # Solar threshold calcs
@@ -186,7 +186,7 @@ solax_zappi_octopus_templates:
             {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') | length > 0) -%}
             {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') -%}
             {%- if dispatch.start|as_timestamp >= disconnected|as_timestamp -%}
-            {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float%}
+            {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float (default=0.0)%}
             {%- endif-%}
             {%- endfor -%}
             {%- endif  %}
@@ -250,7 +250,7 @@ solax_zappi_octopus_templates:
                 {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') | length > 0) -%}
                   {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') -%}
                     {%- if dispatch.start|as_timestamp > disconnected|as_timestamp and dispatch.start|as_timestamp < states('sensor.zappi_last_connected')|as_timestamp-%}
-                      {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float%}
+                      {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float (default=0.0)%}
                     {%- endif-%}
                   {%- endfor -%}
                   {{ns.total_dispatch}}  

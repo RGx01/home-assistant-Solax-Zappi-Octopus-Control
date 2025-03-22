@@ -3006,13 +3006,13 @@
             value_template: "{% set end_time = as_datetime(state_attr('input_datetime.saving_session_start',
               'timestamp') - 60).strftime('%H:%M') %} \n{% set start_time = as_datetime(state_attr('input_datetime.saving_session_start',
               'timestamp') -60 - states('input_number.octopus_saving_session_prep_time')|int*60).strftime('%H:%M')
-              \ %} \n{% if input_number.octopus_saving_session_prep_time >=5 %}\n{%
-              set chd2 = true%}\n{% else %}\n{% set chd2 = false%}\n{% endif %}\n\n{{
-              (states('sensor.solax_local_battery_chd2_enabled')|bool==chd2 \n    and
-              states('sensor.solax_local_battery_setting_stop_charge_2') == end_time\n
-              \   and states('sensor.solax_local_battery_setting_start_charge_2')
+              \ %} \n{% if states('input_number.octopus_saving_session_prep_time')|int
+              >=5 %}\n{% set chd2 = true%}\n{% else %}\n{% set chd2 = false%}\n{%
+              endif %}\n\n{{ (states('sensor.solax_local_battery_chd2_enabled')|bool==chd2
+              \n    and states('sensor.solax_local_battery_setting_stop_charge_2')
+              == end_time\n    and states('sensor.solax_local_battery_setting_start_charge_2')
               == start_time)\n    or repeat.index == 3 }}"
-      - action: select.select_option
+      - action: input_select.select_option
         metadata: {}
         data:
           option: 'yes'
@@ -3181,6 +3181,7 @@
             entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
           enabled: true
           action: switch.turn_off
+        enabled: false
     - conditions:
       - condition: trigger
         id:
