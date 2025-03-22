@@ -370,17 +370,18 @@ solax_zappi_octopus_templates:
                     {% set new = [{"device": states('input_select.solax_automation_notification_devices')}] %}
                     {{ new + current1 }}
                 {% else %}
-                  {% if states('input_select.solax_automation_notification_devices') != ' ' %}}
                     {% set old = {"device": states('input_select.solax_automation_notification_devices')} %}
-                    {% set current1 = state_attr('sensor.solax_zappi_octopus_devices_to_notify', 'device')| reject("equalto", old) |list  %}
-                  {% endif %}
-                  
-                  {{ current1 }}
+                    {% set current1 = state_attr('sensor.solax_zappi_octopus_devices_to_notify', 'mobile_devices')| reject("equalto", old) |list  %}
+                    {{ current1 }}
                 {% endif %}
               {% else %}
                 {{[{"device": " "}]}}
               {% endif %}
 
+        # {% if states('input_select.solax_automation_notification_devices') != ' ' %}}
+        #   {% set old = {"device": states('input_select.solax_automation_notification_devices')} %}
+        #   {% set current1 = state_attr('sensor.solax_zappi_octopus_devices_to_notify', 'device')| reject("equalto", old) |list  %}
+        # {% endif %}
 
     ######################################################
     ### Notification list
