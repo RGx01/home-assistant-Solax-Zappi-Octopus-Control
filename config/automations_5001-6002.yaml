@@ -1271,6 +1271,9 @@
       - condition: template
         value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]|int
           !=  states(''sensor.solax_default_operation_mode'')|int) }}'
+      - condition: state
+        entity_id: input_boolean.saving_session_active
+        state: 'off'
       sequence:
       - repeat:
           sequence:
