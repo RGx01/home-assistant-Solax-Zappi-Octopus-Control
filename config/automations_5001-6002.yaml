@@ -1268,6 +1268,9 @@
               == 3 and state_attr(''sensor.solax_local_settings'', ''Data'')[11] ==
               2) or repeat.index == 3 }}'
     - conditions:
+      - condition: trigger
+        id:
+        - Charge Solax
       - condition: template
         value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]|int
           !=  states(''sensor.solax_default_operation_mode'')|int) }}'
