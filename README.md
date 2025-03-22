@@ -79,6 +79,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 * Myenergi https://github.com/CJNE/ha-myenergi
 * Uptime https://www.home-assistant.io/integrations/uptime/
 * Powercalc https://docs.powercalc.nl/quick-start/
+* Power Flow Card Plus https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.2.0
 
 ### Mandatory Manual Adjustments to Config Yaml & Dashboard Yaml
 You must edit and replace instances of Zappi number, Solax registration number, Octopus account details & IP address :
