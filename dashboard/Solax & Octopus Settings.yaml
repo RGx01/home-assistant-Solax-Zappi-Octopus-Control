@@ -340,6 +340,7 @@ sections:
               secondary_info: {}
               name: Zappi
               use_metadata: false
+              display_zero: true
           fossil_fuel_percentage:
             state_type: power
             entity: sensor.electricity_maps_grid_fossil_fuel_percentage
@@ -456,6 +457,7 @@ sections:
               secondary_info: {}
               name: Zappi
               use_metadata: false
+              display_zero: true
           fossil_fuel_percentage:
             state_type: power
             entity: sensor.electricity_maps_grid_fossil_fuel_percentage
@@ -551,6 +553,7 @@ sections:
               secondary_info: {}
               name: Zappi
               use_metadata: false
+              display_zero: true
           fossil_fuel_percentage:
             state_type: power
             entity: sensor.electricity_maps_grid_fossil_fuel_percentage
