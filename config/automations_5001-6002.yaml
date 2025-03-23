@@ -166,6 +166,9 @@
   - trigger: time
     at: input_datetime.solax_battery_start_charge_time
     id: Charge Solax
+  - trigger: time
+    at: sensor.solax_local_battery_setting_stop_charge_2
+    id: Charge Period 2 End
   conditions: []
   actions:
   - choose:
@@ -1301,6 +1304,27 @@
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
               == default_mode) or repeat.index == 3 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - Charge Period 2 End
+      - condition: state
+        entity_id: sensor.solax_local_battery_chd2_enabled
+        state: ''
+      - condition: state
+        entity_id: input_boolean.saving_session_active
+        state: 'off'
+      sequence:
+      - data:
+          enabled: '{{ 0 }}
+
+            '
+        action: rest_command.solax_local_set_period2_enable
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: '{{refresh_settings_delay}}'
+          milliseconds: 0
     enabled: true
   - action: input_boolean.turn_off
     metadata: {}

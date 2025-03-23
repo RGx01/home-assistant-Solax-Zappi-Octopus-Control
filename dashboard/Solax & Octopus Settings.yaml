@@ -16,7 +16,6 @@ sections:
   - type: grid
     cards:
       - type: heading
-        heading: Octopus Device Settings
         heading_style: title
         badges:
           - type: entity
@@ -42,6 +41,10 @@ sections:
                 entity: >-
                   binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
                 state: "off"
+            state_content:
+              - name
+              - state
+            name: Schedule
           - type: entity
             show_state: true
             show_icon: true
@@ -53,7 +56,7 @@ sections:
             state_content:
               - name
               - state
-            name: Next EV Start Time
+            name: Schedule
           - type: entity
             show_state: true
             show_icon: true
@@ -175,7 +178,6 @@ sections:
   - type: grid
     cards:
       - type: heading
-        heading: Solax Settings
         heading_style: title
         badges:
           - type: entity
@@ -260,7 +262,6 @@ sections:
   - type: grid
     cards:
       - type: heading
-        heading: Self Use Settings
         heading_style: title
         badges:
           - type: entity
@@ -380,7 +381,6 @@ sections:
   - type: grid
     cards:
       - type: heading
-        heading: "Feed In Settings "
         heading_style: title
         grid_options:
           columns: full
@@ -496,7 +496,6 @@ sections:
   - type: grid
     cards:
       - type: heading
-        heading: Manual Mode Settings
         heading_style: title
         badges:
           - type: entity
