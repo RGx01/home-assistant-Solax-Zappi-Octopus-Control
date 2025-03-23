@@ -1309,11 +1309,10 @@
         id:
         - Charge Period 2 End
       - condition: state
-        entity_id: sensor.solax_local_battery_chd2_enabled
-        state: ''
-      - condition: state
         entity_id: input_boolean.saving_session_active
         state: 'off'
+      - condition: template
+        value_template: '{{states(''sensor.solax_local_battery_chd2_enabled'')|bool==true}}'
       sequence:
       - data:
           enabled: '{{ 0 }}
@@ -2150,18 +2149,16 @@
     action: input_number.set_value
     enabled: true
   - if:
-    - condition: state
-      entity_id: sensor.solax_local_battery_chd2_enabled
-      state: 'True'
+    - condition: template
+      value_template: '{{states(''sensor.solax_local_battery_chd2_enabled'')|bool==true}}'
     then:
     - action: input_boolean.turn_on
       target:
         entity_id: input_boolean.solaxchargeperiod2
       data: {}
   - if:
-    - condition: state
-      entity_id: sensor.solax_local_battery_chd2_enabled
-      state: 'False'
+    - condition: template
+      value_template: '{{states(''sensor.solax_local_battery_chd2_enabled'')|bool==false}}'
     then:
     - action: input_boolean.turn_off
       target:
