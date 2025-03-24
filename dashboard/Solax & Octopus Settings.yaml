@@ -61,8 +61,10 @@ sections:
             show_state: true
             show_icon: true
             entity: sensor.octopus_total_planned_dispatch
-            name: Planned
-            state_content: state
+            name: Planned Dispatch
+            state_content:
+              - name
+              - state
             color: green
             tap_action:
               action: more-info
@@ -81,6 +83,9 @@ sections:
                 state: EV Connected
             tap_action:
               action: more-info
+            state_content:
+              - name
+              - state
           - type: entity
             show_state: true
             show_icon: true
@@ -91,6 +96,8 @@ sections:
                 state: Charging
             tap_action:
               action: more-info
+            state_content: name
+            name: Completed
       - type: entities
         entities:
           - entity: sensor.ev_start_time
@@ -211,6 +218,7 @@ sections:
         show_header_toggle: false
         entities:
           - entity: input_boolean.solax_system_enable
+            name: Inverter Off/On
           - entity: input_select.solax_work_mode
           - entity: input_boolean.use_grid_during_octopus_dispatch
             state_color: true
@@ -373,6 +381,9 @@ sections:
         watt_threshold: 1000
         transparency_zero_lines: 0
         max_flow_rate: 10
+        grid_options:
+          columns: 12
+          rows: auto
     visibility:
       - condition: state
         entity: input_select.solax_work_mode

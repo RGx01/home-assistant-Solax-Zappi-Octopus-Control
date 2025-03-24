@@ -70,8 +70,5 @@ sections:
           - entity: input_boolean.octopus_free_electric_soc_use
           - entity: input_number.octopus_free_session_battery_prep_soc
           - entity: input_datetime.octopus_free_electricity_prep
-          - entity: sensor.solax_local_battery_setting_start_charge_2
-          - entity: sensor.solax_local_battery_setting_stop_charge_2
           - entity: binary_sensor.free_electricity_today
     column_span: 1
-

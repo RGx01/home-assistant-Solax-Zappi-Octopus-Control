@@ -1,22 +1,22 @@
 - id: '5001'
   alias: 5001 - Solax Zappi Octopus Control
   description: "# 5001 - Solax Zappi Octopus Control\nSee documentation in repo.\n\n#
-    Initial installation instructions\n1. This is 5001 only you need 5002 5003 5004
-    and 5005. files are kept seperate in repo for ease of maintenance\n2. Find and
-    replace, zappi_XXXXXXXX with zappi number, z_ZZZZZZZZ with Octopus account\n3.
-    Paste into your automations.yaml\n\n# Change Log\nv3.0.4 Added a condition to
-    prevent inverter reverting back to default if vehicle was charging prior to a
-    saving session starting.\nv3.0.3 Added When Condition to ensure inverter mode
-    is reset to default mode when it's time to start charging the solax battery.\nv3.0.2
-    further fixes to 3.0.1\nv3.0.1 Fixed issue that if user plugs in during a saving
-    session a charge could be initiated\nv3.0.0 Allow discharge battery before charging
-    EV\nv2.1.4.1 Spotted a potential bug if user starts charge at 23:30 where it could
-    clash with tail battery export\nv2.1.4 Renamed automation\nv2.1.3.1 fixed missing
-    scenario where min_SoC would not be set properly at 23:30 or if FAST charging
-    was selected.\nv2.1.3 More readable notifications\nv2.1.1 Update dispatch trigger
-    for octopus dispatch from on to off rather than just to off. false triggers when
-    sensor is unavailable \nv2.1 updated setting of modes and SoC's wrt rest sensor
-    sensor.solax_rest_local_settings\nv2.0 Remove legacy dev work"
+    Initial installation instructions\n1. This is 5001. You also need 5002 5003 5004
+    and 5005 to make this work successfully. \n2. Find and replace, zappi_XXXXXXXX
+    with zappi number, z_ZZZZZZZZ with Octopus account\n3. Paste into your automations.yaml\n\n#
+    Change Log\nv3.0.4 Added a condition to prevent inverter reverting back to default
+    if vehicle was charging prior to a saving session starting.\nv3.0.3 Added When
+    Condition to ensure inverter mode is reset to default mode when it's time to start
+    charging the solax battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1 Fixed issue
+    that if user plugs in during a saving session a charge could be initiated\nv3.0.0
+    Allow discharge battery before charging EV\nv2.1.4.1 Spotted a potential bug if
+    user starts charge at 23:30 where it could clash with tail battery export\nv2.1.4
+    Renamed automation\nv2.1.3.1 fixed missing scenario where min_SoC would not be
+    set properly at 23:30 or if FAST charging was selected.\nv2.1.3 More readable
+    notifications\nv2.1.1 Update dispatch trigger for octopus dispatch from on to
+    off rather than just to off. false triggers when sensor is unavailable \nv2.1
+    updated setting of modes and SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0
+    Remove legacy dev work"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -1351,13 +1351,12 @@
     discharge set the mode back to default mode when the SoC threshold is met. In
     a free Electric discharge, feed in priority is used to prevent the battery filling
     if it's sunny. After free electric session is done default mode is returned. \n\n#
-    Initial installation instructions\n1. This is 5002 only you need 5001 5003 5004
-    and 5005. files are kept seperate in repo for ease of maintenance\n2. replace
-    z_ZZZZZZZZ with your Octopus Account Number\n3. Copy and Paste into your automations.yaml\n\n#
-    Change log\nv3.0.0 Set an event to trigger EV charging if binary_sensor.\nSolax
-    Discharge Before EV Charge is on to off\nv2.1.4 Renamed automation\nv2.1.0 - Changes
-    to limits to catch the battery closer to the required threshold set by user\nv2.0.0
-    -productionisation\n"
+    Initial installation instructions\n1. This is 5002 only. You also need 5001 5003
+    5004 and 5005. \n2. replace z_ZZZZZZZZ with your Octopus Account Number\n3. Copy
+    and Paste into your automations.yaml\n\n# Change log\nv3.0.0 Set an event to trigger
+    EV charging if binary_sensor.\nSolax Discharge Before EV Charge is on to off\nv2.1.4
+    Renamed automation\nv2.1.0 - Changes to limits to catch the battery closer to
+    the required threshold set by user\nv2.0.0 -productionisation\n"
   triggers:
   - entity_id:
     - sensor.solax_local_battery_soc
@@ -1632,10 +1631,9 @@
 - id: '5003'
   alias: 5003 - Solax Set UI Options
   description: "Populate UI with Solax Settings\n\n# AUTOMATION 5003 \n1. This is
-    5003 only you need 5001 5002 5004 and 5005. files are kept seperate in repo for
-    ease of maintenance\n2. Copy and Paste into your automations.yaml\n\n# Change
-    log\nv3.1 Added system on/off\nv2.1.4 Renamed automation\nv2.1.0 \n*Allow queued
-    runs so UI looks a bit more seemless when updating the inverter settings\n*Added
+    5003 only. You need 5001 5002 5004 and 5005.\n2. Copy and Paste into your automations.yaml\n\n#
+    Change log\nv3.1 Added system on/off\nv2.1.4 Renamed automation\nv2.1.0 \n*Allow
+    queued runs so UI looks a bit more seemless when updating the inverter settings\n*Added
     battery warmer controls\nV2.0 Revamp\nv1.0 Initial"
   triggers:
   - entity_id:
@@ -2072,9 +2070,9 @@
 - id: '5004'
   alias: 5004 - Solax Reload Settings
   description: "Populate UI with Solax Settings \n\n# AUTOMATION 5004\n 1. This is
-    5004 only you need 5001 5002 5003 and 5005. files are kept separate in repo for
-    ease of maintenance\n 2. Paste into your automations.yaml\n\n# Change log\nv3.1
-    Added system on/off\n v2.1.4 Renamed automation\n v2.1 Battery Warmer\n v2.0 Revamp\n"
+    5004 only. You also need 5001 5002 5003 and 5005. \n 2. Paste into your automations.yaml\n\n#
+    Change log\nv3.1 Added system on/off\n v2.1.4 Renamed automation\n v2.1 Battery
+    Warmer\n v2.0 Revamp\n"
   triggers:
   - trigger: time_pattern
     minutes: /12
