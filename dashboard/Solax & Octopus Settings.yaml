@@ -96,7 +96,9 @@ sections:
                 state: Charging
             tap_action:
               action: more-info
-            state_content: name
+            state_content:
+              - name
+              - state
             name: Completed
       - type: entities
         entities:
