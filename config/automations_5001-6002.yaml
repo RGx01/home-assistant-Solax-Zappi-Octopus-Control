@@ -1026,8 +1026,17 @@
             entity_id: sensor.zappi_plug_status
             state: EV Connected
           - condition: template
-            value_template: '{{(now()|as_timestamp-states(''sensor.ev_start_time'')|as_timestamp)|abs
-              > 15*60}}'
+            value_template: '{%if zappi_eco_mode_override == on %}
+
+              {{(now()|as_timestamp-states(''sensor.zappi_last_connected'')|as_timestamp)|abs
+              > 15*60}}
+
+              {%else%}
+
+              {{(now()|as_timestamp-states(''sensor.ev_start_time'')|as_timestamp)|abs
+              > 15*60}}
+
+              {%endif%}'
       sequence:
       - if:
         - condition: state
