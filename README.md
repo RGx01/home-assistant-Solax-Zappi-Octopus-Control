@@ -53,7 +53,8 @@ The project is split into 3 parts:
 ## Screenshots and Descriptions of Dashboards
 
 ## Demo
-![solaxzappioctopus](https://github.com/user-attachments/assets/ed80306d-c862-40f7-ad16-47ee9838e429)
+![test3](https://github.com/user-attachments/assets/b3d212c2-b009-4605-927f-539bd89c1e69)
+
 
 ## Solax Zappi Octopus Control Dashboard
 ![Screenshot 2025-03-24 at 17 35 44](https://github.com/user-attachments/assets/e0a79123-4eac-444e-b180-504541a8b951)
