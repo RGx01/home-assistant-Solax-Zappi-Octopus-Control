@@ -160,6 +160,9 @@ They are displayed but there is little reason to ever change them once set.
 ### Using the Inverter SoC Controls to Control When the Battery Discharges
 <img width="525" alt="Screenshot 2025-01-29 at 17 01 42" src="https://github.com/user-attachments/assets/4413fdbe-e1ce-46bd-a021-929edd766c1f" />
 
+### Automation 5001
+
+![Screenshot 2025-03-24 at 17 28 50](https://github.com/user-attachments/assets/25001580-f290-4a80-9afc-b91043494663)
 
 
 ## Credits and Acknowledgments
