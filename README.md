@@ -1,5 +1,7 @@
 # Solax-Zappi-Octopus-Control
 
+![test3](https://github.com/user-attachments/assets/b3d212c2-b009-4605-927f-539bd89c1e69)
+
 * [Introduction](#introduction)
 * [Revision Log](#revision-log)
 * [Screenshots and Descriptions](#screenshots-and-descriptions-of-dashboards)
@@ -51,10 +53,6 @@ The project is split into 3 parts:
 | v2.1  | **19/1/25** | All |1. Revised Dashboards <br /> 2. Added Battery Warming controls <br /> 3. Added Mobile Notifications <br /> 4. New template sensors to switch utility meter tariffs peak/offpeak <br /> 5. General bug fixes in template sensors|
 
 ## Screenshots and Descriptions of Dashboards
-
-## Demo
-![test3](https://github.com/user-attachments/assets/b3d212c2-b009-4605-927f-539bd89c1e69)
-
 
 ## Solax Zappi Octopus Control Dashboard
 ![Screenshot 2025-03-24 at 17 35 44](https://github.com/user-attachments/assets/e0a79123-4eac-444e-b180-504541a8b951)
