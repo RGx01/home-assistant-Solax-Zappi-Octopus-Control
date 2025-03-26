@@ -200,6 +200,31 @@ If you have previous used similar Solax automations/config be aware that some re
 ### Other Adjustments needed
 * In the solax package templates.yaml you must adjust the battery size to your battery size and set a flag indicating where your solax CT clamp is. (notes are in the yaml)
 
+### Config File & Packages
+
+Rather than putting all the config in a single config file the package files can be added like this example use of the homeassistant: tag in the configuartion.yaml
+
+<code>
+default_config:
+
+logger:
+  default: info
+  logs:
+    homeassistant.components.rest: info
+
+frontend:
+  themes: !include_dir_merge_named themes
+homeassistant:
+  packages: !include_dir_merge_named packages/
+
+automation: !include automations.yaml
+</code>
+
+The directory referenced in homeassistant: tag should look like this once all the mandatory replacements mentioned above are complete. The packages directory is in the same dierectory where the Home Assistant configuration is kept.
+
+<br>
+<img width="308" alt="Screenshot 2025-03-26 at 23 27 43" src="https://github.com/user-attachments/assets/9f1688af-8ec7-4fab-a8a2-bfd39ee8799c" />
+
 ### Adding the Dashboards
 * Copy the contents of Solax & Octopus Settings.yaml
 * Replace zappi_XXXXXXXX with your Zappi number
