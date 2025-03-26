@@ -3,13 +3,13 @@
 ![test3](https://github.com/user-attachments/assets/b3d212c2-b009-4605-927f-539bd89c1e69)
 
 * [Introduction](#introduction)
-* [Revision Log](#revision-log)
 * [Screenshots and Descriptions](#screenshots-and-descriptions-of-dashboards)
 * [Credits and Acknowledgments](#credits-and-acknowledgments)
 * [INSTALL INSTRUCTIONS](#install-instructions)
 	* [Prerequisite Integrations](#prerequisite-integrations)
 	* [Mandatory Manual Adjustments to Config Yaml & Dashboard Yaml](#mandatory-manual-adjustments-to-config-yaml--dashboard-yaml)
 	* [Adding the Dashboards](#adding-the-dashboards)
+* [Revision Log](#revision-log)
 * [Automation Function Summary](#automation-function-summary)
 	* [5001 - Solax Zappi Octopus Control](#5001---solax-zappi-octopus-control)
 	* [5002 - Solax Reset Mode After Manual Discharge](#5002---solax-reset-mode-after-manual-discharge)
@@ -18,7 +18,7 @@
 	* [5005 - Solax Zappi Octopus Control - Notifier](#5005---solax-zappi-octopus-control---notifier)
 	* [6001 - Octopus - Free Electric Automation](#6001---octopus---free-electric-automation)
 	* [6002 - Octopus - Saving Sessions Automation](#6002---octopus---saving-sessions-automation)
-* [User Requirements](#user-requirements)
+* [Initial User Requirements](#initial-user-requirements)
 * [Future Dev Work](#future-dev-work)
 * [Problems Found During Development](#problems-found-during-development)
 * [Equipment Used During Development](#equipment-used-during-development)
@@ -37,20 +37,6 @@ The project is split into 3 parts:
 	* config/packages/octopus_saving_sessions
  	* Automations 6001-6002
   	* Dashboard Octopus Saving Sessions.yaml
-
-## Revision Log
-| Version | Date | Files updated |Description |
-|:-----|:--------:|:------|:------|
-| v3.1 | **18/03/25** | automations_5001-6002.yaml <br /> Solax & Octopus Settings.yaml  <br /> packages/solax_zappi_octopus |Better notification management & new dashboard additions & Solax System State Control
-| v3.0.4 | **12/3/25** | automations_5001-6002.yaml <br /> Solax & Octopus Settings.yaml | 5001 Added a condition to prevent inverter reverting back to default if vehicle was charging prior to a saving session starting. <br /> Added a chart title to dashboard|
-| v3.0.3 | **11/3/25** |automations_5001-6002.yaml| 5001 - Added When Condition to ensure inverter mode is reset to default mode when it's time to start charging the solax battery.|
-| v3.0.2 | **6/3/25**| All | Added "Zappi always in ECO+ Mode (when connected)" to allow for EV charging from excess solar |
-| v3.0.0 | **9/2/25** | All | Primarily this release is aimed at large capacity EV users that also want to export Solax battery on a daily basis. <br /> The feature will be most used in the summer where solar export is higher leaving less hours to charge EV and reducing window over night to discharge and recharge the Solax battery.
-| v2.1.4 | **29/1/25** | packages/octopus_saving_sessions/input_boolean.yaml <br/> packages/solax_zappi_octopus/templates.yaml <br/> All automations <br/> Octopus Saving Sessions.yaml (Dashboard)| 1. Added new controls to Saving Sessions Dashboard to attempt to get a dispatch during battery prep and also attempt to get a dispatch straight after session. <br /> 2. Updated EV Start Time logic <br /> 3. Renamed all automations
-| v2.1.4 | **28/1/25** | packages/solax/templates.yaml | Improved resilience to sensors reporting defaults/template warnings in logs due to invalid/empty rest responses.
-| v2.1.3 | **23/1/25** | packages/octopus_saving_sessions/input_datetime.yaml <br />packages/octopus_saving_sessions/input_number.yaml <br /> packages/octopus_saving_sessions/templates.yaml <br /> packages/solax/templates.yaml <br />  packages/solax_zappi_octopus/templates.yaml <br /> automation 600x.yaml removed <br /> automation 6001.yaml added <br /> automation 6002.yaml added <br /> dashboard/Solax & Octopus Settings.yaml added <br /> dashboard/Octopus Saving Sessions.yaml  |1. Fixed bug with free electric <br /> 2. Fixed bug with battery in from solar calcs <br /> 3. Enhanced Octopus Saving Session Options with prep time and prep SoC with checks to stop charging when the target SoC is reached <br /> 4. Tidier Notifications <br /> |
-| v2.1.1 | **19/1/25** | packages/solax_zappi_octopus/templates.yaml |1. Fixed bug with tariff select|
-| v2.1  | **19/1/25** | All |1. Revised Dashboards <br /> 2. Added Battery Warming controls <br /> 3. Added Mobile Notifications <br /> 4. New template sensors to switch utility meter tariffs peak/offpeak <br /> 5. General bug fixes in template sensors|
 
 ## Screenshots and Descriptions of Dashboards
 
@@ -215,6 +201,20 @@ If you have previous used similar Solax automations/config be aware that some re
 * Click Save
 * Click Done
 
+## Revision Log
+| Version | Date | Files updated |Description |
+|:-----|:--------:|:------|:------|
+| v3.1 | **18/03/25** | automations_5001-6002.yaml <br /> Solax & Octopus Settings.yaml  <br /> packages/solax_zappi_octopus |Better notification management & new dashboard additions & Solax System State Control
+| v3.0.4 | **12/3/25** | automations_5001-6002.yaml <br /> Solax & Octopus Settings.yaml | 5001 Added a condition to prevent inverter reverting back to default if vehicle was charging prior to a saving session starting. <br /> Added a chart title to dashboard|
+| v3.0.3 | **11/3/25** |automations_5001-6002.yaml| 5001 - Added When Condition to ensure inverter mode is reset to default mode when it's time to start charging the solax battery.|
+| v3.0.2 | **6/3/25**| All | Added "Zappi always in ECO+ Mode (when connected)" to allow for EV charging from excess solar |
+| v3.0.0 | **9/2/25** | All | Primarily this release is aimed at large capacity EV users that also want to export Solax battery on a daily basis. <br /> The feature will be most used in the summer where solar export is higher leaving less hours to charge EV and reducing window over night to discharge and recharge the Solax battery.
+| v2.1.4 | **29/1/25** | packages/octopus_saving_sessions/input_boolean.yaml <br/> packages/solax_zappi_octopus/templates.yaml <br/> All automations <br/> Octopus Saving Sessions.yaml (Dashboard)| 1. Added new controls to Saving Sessions Dashboard to attempt to get a dispatch during battery prep and also attempt to get a dispatch straight after session. <br /> 2. Updated EV Start Time logic <br /> 3. Renamed all automations
+| v2.1.4 | **28/1/25** | packages/solax/templates.yaml | Improved resilience to sensors reporting defaults/template warnings in logs due to invalid/empty rest responses.
+| v2.1.3 | **23/1/25** | packages/octopus_saving_sessions/input_datetime.yaml <br />packages/octopus_saving_sessions/input_number.yaml <br /> packages/octopus_saving_sessions/templates.yaml <br /> packages/solax/templates.yaml <br />  packages/solax_zappi_octopus/templates.yaml <br /> automation 600x.yaml removed <br /> automation 6001.yaml added <br /> automation 6002.yaml added <br /> dashboard/Solax & Octopus Settings.yaml added <br /> dashboard/Octopus Saving Sessions.yaml  |1. Fixed bug with free electric <br /> 2. Fixed bug with battery in from solar calcs <br /> 3. Enhanced Octopus Saving Session Options with prep time and prep SoC with checks to stop charging when the target SoC is reached <br /> 4. Tidier Notifications <br /> |
+| v2.1.1 | **19/1/25** | packages/solax_zappi_octopus/templates.yaml |1. Fixed bug with tariff select|
+| v2.1  | **19/1/25** | All |1. Revised Dashboards <br /> 2. Added Battery Warming controls <br /> 3. Added Mobile Notifications <br /> 4. New template sensors to switch utility meter tariffs peak/offpeak <br /> 5. General bug fixes in template sensors|
+
 ## Automation Function Summary
 Automations can take a long time to run. I wish it could be made to be more snappy but the rest_commands aren't reliable. The automations make use of an input_boolean.solax_automation_running set to true to indicate in the UI (and to other automations) that an automation is running. Please be patient and wait for the input_boolean to go off before assuming the automation failed. On the dashboard it should turn red whilst something is running.
 
@@ -269,7 +269,7 @@ Automations can take a long time to run. I wish it could be made to be more snap
 * During saving session the zappi is stopped and battery is discharged.
 * After saving session a dispatch is requested if Zappi is connected.
 
-## User Requirements
+## Initial User Requirements
 <ol>
 <li>Control all Solax G4 Inverter settings locally.</li>
 <li>Optionally Prevent Solax battery discharging when Zappi is charging EV.
