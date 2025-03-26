@@ -24,7 +24,8 @@
 * [Equipment Used During Development](#equipment-used-during-development)
   
 ## Introduction
-Please note this is designed specifically for Intelligent Octopus Go using a Zappi registered with Octopus. Using any other timers and programs to contol your EV with this project may cause unexpected behaviours.
+Please note this is designed specifically for <ins>Intelligent Octopus Go</ins> using a <ins>Zappi registered with Octopus</ins>. Using any other timers and programs to contol your EV with this project may cause unexpected behaviours. 
+<br>Please also note the solax inverter is <ins>controlled locally</ins> and does not use any cloud connections.
 <br>This started out as a Home Assistant project to create a UI to control my Solax inverter locally. It's now a project to automate the contol of the my Solax inverter, Zappi EV charger and Octopus Energy interactions including Octoplus Saving Sessions and Free Electric sessions. The idea isn't entirely new (see credits below) but the project now goes beyond my original idea and now provides the opportunity to automatically contol for scenarios (decribed in the requirements below). 
 
 The project is split into 3 parts:
