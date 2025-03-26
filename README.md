@@ -4,6 +4,13 @@
 
 * [Introduction](#introduction)
 * [Screenshots and Descriptions](#screenshots-and-descriptions-of-dashboards)
+	* [Octopus Device Settings](#octopus-device-settings)
+ 	* [Notification Management](#notification-management)
+  	* [Solax Control](#solax-control)
+  	* [Battery Heating](#battery-heating)
+  	* [Self Use Mode Settings](#self-use-mode-settings)
+  	* [Saving Sessions and Free Electric Dashboard](#octopus-saving-sessions)
+  	* [Octopus Free Electricity (1hr Session)](#octopus-free-electricity-1hr-session)
 * [Credits and Acknowledgments](#credits-and-acknowledgments)
 * [INSTALL INSTRUCTIONS](#install-instructions)
 	* [Prerequisite Integrations](#prerequisite-integrations)
