@@ -3,6 +3,7 @@
 ![test3](https://github.com/user-attachments/assets/b3d212c2-b009-4605-927f-539bd89c1e69)
 
 * [Introduction](#introduction)
+* [Credits and Acknowledgments](#credits-and-acknowledgments)
 * [Screenshots and Descriptions](#screenshots-and-descriptions-of-dashboards)
 	* [Octopus Device Settings](#octopus-device-settings)
  	* [Notification Management](#notification-management)
@@ -11,7 +12,6 @@
   	* [Self Use Mode Settings](#self-use-mode-settings)
   	* [Saving Sessions and Free Electric Dashboard](#octopus-saving-sessions)
   	* [Octopus Free Electricity (1hr Session)](#octopus-free-electricity-1hr-session)
-* [Credits and Acknowledgments](#credits-and-acknowledgments)
 * [INSTALL INSTRUCTIONS](#install-instructions)
 	* [Prerequisite Integrations](#prerequisite-integrations)
 	* [Mandatory Manual Adjustments to Config Yaml & Dashboard Yaml](#mandatory-manual-adjustments-to-config-yaml--dashboard-yaml)
@@ -34,6 +34,18 @@
 Please note this is designed specifically for <ins>Intelligent Octopus Go</ins> using a <ins>Zappi registered with Octopus</ins>. Using any other timers and programs to contol your EV with this project may cause unexpected behaviours. 
 <br>Please also note the solax inverter is <ins>controlled locally</ins> and does not use any cloud connections.
 <br>This started out as a Home Assistant project to create a UI to control my Solax inverter locally. It's now a project to automate the contol of the my Solax inverter, Zappi EV charger and Octopus Energy interactions including Octoplus Saving Sessions and Free Electric sessions. The idea isn't entirely new (see credits below) but the project now goes beyond my original idea and now provides the opportunity to automatically contol for scenarios (decribed in the requirements below). 
+[INSTALL INSTRUCTIONS](#install-instructions)
+
+## Credits and Acknowledgments
+The Solax interactions are possible due to work published by @Colin Robbins and @Kamil Baczkowicz. I've tried to simplify things by putting their work into a package. Essentially it becomes a building block for my automations and dashboards. Suggested reading: 
+<ol>
+<li>https://community.home-assistant.io/t/solax-x1-hybrid-g4-worked-example/499362
+</li>
+<li>https://community.home-assistant.io/t/automated-octopus-saving-sessions-with-solax-x1-hybrid-g4/654502
+</li>
+<li>https://community.home-assistant.io/t/solax-x1-hybrid-g4-local-cloud-api/506172
+</li>
+</ol>
 
 The project is split into 3 parts:
 <br> 
@@ -165,17 +177,6 @@ On the free electric day the inverter will use Feed In priority to leave capacit
 
 ![Screenshot 2025-03-24 at 17 28 50](https://github.com/user-attachments/assets/25001580-f290-4a80-9afc-b91043494663)
 
-
-## Credits and Acknowledgments
-The Solax interactions are possible due to work published by @Colin Robbins and @Kamil Baczkowicz. I've tried to simplify things by putting their work into a package. Essentially it becomes a building block for my automations and dashboards. Suggested reading: 
-<ol>
-<li>https://community.home-assistant.io/t/solax-x1-hybrid-g4-worked-example/499362
-</li>
-<li>https://community.home-assistant.io/t/automated-octopus-saving-sessions-with-solax-x1-hybrid-g4/654502
-</li>
-<li>https://community.home-assistant.io/t/solax-x1-hybrid-g4-local-cloud-api/506172
-</li>
-</ol>
 
 # INSTALL INSTRUCTIONS
 ### Prerequisite Integrations
