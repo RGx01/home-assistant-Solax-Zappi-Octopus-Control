@@ -204,8 +204,10 @@ In the packages and automations, you must edit and replace instances of Zappi nu
 * Dashboards
 	* Solax & Octopus Settings.yaml
 	* Octopus Saving Sessions.yaml
-<br>
-Instructions on adding dashboards [Adding the Dashboards](#adding-the-dashboards)
+
+[Instructions on adding dashboards.](#adding-the-dashboards)
+
+
 ### Other Adjustments needed
 In the solax package templates.yaml 
 * you must adjust the battery size to your battery size 
