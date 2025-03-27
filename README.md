@@ -196,6 +196,7 @@ On the free electric day the inverter will use Feed In priority to leave capacit
 * Power Flow Card Plus https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.2.0
 
 ## Steps
+I will aim to provide a script to do the bulk of these steps when I get time.
 
 First back up your Home Assistant. Make sure you are familar with Developer Tools and the Check Configuration button. There should be any issues but if there are a back up is handy.
 <br><br>
@@ -280,9 +281,9 @@ automation: !include automations.yaml
 1. In Home Assistant UI,
  * Select Developer Tools
  * Select the YAML tab
- * Click 'Check Configuration.
- * If there are issue with the config then roll back the changes and repeat but use the 'check configuration' at each step to identify where the issue is.
- * If the Configuration check is fine go ahead and restart home assistant
+ * Click 'Check Configuration'.
+ * If there are issues with the config then either roll back the changes and repeat but use the 'check configuration' at each step to identify where issues arise.
+ * If the 'Check Configuration' is fine go ahead and restart home assistant.
 
 
 ### Adding the Dashboards
