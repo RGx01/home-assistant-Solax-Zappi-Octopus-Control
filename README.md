@@ -182,6 +182,7 @@ On the free electric day the inverter will use Feed In priority to leave capacit
 
 
 # INSTALL INSTRUCTIONS
+
 ### Prerequisite Integrations
 * Electricity Maps https://www.home-assistant.io/integrations/co2signal/
 * HACS https://hacs.xyz/docs/use/
@@ -191,6 +192,8 @@ On the free electric day the inverter will use Feed In priority to leave capacit
 * Powercalc https://docs.powercalc.nl/quick-start/
 * Power Flow Card Plus https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.2.0
 
+## Steps - WIP
+1. copy packages to 
 ### Mandatory Manual Adjustments to Config Yaml & Dashboard Yaml
 Config files are here https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config
 The example configuration.yaml is an example of how to include packages. Do not replace yours with this, just add the package configuration to your configuation yaml. remember to back up your files and use developer tools to confirm your updated configuration won't prevent home assistant from starting.
