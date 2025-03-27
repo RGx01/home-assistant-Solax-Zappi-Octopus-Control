@@ -192,8 +192,12 @@ On the free electric day the inverter will use Feed In priority to leave capacit
 * Power Flow Card Plus https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.2.0
 
 ### Mandatory Manual Adjustments to Config Yaml & Dashboard Yaml
-You must edit and replace instances of Zappi number, Solax registration number, Octopus account details & IP address :
-* automations.yaml (automation files need to be cut and paste into your single automation.yaml)
+Config files are here https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config
+The example configuration.yaml is an example of how to include packages. Do not replace yours with this, just add the package configuration to your configuation yaml. remember to back up your files and use developer tools to confirm your updated configuration won't prevent home assistant from starting.
+<br>
+<br>
+In the packages and automations, you must edit and replace instances of Zappi number, Solax registration number, Octopus account details & IP address :
+* automations.yaml (automation files need to be cut and paste into the bottom of your automation.yaml)
 * templates.yaml
 * secrets.yaml
 * Dashboards
