@@ -1,4 +1,4 @@
-control# Solax-Zappi-Octopus-Control
+# Solax-Zappi-Octopus-Control
 
 ![test3](https://github.com/user-attachments/assets/b3d212c2-b009-4605-927f-539bd89c1e69)
 
