@@ -39,17 +39,6 @@ control# Solax-Zappi-Octopus-Control
 This started out as a Home Assistant project to create a UI to control my Solax inverter locally. It's now a project to automate the control of the my Solax inverter, Zappi EV charger and Octopus Energy interactions including Octoplus Saving Sessions and Free Electric sessions. The idea isn't entirely new (see credits below) but the project now goes beyond my original idea and now provides the opportunity to automatically control for scenarios (described in the requirements below). 
 [INSTALL INSTRUCTIONS](#install-instructions)
 
-## Credits and Acknowledgments
-The Solax interactions are possible due to work published by @Colin Robbins and @Kamil Baczkowicz. I've tried to simplify things by putting their work into a package. Essentially it becomes a building block for my automations and dashboards. Suggested reading: 
-<ol>
-<li>https://community.home-assistant.io/t/solax-x1-hybrid-g4-worked-example/499362
-</li>
-<li>https://community.home-assistant.io/t/automated-octopus-saving-sessions-with-solax-x1-hybrid-g4/654502
-</li>
-<li>https://community.home-assistant.io/t/solax-x1-hybrid-g4-local-cloud-api/506172
-</li>
-</ol>
-
 The project is split into 3 parts:
 <br> 
 Part 1 can be used in its own right and creates all the sensors and provides all the rest/restful local connections. This may be useful if you want to build your own interfaces/automations on top.
@@ -64,6 +53,17 @@ Part 1 can be used in its own right and creates all the sensors and provides all
 	* config/packages/octopus_saving_sessions
  	* Automations 6001-6002
   	* Dashboard Octopus Saving Sessions.yaml
+
+## Credits and Acknowledgments
+The Solax interactions are possible due to work published by @Colin Robbins and @Kamil Baczkowicz. I've tried to simplify things by putting their work into a package. Essentially it becomes a building block for my automations and dashboards. Suggested reading: 
+<ol>
+<li>https://community.home-assistant.io/t/solax-x1-hybrid-g4-worked-example/499362
+</li>
+<li>https://community.home-assistant.io/t/automated-octopus-saving-sessions-with-solax-x1-hybrid-g4/654502
+</li>
+<li>https://community.home-assistant.io/t/solax-x1-hybrid-g4-local-cloud-api/506172
+</li>
+</ol>
 
 ## Screenshots and Descriptions of Dashboards
 
