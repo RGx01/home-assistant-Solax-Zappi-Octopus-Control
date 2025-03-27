@@ -130,7 +130,7 @@ They are displayed but there is little reason to ever change them once set.
 <ol start=60>
 	<li>Self Use Min SoC - Sets the battery minimum SoC. If changed it will return to default levels (set in Solax Control) after a forced discharge or any operation that causes the mode to change.</li>
 	<li>Self Use Charge to SoC - Sets the charge to SoC. Same rules apply.</li>
-	<li>Battery Start Discharge Time - shoiuld always be set to 00:00.</li>
+	<li>Battery Start Discharge Time - should always be set to 00:00.</li>
         <li>Battery Stop Discharge Time - should always be set to 23:59.</li>
 	<li>Self Use Enable Charge From Grid - If switched to on the battery can charge from grid during the following times.</li>
 	<li>Battery Start Charge Time - recommend to set this to as close as possible to the stop time but leave enough time to fully charge. This leaves a bigger window of opportunity to export battery to grid if using the daily export function.</li>
@@ -220,7 +220,7 @@ homeassistant:
 automation: !include automations.yaml
 </code>
 
-The directory referenced in homeassistant: tag should look like this once all the mandatory replacements mentioned above are complete. The packages directory is in the same dierectory where the Home Assistant configuration is kept.
+The directory referenced in homeassistant: tag should look like this once all the mandatory replacements mentioned above are complete. The packages directory is in the same directory where the Home Assistant configuration is kept.
 
 <br>
 <img width="308" alt="Screenshot 2025-03-26 at 23 27 43" src="https://github.com/user-attachments/assets/9f1688af-8ec7-4fab-a8a2-bfd39ee8799c" />
@@ -250,7 +250,7 @@ The directory referenced in homeassistant: tag should look like this once all th
 | v2.1.4 | **29/1/25** | packages/octopus_saving_sessions/input_boolean.yaml <br/> packages/solax_zappi_octopus/templates.yaml <br/> All automations <br/> Octopus Saving Sessions.yaml (Dashboard)| 1. Added new controls to Saving Sessions Dashboard to attempt to get a dispatch during battery prep and also attempt to get a dispatch straight after session. <br /> 2. Updated EV Start Time logic <br /> 3. Renamed all automations
 | v2.1.4 | **28/1/25** | packages/solax/templates.yaml | Improved resilience to sensors reporting defaults/template warnings in logs due to invalid/empty rest responses.
 | v2.1.3 | **23/1/25** | packages/octopus_saving_sessions/input_datetime.yaml <br />packages/octopus_saving_sessions/input_number.yaml <br /> packages/octopus_saving_sessions/templates.yaml <br /> packages/solax/templates.yaml <br />  packages/solax_zappi_octopus/templates.yaml <br /> automation 600x.yaml removed <br /> automation 6001.yaml added <br /> automation 6002.yaml added <br /> dashboard/Solax & Octopus Settings.yaml added <br /> dashboard/Octopus Saving Sessions.yaml  |1. Fixed bug with free electric <br /> 2. Fixed bug with battery in from solar calcs <br /> 3. Enhanced Octopus Saving Session Options with prep time and prep SoC with checks to stop charging when the target SoC is reached <br /> 4. Tidier Notifications <br /> |
-| v2.1.1 | **19/1/25** | packages/solax_zappi_octopus/templates.yaml |1. Fixed bug with tariff select|
+| v2.1.1 | **19/1/25** | packages/solax_zappi_octopus/templates.yaml |1. Fixed bug with taiff select|
 | v2.1  | **19/1/25** | All |1. Revised Dashboards <br /> 2. Added Battery Warming controls <br /> 3. Added Mobile Notifications <br /> 4. New template sensors to switch utility meter tariffs peak/offpeak <br /> 5. General bug fixes in template sensors|
 
 ## Automation Function Summary
@@ -336,7 +336,7 @@ Automations can take a long time to run. I wish it could be made to be more snap
 <li>User configurable battery target SoC.</li>
 </ol>
 </li>
-<li>Setting the inverter to Feed In Priority so the battery doesnt fill from solar.</li>
+<li>Setting the inverter to Feed In Priority so the battery doesn't fill from solar.</li>
 <li>Setting the start2 and stop2 period.</li>
 <li>Enable second period charge option.</li>
 <li>Set Zappi to Fast mode so EV starts charging.</li>
@@ -389,7 +389,7 @@ Automations can take a long time to run. I wish it could be made to be more snap
 Recently I've found when trying to automatically discharge the house battery when the EV has finished although the rest settings report the mode was correctly set to discharge, the discharge does not always start. It appears sometimes there is an issue in the inverter and the mode gets set back to 'Do Nothing'. To combat this 5001 checks if the mode is set to 'Do Nothing' for more than 2 minutes, if the time is between 23:30 and time to start charging the house battery, a second attempt is made. Also to be more resilient, when the time reaches time to start charging the house battery, the default mode is set.
 </li>
 <li>Reboots/restarts can trigger the main automation, I've used an integration called "uptime" to check if the last reboot was within last 80 seconds.</li>
-<li>Battery Warming - Even through the official web ui I've seen issues/errors which won't allow the setting times or enabling/disabling the option. The first time I paniced and thought my rest command had broken the inverter so tried rebooting it. This didn't work. After leaving it alone for sometime (about 12 hours) everything was back to normal and settings could be adjusted again. Strange</li>
+<li>Battery Warming - Even through the official web ui I've seen issues/errors which won't allow the setting times or enabling/disabling the option. The first time I panicked and thought my rest command had broken the inverter so tried rebooting it. This didn't work. After leaving it alone for sometime (about 12 hours) everything was back to normal and settings could be adjusted again. Strange</li>
 </ol>
 
 ## Equipment Used During Development
