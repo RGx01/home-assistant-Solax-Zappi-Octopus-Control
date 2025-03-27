@@ -14,8 +14,11 @@
   	* [Octopus Free Electricity (1hr Session)](#octopus-free-electricity-1hr-session)
 * [INSTALL INSTRUCTIONS](#install-instructions)
 	* [Prerequisite Integrations](#prerequisite-integrations)
-	* [Mandatory Manual Adjustments to Config Yaml & Dashboard Yaml](#mandatory-manual-adjustments-to-config-yaml--dashboard-yaml)
-	* [Adding the Dashboards](#adding-the-dashboards)
+	* [Steps](#steps)
+        * [configuration yaml and Packages](#configuration-yaml-and-packages)
+      	* [Adding automations yaml](#adding-automations-yaml)
+        * [Verifying Home Assistant Will Restart With The Changes](#verifying-home-assistant-will-restart-with-the-changes)	 
+		* [Adding the Dashboards](#adding-the-dashboards)
 * [Revision Log](#revision-log)
 * [Automation Function Summary](#automation-function-summary)
 	* [5001 - Solax Zappi Octopus Control](#5001---solax-zappi-octopus-control)
@@ -192,11 +195,55 @@ On the free electric day the inverter will use Feed In priority to leave capacit
 * Powercalc https://docs.powercalc.nl/quick-start/
 * Power Flow Card Plus https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.2.0
 
-## Steps - WIP
+## Steps
 
-### configuration.yaml File & Packages
+First back up your Home Assistant. Make sure you are familar with Developer Tools and the Check Configuration button. There should be any issues but if there are a back up is handy.
+<br><br>
+If you have previous used similar Solax automations/config be aware that some rest_command names may have changed. Feed in priority options have been added.
 
-Rather than putting all the config in the single configuration.yaml file, the package files can be added like this: in the example below see the use of the homeassistant: tag. The directory referenced under homeassistant: tag should look like the screenshot below. Don't forget the mandoratory find and replacements mentioned above. The packages directory is in the same directory where the Home Assistant configuration.yaml is kept.
+### configuration yaml and Packages
+
+<br>
+<img width="308" alt="Screenshot 2025-03-26 at 23 27 43" src="https://github.com/user-attachments/assets/9f1688af-8ec7-4fab-a8a2-bfd39ee8799c" />
+
+#### Step 1
+1. Navigate to the home assistant config directory where configuration.yaml resides, create a new directory packages as per the above image
+
+#### Step 2
+2. Create the three sub directories
+ * octopus_saving_sessions
+ * solax
+ * solax_zappi_octopus
+
+#### Step 3
+3. copy the contents from
+ * https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config/packages/octopus_saving_sessions
+ * https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config/packages/solax
+ * https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config/packages/solax_zappi_octopus
+
+   <br>to the respective directories in step 2
+
+#### Step 4
+4. You must find and replace instances of the following in all package files.
+ * Zappi number i.e find zappi_XXXXXXXX and replace with zappi_12345678
+ * Solax registration number  i.e find YYYYYYYYYY and replace with 1234567890
+ * Octopus account details i.e. find z_ZZZZZZZZ and replace with a_42036969
+ * Static IP address of your inverter i.e. find http://192.168.xxx.xxx/ and replace with http://192.168.1.30/
+
+#### Step 5
+5. In the solax package templates.yaml 
+ * you must adjust the battery size to your battery size in The "Solax Local Battery Remain Energy" sensor
+ * set a flag indicating where your solax CT clamp is in the "Solax Local House Load Power" sensor (notes are in the yaml 1 for yes 0 for no)
+ * Set the number of cells for your battery size in "Solax Local Battery Cell Voltage" sensor (30 cells per pack * number of packs. 9kWh battery is 4 packs = 90 cells)
+
+### Step 6
+6. In the solax package utility meter.yaml
+ * find ev_charging_daily_vehicle and replace the vehicle names and set them as you wish
+ * find ev_charging_monthly_vehicle and replace the vehicle names and set them as you wish
+   
+#### Step 7
+7. Edit your configuration.yaml to pick up the new packages.
+   Rather than putting all the config in the single configuration.yaml file, the package files can be added like this: in the example below see the use of the homeassistant: tag. The directory referenced under homeassistant: tag should look like the screenshot above. The packages directory is in the same directory where the Home Assistant configuration.yaml is kept.
 
 <code>
 default_config:
@@ -208,48 +255,51 @@ logger:
 
 frontend:
   themes: !include_dir_merge_named themes
-homeassistant:
-  packages: !include_dir_merge_named packages/
 
+<mark style="background: #00ced1!important">homeassistant:</mark>
+<mark style="background: #00ced1!important">  packages: !include_dir_merge_named packages/</mark>
+  
 automation: !include automations.yaml
 </code>
 
-The directory referenced in homeassistant: tag should look like this once all the mandatory replacements mentioned above are complete. The packages directory is in the same directory where the Home Assistant configuration is kept.
+### Adding automations yaml
 
-<br>
-<img width="308" alt="Screenshot 2025-03-26 at 23 27 43" src="https://github.com/user-attachments/assets/9f1688af-8ec7-4fab-a8a2-bfd39ee8799c" />
+#### Step 1
+1. Navigate to the home assistant config directory where automations.yaml resides
 
-## Step 1
-1. Navigate to the home assistant config directory where configuration.yaml resides, create a new directory packages as per the above image
+#### Step 2
+2. Copy the contents of https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/blob/main/config/automations_5001-6002.yaml to the bottom of your automations.yaml
 
-## Step 2
-2. Create the three sub directories
- * octopus_saving_sessions
- * solax
- * solax_zappi_octopus
+#### step 3
+3. A find and replace in the automations.yaml:
+ * Zappi number i.e find zappi_XXXXXXXX and replace with zappi_12345678
+ * Octopus account details i.e. find z_ZZZZZZZZ and replace with a_42036969
+ * Save and close automations.yaml
 
-## Step 3
-3. copy the contents from
- * https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config/packages/octopus_saving_sessions
- * https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config/packages/solax
- * https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config/packages/solax_zappi_octopus
-
-   <br>to the directories in step 2
+### Verifying Home Assistant Will Restart With The Changes
+1. In Home Assistant UI,
+ * Select Developer Tools
+ * Select the YAML tab
+ * Click 'Check Configuration.
+ * If there are issue with the config then roll back the changes and repeat but use the 'check configuration' at each step to identify where the issue is.
+ * If the Configuration check is fine go ahead and restart home assistant
 
 
 ### Adding the Dashboards
-* Copy the contents of Solax & Octopus Settings.yaml
-* Replace zappi_XXXXXXXX with your Zappi number
-* Replace z_ZZZZZZZZ with your Octopus account number
-* Open Home Assistant
-* Open Overview dashboard
-* Click Pencil icon in top left
-* Click + to add a new dashboard
-* New window opens, click the 3 dots in top left corner
-* Select Edit in Yaml
-* Replace the contents with your prepared yaml
-* Click Save
-* Click Done
+Dashboard yamls are here https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/dashboard
+1. Copy the contents of Solax & Octopus Settings.yaml
+2. Replace zappi_XXXXXXXX with your Zappi number
+3. Replace z_ZZZZZZZZ with your Octopus account number
+4. Open Home Assistant
+5. Open Overview dashboard
+6. Click Pencil icon in top left
+7. Click + to add a new dashboard
+8. New window opens, click the 3 dots in top left corner
+9. Select Edit in Yaml
+10. Replace the contents with your prepared yaml
+11. Click Save
+12. Click Done
+13. Repeat 1-12 for the Octopus Saving Sessions.yaml
 
 ## Revision Log
 | Version | Date | Files updated |Description |
