@@ -1,4 +1,4 @@
-# Solax-Zappi-Octopus-Control
+control# Solax-Zappi-Octopus-Control
 
 ![test3](https://github.com/user-attachments/assets/b3d212c2-b009-4605-927f-539bd89c1e69)
 
@@ -31,9 +31,9 @@
 * [Equipment Used During Development](#equipment-used-during-development)
   
 ## Introduction
-Please note this is designed specifically for <ins>Intelligent Octopus Go</ins> using a <ins>Zappi registered with Octopus</ins>. Using any other timers and programs to contol your EV with this project may cause unexpected behaviours. 
+Please note this is designed specifically for <ins>Intelligent Octopus Go</ins> using a <ins>Zappi registered with Octopus</ins>. Using any other timers and programs to control your EV with this project may cause unexpected behaviours. 
 <br>Please also note the solax inverter is <ins>controlled locally</ins> and does not use any cloud connections.
-<br>This started out as a Home Assistant project to create a UI to control my Solax inverter locally. It's now a project to automate the contol of the my Solax inverter, Zappi EV charger and Octopus Energy interactions including Octoplus Saving Sessions and Free Electric sessions. The idea isn't entirely new (see credits below) but the project now goes beyond my original idea and now provides the opportunity to automatically contol for scenarios (decribed in the requirements below). 
+<br>This started out as a Home Assistant project to create a UI to control my Solax inverter locally. It's now a project to automate the contol of the my Solax inverter, Zappi EV charger and Octopus Energy interactions including Octoplus Saving Sessions and Free Electric sessions. The idea isn't entirely new (see credits below) but the project now goes beyond my original idea and now provides the opportunity to automatically contol for scenarios (described in the requirements below). 
 [INSTALL INSTRUCTIONS](#install-instructions)
 
 ## Credits and Acknowledgments
@@ -49,7 +49,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 
 The project is split into 3 parts:
 <br> 
-Part 1 can be used in it's own right and creates all the sensors and provides all the rest/restful local connections. This may be useful if you want to build your own interfaces/automations on top.
+Part 1 can be used in its own right and creates all the sensors and provides all the rest/restful local connections. This may be useful if you want to build your own interfaces/automations on top.
 <br>
 * The first part is to simplify previous efforts by Kamil Baczkowicz into a single Home Assistant Package (with some updated parts).
 	* config/packages/solax.
