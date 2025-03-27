@@ -69,12 +69,12 @@ Part 1 can be used in it's own right and creates all the sensors and provides al
 ### Octopus Device Settings
 <ol>
 	<li>Octopus Will Provide Next Schedule At - This indicates when Octopus will provide the next schedule. The time is based on the two options below.</li>
-	<li>Octopus Schedule at Anytime - When this is set to on, Octopus will provide a schedle as soon as you plug in or if you're EV is already connected switching it to on will get a schedule.</li>
+	<li>Octopus Schedule at Anytime - When this is set to on, Octopus will provide a schedule as soon as you plug in or if you're EV is already connected switching it to on will get a schedule.</li>
 	<li>Octopus Schedule after Sun Elevation Threshold - Switching this to on will maximise the amount of solar stored in the house battery before Octopus will provide a schedule. </li>
 	<li>Sunset degrees above horizon - Sets a threshold to support the above option.</li>
 	<li>Octopus Will Provide Next Schedule At - If "Schedule at Anytime" and "Schedule after Sun Elevation Threshold" are both off, the time set here is when Octopus will get the schedule.</li>
 	<li>Intelligent Charge Target - This reflects what is set in the Octopus app.</li>
-	<li>Inteligent Target Time - This reflects what is set in the Octopus app.</li>
+	<li>Intelligent Target Time - This reflects what is set in the Octopus app.</li>
 	<li>Intelligent Smart Charge - This reflects what is set in the Octopus app. The Automation contols this, changing it manually can have unexpected results.</li>
 	<li>Zappi always in ECO+ Mode (when connected) - Select this if you wish to use excess solar to charge EV. </li>
 	<li>Minimum Green Level.</li>
@@ -100,7 +100,7 @@ Part 1 can be used in it's own right and creates all the sensors and provides al
 	<li>Use Grid During Dispatch - Selecting this option will set the min battery SoC to 100% when EV is following the schedule or when the tariff is off-peak. This can be advantageous as less energy needs to be imported and stored and more is therefore available for export.</li>
 	<li>Prevent Zappi from Draining Battery - Depending on where the Solax CT clamp is positioned it may see Zappi loads. Selecting this option prevents the inverter dumping the battery into the EV by setting the Solax SoC to 100% when the EV starts to charge. </li>
 	<li>Export Battery before charging EV - Selecting this option will discharge the Solax Battery to a defined SoC (below) before getting an Octopus schedule (if EV is connected). This is useful to load shifters and to users with large EV capacity that also want to export the house battery but also require the house battery to charge during the off peak.</li>
-	<li>Discharge to SoC (before charging EV) - Set the SoC to discharge the house battery to prior to getting an Octopus Schedule. Setting this too low could leave you importing peak rate energy if Octopus doesn't schedule to start EV immeadiatley after. </li>
+	<li>Discharge to SoC (before charging EV) - Set the SoC to discharge the house battery to prior to getting an Octopus Schedule. Setting this too low could leave you importing peak rate energy if Octopus doesn't schedule to start EV immediately after. </li>
 	<li>Daily Battery Export After EV Charge (23:30 - Battery Start Charge Time) - Select this option to export the Solax battery everyday between 23:30 and the start time of the solax battery charge. If the EV is charging the export will happen after the EV has finished but not before 23:30.</li>
 	<li>Daily/Forced Discharge SoC - The SoC the automation will aim to hit when discharging daily. The same limit is used if the manual discharge option below is left unattended. Recommend setting this to 20% or higher.</li>
 	<li>Default Mode After Discharge - The invert mode the automation returns to after a forced discharge. </li>
@@ -133,7 +133,7 @@ They are displayed but there is little reason to ever change them once set.
 	<li>Battery Start Discharge Time - shoiuld always be set to 00:00.</li>
         <li>Battery Stop Discharge Time - should always be set to 23:59.</li>
 	<li>Self Use Enable Charge From Grid - If switched to on the battery can charge from grid during the following times.</li>
-	<li>Battery Start Charge Time - recommend to set this to as close as possible to the stop time but leave enough time to fully charge. This leaves a bigger window of oppurtunity to export battery to grid if using the daily export function.</li>
+	<li>Battery Start Charge Time - recommend to set this to as close as possible to the stop time but leave enough time to fully charge. This leaves a bigger window of opportunity to export battery to grid if using the daily export function.</li>
 	<li>Battery Stop Charge Time - recommend to set this to the end of off peak time.</li>
 	<li>Charge Period 2 - This option is used by the 6001 and 6002 automations. If set manually it will turn back off after the stop 2 time.</li>
 </ol>
@@ -158,7 +158,7 @@ This automation auto joins saving sessions that are announced via the Octopus AP
 </ol>
 
 ### Octopus Free Electricity (1hr Session)
-On the free electric day the inverter will use Feed In priority to leave capacity to charge the battery. This will prevent solar engy filling the battery if the default mode is Self Use.
+On the free electric day the inverter will use Feed In priority to leave capacity to charge the battery. This will prevent solar SoC filling the battery if the default mode is Self Use.
 <ol start=80>
 	<li>6001 - Octopus - Free Electric Automation - turns automation on/off.</li>
 	<li>Octopus Free Electricity Start - set the time for free electric.</li>
