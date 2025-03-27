@@ -75,7 +75,7 @@ Part 1 can be used in its own right and creates all the sensors and provides all
 	<li>Octopus Will Provide Next Schedule At - If "Schedule at Anytime" and "Schedule after Sun Elevation Threshold" are both off, the time set here is when Octopus will get the schedule.</li>
 	<li>Intelligent Charge Target - This reflects what is set in the Octopus app.</li>
 	<li>Intelligent Target Time - This reflects what is set in the Octopus app.</li>
-	<li>Intelligent Smart Charge - This reflects what is set in the Octopus app. The Automation contols this, changing it manually can have unexpected results.</li>
+	<li>Intelligent Smart Charge - This reflects what is set in the Octopus app. The Automation controls this, changing it manually can have unexpected results.</li>
 	<li>Zappi always in ECO+ Mode (when connected) - Select this if you wish to use excess solar to charge EV. </li>
 	<li>Minimum Green Level.</li>
 	<li>Zappi Charge Mode - Automation sets this to "Stop" when EV is disconnected. Automation controls this, changing it manually can have unexpected results. </li>
@@ -128,7 +128,7 @@ These are the same setting that are displayed through the solax app or web ui bu
 They are displayed but there is little reason to ever change them once set.
 
 <ol start=60>
-	<li>Self Use Min SoC - Sets the battery minimum SoC. If changed it will return to default levels (set in Solax Contol) after a forced discharge or any operation that causes the mode to change.</li>
+	<li>Self Use Min SoC - Sets the battery minimum SoC. If changed it will return to default levels (set in Solax Control) after a forced discharge or any operation that causes the mode to change.</li>
 	<li>Self Use Charge to SoC - Sets the charge to SoC. Same rules apply.</li>
 	<li>Battery Start Discharge Time - shoiuld always be set to 00:00.</li>
         <li>Battery Stop Discharge Time - should always be set to 23:59.</li>
