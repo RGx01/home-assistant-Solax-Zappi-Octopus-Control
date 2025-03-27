@@ -195,7 +195,9 @@ On the free electric day the inverter will use Feed In priority to leave capacit
 Config files are here https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config
 The example configuration.yaml is an example of how to include packages. Do not replace yours with this, just add the package configuration to your configuation yaml. remember to back up your files and use developer tools to confirm your updated configuration won't prevent home assistant from starting.
 <br>
+<br>
 If you have previous used similar Solax automations/config be aware that some rest_command names may have changed. Feed in priority options have been added. Also be aware that some entities have been added in templates.yaml
+<br>
 <br>
 In the packages and automations, you must edit and replace instances of Zappi number, Solax registration number, Octopus account details & IP address :
 * automations.yaml (automation files need to be cut and paste into the bottom of your automation.yaml)
