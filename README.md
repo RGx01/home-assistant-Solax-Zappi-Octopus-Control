@@ -205,8 +205,11 @@ In the packages and automations, you must edit and replace instances of Zappi nu
 	* Octopus Saving Sessions.yaml
 If you have previous used similar Solax automations/config be aware that some rest_command names may have changed. Feed in priority options have been added. Also be aware that some entities have been added in templates.yaml
 ### Other Adjustments needed
-* In the solax package templates.yaml you must adjust the battery size to your battery size and set a flag indicating where your solax CT clamp is. (notes are in the yaml)
-
+In the solax package templates.yaml 
+* you must adjust the battery size to your battery size 
+* set a flag indicating where your solax CT clamp is. (notes are in the yaml)
+* Set the number of cells for your battery size (30 cells per pack * number of packs 6kWh battery is 2 packs = 60 cells)
+  
 ### configuration.yaml File & Packages
 
 Rather than putting all the config in the single configuration.yaml file, the package files can be added like this: in the example below see the use of the homeassistant: tag. The directory referenced under homeassistant: tag should look like the screenshot below. Don't forget the mandoratory find and replacements mentioned above. The packages directory is in the same directory where the Home Assistant configuration.yaml is kept.
