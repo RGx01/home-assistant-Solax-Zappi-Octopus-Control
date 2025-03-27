@@ -203,9 +203,9 @@ If you have previous used similar Solax automations/config be aware that some re
 ### Other Adjustments needed
 * In the solax package templates.yaml you must adjust the battery size to your battery size and set a flag indicating where your solax CT clamp is. (notes are in the yaml)
 
-### Config File & Packages
+### configuration.yaml File & Packages
 
-Rather than putting all the config in a single config file the package files can be added like this example use of the homeassistant: tag in the configuartion.yaml
+Rather than putting all the config in the single configuration.yaml file, the package files can be added like this: in the example below see the use of the homeassistant: tag. The directory referenced under homeassistant: tag should look like the screenshot below. Don't forget the mandoratory find and replacements mentioned above. The packages directory is in the same directory where the Home Assistant configuration is kept.
 
 <code>
 default_config:
