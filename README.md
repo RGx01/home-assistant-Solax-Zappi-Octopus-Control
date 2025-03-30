@@ -305,6 +305,7 @@ Dashboard yamls are here https://github.com/RGx01/home-assistant-Solax-Zappi-Oct
 ## Revision Log
 | Version | Date | Files updated |Description |
 |:-----|:--------:|:------|:------|
+| v3.2 | **30/3/25** | automations_5001-6002.yaml  <br /> packages/solax_zappi_octopus| Added an input boolean for checking if a manual discharge is in progress, refined conditions to catch and reset after a discharge particuluarly if discharging before charging EV|
 | v3.1 | **18/03/25** | automations_5001-6002.yaml <br /> Solax & Octopus Settings.yaml  <br /> packages/solax_zappi_octopus |Better notification management & new dashboard additions & Solax System State Control
 | v3.0.4 | **12/3/25** | automations_5001-6002.yaml <br /> Solax & Octopus Settings.yaml | 5001 Added a condition to prevent inverter reverting back to default if vehicle was charging prior to a saving session starting. <br /> Added a chart title to dashboard|
 | v3.0.3 | **11/3/25** |automations_5001-6002.yaml| 5001 - Added When Condition to ensure inverter mode is reset to default mode when it's time to start charging the solax battery.|

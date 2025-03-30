@@ -51,6 +51,10 @@ solax_zappi_octopus_input_boolean:
     export_battery_prior:
       name: Export Battery Before Charging EV
       icon: mdi:battery-arrow-down
+    #Manual Export
+    export_battery_manual:
+      name: Export Battery Manual
+      icon: mdi:battery-arrow-down
     # solax System on/off
     solax_system_enable:
       name: Solax System Enable
