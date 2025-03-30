@@ -6,12 +6,12 @@ solax_templates:
     # Solax Local Sensor Readings and Settings
     #
     # User must set the battery size in sensor Solax Local Battery Remain Energy
-    # User must replace zappi_XXXXXXXX
     # User must set solax_can_see_zappi_load = 1 or 0 in - name: "Solax Local House Load Power"
     # User must add battery size to "Solax Local Battery Remain Energy"
     ######################################################
     # Change log
     ######################################################
+    # v3.2   Removed zappi cloud sensor and replaced with zappi_power_ct_internal_load to avoid drop outs
     # v3.1   Added system on/off sensor
     #        Added sensor to compare string voltages
     # v3.0.0 Added calc for battery in from grid
@@ -521,7 +521,7 @@ solax_templates:
           state: >
             {%set solax_can_see_zappi_load = 1%}
             {%if solax_can_see_zappi_load|bool == true%}
-              {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) - states('sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load') | float(default=0) }}
+              {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) - states('sensor.zappi_power_ct_internal_load') | float(default=0) }}
             {%else%}
               {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) }}
             {%endif%}

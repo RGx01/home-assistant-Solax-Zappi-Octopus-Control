@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v3.2.1 Added house load power to the Heading Card
 # v3.2   Dashboard tidy
 # v3.1   Added better notification options and cell voltage
 #        Added Solax System On/Off
@@ -194,6 +195,17 @@ sections:
             show_icon: true
             entity: input_boolean.solax_automation_running
             color: pink
+          - type: entity
+            show_state: true
+            show_icon: true
+            entity: sensor.solax_local_house_load_power
+            state_content:
+              - name
+              - state
+            name: House Load
+            color: light-green
+            tap_action:
+              action: more-info
           - type: entity
             show_state: true
             show_icon: true

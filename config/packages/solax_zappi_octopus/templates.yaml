@@ -3,6 +3,7 @@
 # replace zappi serial number zappi_XXXXXXXX
 #
 # Change log
+# v3.2   Replace zappi cloud sensor with zappi_power_ct_internal_load to avoid drop outs
 # v3.1   Better Notification Management
 #        Added system on off functionality
 #        Added new sensor to check PV string power difference
@@ -528,3 +529,18 @@ solax_zappi_octopus_templates:
           state: >
             {{true if trigger.event.data.battery_discharge == "discharge before EV charge" else false}}
 
+    ######################################################
+    # for when zappi cloud sensor dips out
+    ######################################################
+    - sensor:
+      - name: Zappi Power CT Internal Load
+        unique_id: zappi_power_ct_internal_load
+        state: >
+          {%if states('sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load') in ['unknown', 'unavailable','none'] %}
+          {{states('sensor.zappi_power_ct_internal_load')}}
+          {%else%}
+          {{states('sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load')}}
+          {%endif%}
+        unit_of_measurement: "W"
+        state_class: measurement
+        device_class: "power"
