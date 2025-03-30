@@ -317,7 +317,7 @@
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
         {%-endif %}\n{%-endif %}\n"
       mode_delay: 15
-      manual_mode_delay: 30
+      manual_mode_delay: 40
       settings_delay: 15
       refresh_settings_delay: 10
   - action: input_boolean.turn_on

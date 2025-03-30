@@ -50,7 +50,7 @@ solax_zappi_octopus_templates:
           unique_id: 3d61ba31-cdf6-4c86-86ea-98c70dee849f
           device_class: "timestamp"
           state: >
-            {%set target_time = states('sensor.intelligent_target_time')|as_timestamp%}
+            {%set target_time = states('sensor.octopus_intelligent_target_time')|as_timestamp%}
             {%set target_percentage = states('number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target')%}
             {%set ev_size = states('input_number.ev_battery_size')|int(default=10) %}
             {%set delta_time = ((ev_size|int/7)*(target_percentage|int/100))*60*60%}
@@ -133,19 +133,20 @@ solax_zappi_octopus_templates:
     #####################################################
     - sensor:
         - name: Octopus Intelligent Target Time
-          unique_id: f9b1faae-64bf-454e-a907-c64a35dd626c
+          #unique_id: f9b1faae-64bf-454e-a907-c64a35dd626c
+          unique_id: octopus_intelligent_target_time
           device_class: "timestamp"
           state: >
             {% if states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time') != 'unknown'%}
-            {% set x = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+(states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[0]|int(default=5)*60*60 +states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[1]|int(default=0)*60) )|as_datetime) %}
+            {% set t = today_at(states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[0] + ":" + states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[1]) %}
             {%else%}
-            {% set x = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+18000)|as_datetime) %}
+            {% set t = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+18000)|as_datetime|as_local) %}
             {%endif%}
-            {%if now()|as_timestamp > x|as_timestamp%}
-            {% set x = x|as_timestamp + 86400 %}
-            {{x|as_datetime}}
+            {%if now()|as_timestamp > t|as_timestamp%}
+            {% set x = t|as_timestamp + 86400 %}
+            {{x|as_datetime|as_local}}
             {%else%}
-            {{x|as_datetime}}
+            {{t|as_local}}
             {%endif%}
     ######################################################
     # Octopus dispatch kWh
@@ -425,7 +426,7 @@ solax_zappi_octopus_templates:
       condition:
         - condition: template
           value_template: >
-            {{ now()|as_timestamp > states('sensor.intelligent_target_time')|as_timestamp and (states('sensor.sensor.zappi_plug_status' != "Charging") or states('sensor.sensor.zappi_plug_status' != "Waiting for EV"))}}
+            {{ now()|as_timestamp > states('sensor.octopus_intelligent_target_time')|as_timestamp and (states('sensor.sensor.zappi_plug_status' != "Charging") or states('sensor.sensor.zappi_plug_status' != "Waiting for EV"))}}
       action:
         - event: octopus_tariff
           event_data:
