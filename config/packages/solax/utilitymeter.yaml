@@ -283,7 +283,7 @@ solax_utilitymeter:
       always_available: false
       tariffs:
         - car1
-        - Aryia
+        - car2
         - Guest
 
     ev_charging_monthly_vehicle:
@@ -299,7 +299,7 @@ solax_utilitymeter:
         days: 2
       tariffs:
         - car1
-        - Aryia
+        - car2
         - Guest
 
     zappi_charging_daily:
