@@ -52,6 +52,7 @@ solax_zappi_octopus_input_select:
         - EV Connected - Waiting for Octopus schedule - Solax Discharge Unavailable
         - EV Connected - No Charge Plan
         - EV Disconnected
+        - Forced Discharge Before EV Charge - Failed
         - Manual Discharge Started
         - Manual Discharge Stopped
         - Battery Export Started

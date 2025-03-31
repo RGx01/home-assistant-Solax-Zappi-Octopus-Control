@@ -4,21 +4,24 @@
     Initial installation instructions\n1. This is 5001. You also need 5002 5003 5004
     and 5005 to make this work successfully. \n2. Find and replace, zappi_XXXXXXXX
     with zappi number, z_ZZZZZZZZ with Octopus account\n3. Paste into your automations.yaml\n\n#
-    Change Log\nv3.2 Added an input boolean switch to enable possibility to check
-    what kind of discharge is occurring when a manual discharge is occurring.\nv3.0.4
-    Added a condition to prevent inverter reverting back to default if vehicle was
-    charging prior to a saving session starting.\nv3.0.3 Added When Condition to ensure
-    inverter mode is reset to default mode when it's time to start charging the solax
-    battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1 Fixed issue that if user plugs
-    in during a saving session a charge could be initiated\nv3.0.0 Allow discharge
-    battery before charging EV\nv2.1.4.1 Spotted a potential bug if user starts charge
-    at 23:30 where it could clash with tail battery export\nv2.1.4 Renamed automation\nv2.1.3.1
-    fixed missing scenario where min_SoC would not be set properly at 23:30 or if
-    FAST charging was selected.\nv2.1.3 More readable notifications\nv2.1.1 Update
-    dispatch trigger for octopus dispatch from on to off rather than just to off.
-    false triggers when sensor is unavailable \nv2.1 updated setting of modes and
-    SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0 Remove legacy dev
-    work"
+    Change Log\nv3.3 Changed the logic slightly for setting SoC limits. Sometimes
+    depending on which mode is being set (self use or feed in) the inverter seems
+    to randomly reject the second service call. so I now set the first soc limit to
+    match the default return to mode.\nv3.2 Added an input boolean switch to enable
+    possibility to check what kind of discharge is occurring when a manual discharge
+    is occurring.\nv3.0.4 Added a condition to prevent inverter reverting back to
+    default if vehicle was charging prior to a saving session starting.\nv3.0.3 Added
+    When Condition to ensure inverter mode is reset to default mode when it's time
+    to start charging the solax battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1 Fixed
+    issue that if user plugs in during a saving session a charge could be initiated\nv3.0.0
+    Allow discharge battery before charging EV\nv2.1.4.1 Spotted a potential bug if
+    user starts charge at 23:30 where it could clash with tail battery export\nv2.1.4
+    Renamed automation\nv2.1.3.1 fixed missing scenario where min_SoC would not be
+    set properly at 23:30 or if FAST charging was selected.\nv2.1.3 More readable
+    notifications\nv2.1.1 Update dispatch trigger for octopus dispatch from on to
+    off rather than just to off. false triggers when sensor is unavailable \nv2.1
+    updated setting of modes and SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0
+    Remove legacy dev work"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -321,7 +324,7 @@
       mode_delay: 15
       manual_mode_delay: 40
       settings_delay: 15
-      refresh_settings_delay: 10
+      refresh_settings_delay: 5
   - action: input_boolean.turn_on
     metadata: {}
     data: {}
@@ -346,31 +349,67 @@
             == min_soc and state_attr(''sensor.solax_local_settings'', ''Data'')[12]
             == min_soc)}}'
         enabled: true
-      - action: rest_command.solax_local_set_selfuse_battery_min_soc
-        data:
-          level: '{{min_soc}}'
-      - delay:
-          hours: 0
-          minutes: 0
-          seconds: '{{settings_delay}}'
-          milliseconds: 0
-      - action: rest_command.solax_local_set_feedin_battery_min_soc
-        data:
-          level: '{{min_soc}}'
-      - delay:
-          hours: 0
-          minutes: 0
-          seconds: '{{settings_delay}}'
-          milliseconds: 0
-      - action: homeassistant.update_entity
-        data:
-          entity_id:
-          - sensor.solax_rest_local_settings
-      - delay:
-          hours: 0
-          minutes: 0
-          seconds: '{{refresh_settings_delay}}'
-          milliseconds: 0
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: sensor.solax_default_operation_mode
+            state: '1'
+          sequence:
+          - action: rest_command.solax_local_set_feedin_battery_min_soc
+            data:
+              level: '{{min_soc}}'
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - action: rest_command.solax_local_set_selfuse_battery_min_soc
+            data:
+              level: '{{min_soc}}'
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - action: homeassistant.update_entity
+            data:
+              entity_id:
+              - sensor.solax_rest_local_settings
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{refresh_settings_delay}}'
+              milliseconds: 0
+        - conditions:
+          - condition: state
+            entity_id: sensor.solax_default_operation_mode
+            state: '0'
+          sequence:
+          - action: rest_command.solax_local_set_selfuse_battery_min_soc
+            data:
+              level: '{{min_soc}}'
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - action: rest_command.solax_local_set_feedin_battery_min_soc
+            data:
+              level: '{{min_soc}}'
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{settings_delay}}'
+              milliseconds: 0
+          - action: homeassistant.update_entity
+            data:
+              entity_id:
+              - sensor.solax_rest_local_settings
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: '{{refresh_settings_delay}}'
+              milliseconds: 0
       - if:
         - condition: template
           value_template: '{{repeat.index == 3}}'
@@ -677,10 +716,10 @@
                       ''Data'')[11] == 2) or repeat.index == 3 }}'
               - event: Solax Zappi Octopus Control
                 event_data:
-                  message: EV Connected @ {{now().strftime('%H:%M')}}.Getting shedule
-                    at {%if now()|as_timestamp > states('sensor.ev_start_time')|as_timestamp%}
-                    {{now().strftime('%H:%M')}} {% else %} {{(states('sensor.ev_start_time')|as_datetime).strftime('%H:%M')}}.
-                    {% endif %}
+                  message: EV Connected @ {{now().strftime('%H:%M')}}. Solax Battery
+                    will attempt to discharge at {%if now()|as_timestamp > states('sensor.ev_start_time')|as_timestamp%}{{now().strftime('%H:%M')}}
+                    {% else %}{{(states('sensor.ev_start_time')|as_datetime).strftime('%H:%M')}}
+                    {%endif%} prior to getting a schedule from octopus.
                   title: EV Connected - Waiting for Solax to Discharge before getting
                     Octopus schedule
                   class: normal
@@ -698,9 +737,9 @@
                 timeout: '5'
               - event: Solax Zappi Octopus Control
                 event_data:
-                  message: Manual discharge failed because battery is already too
-                    close to target SoC @ {{now().strftime('%H:%M')}}
-                  title: Manual Discharge Attempted - Failed
+                  message: Forced discharge failed because the battery is already
+                    too close to target SoC @ {{now().strftime('%H:%M')}}
+                  title: Forced Discharge Before EV Charge - Failed
                   class: normal
                 enabled: true
             else:
@@ -734,14 +773,13 @@
               enabled: false
             - event: Solax Zappi Octopus Control
               event_data:
-                message: 'EV Connected @ {{now().strftime(''%H:%M'')}}.Getting shedule
-                  at {%if now()|as_timestamp > states(''sensor.ev_start_time'')|as_timestamp%}
-                  {{now().strftime(''%H:%M'')}} {% else %} {{(states(''sensor.ev_start_time'')|as_datetime).strftime(''%H:%M'')}}.
-                  {% endif %}. Solax Battery will attempt to discharge prior to EV
-                  charge. '
+                message: EV Connected @ {{now().strftime('%H:%M')}}. Solax Battery
+                  will attempt to discharge at {%if now()|as_timestamp > states('sensor.ev_start_time')|as_timestamp%}{{now().strftime('%H:%M')}}
+                  {% else %}{{(states('sensor.ev_start_time')|as_datetime).strftime('%H:%M')}}
+                  {%endif%} prior to getting a schedule from octopus.
                 title: EV Connected - Waiting for Octopus schedule & Solax to Discharge
                 class: normal
-              enabled: true
+              enabled: false
     - conditions:
       - condition: trigger
         id:
@@ -1526,6 +1564,9 @@
         - condition: state
           entity_id: input_boolean.export_battery_manual
           state: 'on'
+      - condition: state
+        entity_id: input_boolean.export_battery_prior
+        state: 'off'
       sequence:
       - repeat:
           sequence:

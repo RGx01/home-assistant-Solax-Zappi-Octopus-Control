@@ -8,7 +8,7 @@ solax_zappi_octopus_input_number:
       name: Sunset degrees above horizon
       unit_of_measurement: "Degrees"
       min: 0
-      max: 10
+      max: 20
       mode: box
       step: 0.5
       icon: mdi:weather-sunset-down
