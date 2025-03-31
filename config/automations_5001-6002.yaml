@@ -143,7 +143,7 @@
     id: Solax Discharge Prior to EV
   - trigger: time
     at:
-      entity_id: sensor.intelligent_target_time
+      entity_id: sensor.octopus_intelligent_target_time
       offset: '-1'
     id: Dispatch Finished
   - trigger: state
@@ -545,7 +545,7 @@
               conditions:
               - condition: time
                 after: sensor.ev_start_time
-                before: sensor.intelligent_target_time
+                before: sensor.octopus_intelligent_target_time
               - condition: state
                 entity_id: input_boolean.zappi_eco_mode_override
                 state: 'on'
@@ -609,16 +609,12 @@
           - if:
             - condition: or
               conditions:
-              - condition: time
-                after: sensor.ev_start_time
-                before: sensor.intelligent_target_time
               - condition: state
                 entity_id: input_boolean.zappi_eco_mode_override
                 state: 'on'
               - condition: template
-                value_template: '{{states(''sensor.earliest_ev_start_time'')|as_timestamp<=states(''sensor.ev_start_time'')|as_timestamp
-                  or states(''sensor.earliest_ev_start_time'')|as_timestamp <=now()|as_timestamp}}'
-                enabled: false
+                value_template: '     {{now()|as_timestamp>=states(''sensor.ev_start_time'')|as_timestamp
+                  and now()|as_timestamp <=states(''sensor.octopus_intelligent_target_time'')|as_timestamp}}'
             then:
             - event: solax_discharge
               event_data:
