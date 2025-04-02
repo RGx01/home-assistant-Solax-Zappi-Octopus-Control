@@ -211,6 +211,12 @@ solax_templates:
           state: "{{ state_attr('sensor.solax_local_settings', 'Data')[14] == 1 | bool(default=false) }}"
           icon: mdi:radiator
 
+        ### Battery heat level
+        - name: "Solax Local Battery Heat Level"
+          unique_id: solax_local_battery_heat_level
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[20] | int(default=0) }}"
+          icon: mdi:radiator
+
         ### Battery settings Heat (period 1) ###
         - name: "Solax Local Battery Heat Start"
           unique_id: solax_local_battery_heat_start

@@ -194,6 +194,7 @@ On the free electric day the inverter will use Feed In priority to leave capacit
 * Uptime https://www.home-assistant.io/integrations/uptime/
 * Powercalc https://docs.powercalc.nl/quick-start/
 * Power Flow Card Plus https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.2.0
+* Forecast.solar https://www.home-assistant.io/integrations/forecast_solar
 
 ## Steps
 I will aim to provide a script to do the bulk of these steps when I get time.
@@ -305,6 +306,7 @@ Dashboard yamls are here https://github.com/RGx01/home-assistant-Solax-Zappi-Oct
 ## Revision Log
 | Version | Date | Files updated |Description |
 |:-----|:--------:|:------|:------|
+| v3.3 | **02/04/25** | packages/solax <br> packages/solax_zappi_octopus <br> automations_5001-6002.yaml |  Battery heating level added. Not sure why but it doesn't reliably set along with all the other battery heat settings. Using the Solax UI also seems flakey <br> added a check to confirm the highest min SoC of set value and user requested min SoC when discharging before charging EV. Critical that the automation has a chance to fire an event once complete otherwise car won't charge|
 | v3.3 | **31/3/25** | automations_5001-6002.yaml  <br> packages/solax_zappi_octopus | Changed the logic slightly for setting SoC limits. Sometimes depending on which mode is being set (self use or feed in) the inverter seems to randomly reject the second service call. so I now set the first soc limit to match the default return to mode.<br> Tidied the logic and messages up for discharging the house battery before charging EV<br> Allowed for a bigger Sun elevation angle so that battery export can occur before charging EV.|
 | v3.2 | **30/3/25** | automations_5001-6002.yaml  <br> packages/solax_zappi_octopus<br> packages/solax| Added an input boolean for checking if a manual discharge is in progress, refined conditions to catch and reset after a discharge particuluarly if discharging before charging EV <br> Removed use of zappi cloud sensor and replaced with zappi_power_ct_internal_load to avoid drop outs and spurious readings in house load (for when solax sees zappi load because of CT position)|
 | v3.1 | **18/03/25** | automations_5001-6002.yaml <br /> Solax & Octopus Settings.yaml  <br /> packages/solax_zappi_octopus |Better notification management & new dashboard additions & Solax System State Control

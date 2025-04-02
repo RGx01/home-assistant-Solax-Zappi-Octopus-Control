@@ -42,7 +42,7 @@ solax_zappi_octopus_input_boolean:
     #A secondary charge period usually left off
     battery_heat_enable:
       name: Battery Heating
-      icon: mdi:radiator
+      icon: mdi:heating-coil
     #Export battery switch is used to determine if the remainder of solax battery can be dumped back to the grid during off peak
     export_battery:
       name: Daily Battery Export After EV Charge (23:30 - Battery Start Charge Time)

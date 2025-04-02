@@ -18,7 +18,7 @@ solax_zappi_octopus_input_select:
       options:
         - Self Use
         - Feed In Priority
-      initial: Self Use
+      #initial: Self Use
       icon: mdi:weather-sunny-alert
     solax_manual_modes:
       name: Manual Modes
@@ -27,6 +27,13 @@ solax_zappi_octopus_input_select:
         - Force Charge
         - Force Discharge
       icon: mdi:battery-outline
+    solax_battery_heat_level:
+      name: Battery Heat Level
+      options:
+        - '0'
+        - '1'
+        - '2'
+      icon: mdi:heating-coil
     solax_automation_notification_devices:
       name: Notify Mobile Device
       options:
