@@ -1439,17 +1439,6 @@
     on to off\nv2.1.4 Renamed automation\nv2.1.0 - Changes to limits to catch the
     battery closer to the required threshold set by user\nv2.0.0 -productionisation\n"
   triggers:
-  - entity_id:
-    - sensor.solax_local_battery_soc
-    below: input_number.solax_discharge_limit_soc_before_ev
-    for:
-      hours: 0
-      minutes: 1
-      seconds: 1
-    id: Normal Stop Discharge Prior
-    trigger: numeric_state
-    value_template: '{{ state.state | float(0)  - 3 }}'
-    enabled: false
   - trigger: template
     value_template: "{%set highestSoC = states('sensor.solax_local_feed_in_battery_min_soc')|int,\n
       \                  states('sensor.solax_local_selfuse_battery_min_soc')|int,\n
@@ -1580,6 +1569,7 @@
       - condition: state
         entity_id: input_boolean.export_battery_prior
         state: 'off'
+        enabled: false
       sequence:
       - repeat:
           sequence:
