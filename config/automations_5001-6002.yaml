@@ -1505,16 +1505,16 @@
       - repeat:
           sequence:
           - data:
-              value: '{{default_mode}}'
-            action: rest_command.solax_local_set_inverter_mode
+              value: 0
+            action: rest_command.solax_local_set_manual_mode_behaviour
           - delay:
               hours: 0
               minutes: 0
               seconds: '{{mode_delay}}'
               milliseconds: 0
           - data:
-              value: 0
-            action: rest_command.solax_local_set_manual_mode_behaviour
+              value: '{{default_mode}}'
+            action: rest_command.solax_local_set_inverter_mode
           - delay:
               hours: 0
               minutes: 0
@@ -1566,24 +1566,20 @@
         - condition: state
           entity_id: input_boolean.export_battery_manual
           state: 'on'
-      - condition: state
-        entity_id: input_boolean.export_battery_prior
-        state: 'off'
-        enabled: false
       sequence:
       - repeat:
           sequence:
           - data:
-              value: '{{default_mode}}'
-            action: rest_command.solax_local_set_inverter_mode
+              value: 0
+            action: rest_command.solax_local_set_manual_mode_behaviour
           - delay:
               hours: 0
               minutes: 0
               seconds: '{{mode_delay}}'
               milliseconds: 0
           - data:
-              value: 0
-            action: rest_command.solax_local_set_manual_mode_behaviour
+              value: '{{default_mode}}'
+            action: rest_command.solax_local_set_inverter_mode
           - delay:
               hours: 0
               minutes: 0
@@ -1630,16 +1626,16 @@
       - repeat:
           sequence:
           - data:
-              value: '{{1}}'
-            action: rest_command.solax_local_set_inverter_mode
+              value: 0
+            action: rest_command.solax_local_set_manual_mode_behaviour
           - delay:
               hours: 0
               minutes: 0
               seconds: '{{mode_delay}}'
               milliseconds: 0
           - data:
-              value: 0
-            action: rest_command.solax_local_set_manual_mode_behaviour
+              value: '{{1}}'
+            action: rest_command.solax_local_set_inverter_mode
           - delay:
               hours: 0
               minutes: 0

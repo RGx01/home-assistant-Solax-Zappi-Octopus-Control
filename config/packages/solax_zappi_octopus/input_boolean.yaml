@@ -72,5 +72,16 @@ solax_zappi_octopus_input_boolean:
     saving_session_active:
       name: Saving Session In Progress
       icon: mdi:leaf
-
+    solax_octopus_hide_settings:
+      name: Hide Settings
+      icon: mdi:eye-off
+    solax_octopus_hide_energy:
+      name: Hide Energy Charts
+      icon: mdi:eye-off
+    solax_octopus_hide_power:
+      name: Hide Power Charts
+      icon: mdi:eye-off
+    solax_octopus_hide_stats:
+      name: Hide Stats Charts
+      icon: mdi:eye-off
     ###########################################
