@@ -41,7 +41,6 @@ sections:
             show_state: true
             show_icon: true
             entity: sensor.ev_start_time
-            format: time
             visibility:
               - condition: state
                 entity: sensor.zappi_plug_status
@@ -54,11 +53,12 @@ sections:
               - name
               - state
             name: Schedule
+            tap_action:
+              action: more-info
           - type: entity
             show_state: true
             show_icon: true
             entity: sensor.ev_start_time
-            format: time
             visibility:
               - condition: state
                 entity: sensor.zappi_plug_status
@@ -67,6 +67,8 @@ sections:
               - name
               - state
             name: Schedule
+            tap_action:
+              action: more-info
           - type: entity
             show_state: true
             show_icon: true
@@ -156,6 +158,7 @@ sections:
             color_value: true
             name: Home
             use_metadata: true
+            override_state: true
           individual:
             - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
               secondary_info: {}
@@ -582,6 +585,7 @@ sections:
             color_value: true
             name: Home
             use_metadata: true
+            override_state: true
           individual:
             - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
               secondary_info: {}
@@ -626,6 +630,9 @@ sections:
       - condition: state
         entity: input_select.solax_work_mode
         state: Self Use
+      - condition: state
+        entity: input_boolean.solax_octopus_hide_settings
+        state: "on"
     column_span: 1
   - type: grid
     cards:
@@ -710,6 +717,8 @@ sections:
             color_value: true
             name: Home
             use_metadata: true
+            secondary_info: {}
+            override_state: true
           individual:
             - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
               secondary_info: {}
@@ -808,6 +817,9 @@ sections:
             color_value: true
             name: Home
             use_metadata: true
+            secondary_info: {}
+            override_state: true
+            subtract_individual: false
           individual:
             - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
               secondary_info: {}
@@ -1666,4 +1678,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-
