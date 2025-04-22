@@ -4,24 +4,25 @@
     Initial installation instructions\n1. This is 5001. You also need 5002 5003 5004
     and 5005 to make this work successfully. \n2. Find and replace, zappi_XXXXXXXX
     with zappi number, z_ZZZZZZZZ with Octopus account\n3. Paste into your automations.yaml\n\n#
-    Change Log\nv3.3 Changed the logic slightly for setting SoC limits. Sometimes
-    depending on which mode is being set (self use or feed in) the inverter seems
-    to randomly reject the second service call. so I now set the first soc limit to
-    match the default return to mode.\nv3.2 Added an input boolean switch to enable
-    possibility to check what kind of discharge is occurring when a manual discharge
-    is occurring.\nv3.0.4 Added a condition to prevent inverter reverting back to
-    default if vehicle was charging prior to a saving session starting.\nv3.0.3 Added
-    When Condition to ensure inverter mode is reset to default mode when it's time
-    to start charging the solax battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1 Fixed
-    issue that if user plugs in during a saving session a charge could be initiated\nv3.0.0
-    Allow discharge battery before charging EV\nv2.1.4.1 Spotted a potential bug if
-    user starts charge at 23:30 where it could clash with tail battery export\nv2.1.4
-    Renamed automation\nv2.1.3.1 fixed missing scenario where min_SoC would not be
-    set properly at 23:30 or if FAST charging was selected.\nv2.1.3 More readable
-    notifications\nv2.1.1 Update dispatch trigger for octopus dispatch from on to
-    off rather than just to off. false triggers when sensor is unavailable \nv2.1
-    updated setting of modes and SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0
-    Remove legacy dev work"
+    Change Log\nv3.4 Added condition to check if saving session is in progress\nv3.3
+    Changed the logic slightly for setting SoC limits. Sometimes depending on which
+    mode is being set (self use or feed in) the inverter seems to randomly reject
+    the second service call. so I now set the first soc limit to match the default
+    return to mode.\nv3.2 Added an input boolean switch to enable possibility to check
+    what kind of discharge is occurring when a manual discharge is occurring.\nv3.0.4
+    Added a condition to prevent inverter reverting back to default if vehicle was
+    charging prior to a saving session starting.\nv3.0.3 Added When Condition to ensure
+    inverter mode is reset to default mode when it's time to start charging the solax
+    battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1 Fixed issue that if user plugs
+    in during a saving session a charge could be initiated\nv3.0.0 Allow discharge
+    battery before charging EV\nv2.1.4.1 Spotted a potential bug if user starts charge
+    at 23:30 where it could clash with tail battery export\nv2.1.4 Renamed automation\nv2.1.3.1
+    fixed missing scenario where min_SoC would not be set properly at 23:30 or if
+    FAST charging was selected.\nv2.1.3 More readable notifications\nv2.1.1 Update
+    dispatch trigger for octopus dispatch from on to off rather than just to off.
+    false triggers when sensor is unavailable \nv2.1 updated setting of modes and
+    SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0 Remove legacy dev
+    work"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -246,6 +247,9 @@
         - condition: state
           entity_id: sensor.zappi_plug_status
           state: Charging
+      - condition: state
+        entity_id: input_boolean.saving_session_active
+        state: 'on'
   - condition: template
     value_template: '{{now()|as_timestamp-states(''sensor.uptime'')|as_timestamp>80}}
 
@@ -1431,9 +1435,10 @@
     if it's sunny. After free electric session is done default mode is returned. \n\n#
     Initial installation instructions\n1. This is 5002 only. You also need 5001 5003
     5004 and 5005. \n2. replace z_ZZZZZZZZ with your Octopus Account Number\n3. Copy
-    and Paste into your automations.yaml\n\n# Change log\nv3.3  Added a validity check
-    on which SoC is highest for the discharge before ev charge as it is critical that
-    an event is triggered in this option to initialise EV charging.\nv3.2  Add a condition
+    and Paste into your automations.yaml\n\n# Change log\nv3.3 Added condition to
+    check if saving session is in progress\nv3.3  Added a validity check on which
+    SoC is highest for the discharge before ev charge as it is critical that an event
+    is triggered in this option to initialise EV charging.\nv3.2  Add a condition
     to check if export prior and manual export button press.\nv3.0.0 Set an event
     to trigger EV charging if binary_sensor.\nSolax Discharge Before EV Charge is
     on to off\nv2.1.4 Renamed automation\nv2.1.0 - Changes to limits to catch the
@@ -1501,6 +1506,9 @@
       - condition: state
         entity_id: input_boolean.export_battery_prior
         state: 'on'
+      - condition: state
+        entity_id: input_boolean.saving_session_active
+        state: 'off'
       sequence:
       - repeat:
           sequence:

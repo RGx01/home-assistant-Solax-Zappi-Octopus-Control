@@ -306,6 +306,7 @@ Dashboard yamls are here https://github.com/RGx01/home-assistant-Solax-Zappi-Oct
 ## Revision Log
 | Version | Date | Files updated |Description |
 |:-----|:--------:|:------|:------|
+| v3.4 | **22/04/25** | automations_5001-6002.yaml | added checks for saving session in progress |
 | v3.3 | **07/04/25** | Solax Zappi Octopus Control Dashboard  <br> packages/solax_zappi_octopus <br> automations_5001-6002.yaml| Added switches to hide/unhide bits of the dashboard <br> tidy of 5002|
 | v3.3 | **02/04/25** | packages/solax <br> packages/solax_zappi_octopus <br> automations_5001-6002.yaml |  Battery heating level added. Not sure why but it doesn't reliably set along with all the other battery heat settings. Using the Solax UI also seems flakey <br> added a check to confirm the highest min SoC of set value and user requested min SoC when discharging before charging EV. Critical that the automation has a chance to fire an event once complete otherwise car won't charge|
 | v3.3 | **31/3/25** | automations_5001-6002.yaml  <br> packages/solax_zappi_octopus | Changed the logic slightly for setting SoC limits. Sometimes depending on which mode is being set (self use or feed in) the inverter seems to randomly reject the second service call. so I now set the first soc limit to match the default return to mode.<br> Tidied the logic and messages up for discharging the house battery before charging EV<br> Allowed for a bigger Sun elevation angle so that battery export can occur before charging EV.|
