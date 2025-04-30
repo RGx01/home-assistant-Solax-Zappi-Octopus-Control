@@ -48,12 +48,20 @@
     to: EV Connected
     id: Finished Charging
     trigger: state
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
   - entity_id:
     - sensor.zappi_plug_status
     from: Waiting for EV
     to: EV Connected
     id: Finished Charging
     trigger: state
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
   - entity_id:
     - sensor.zappi_plug_status
     from: EV Disconnected
@@ -482,7 +490,7 @@
       - if:
         - condition: time
           after: '23:30:00'
-          before: input_datetime.solax_battery_start_charge_time
+          before: sensor.discharge_window_closed
         - condition: state
           entity_id: input_boolean.export_battery
           state: 'on'
@@ -1689,16 +1697,16 @@
       - repeat:
           sequence:
           - data:
-              value: '{{default_mode}}'
-            action: rest_command.solax_local_set_inverter_mode
+              value: 0
+            action: rest_command.solax_local_set_manual_mode_behaviour
           - delay:
               hours: 0
               minutes: 0
               seconds: '{{mode_delay}}'
               milliseconds: 0
           - data:
-              value: 0
-            action: rest_command.solax_local_set_manual_mode_behaviour
+              value: '{{default_mode}}'
+            action: rest_command.solax_local_set_inverter_mode
           - delay:
               hours: 0
               minutes: 0

@@ -306,6 +306,7 @@ Dashboard yamls are here https://github.com/RGx01/home-assistant-Solax-Zappi-Oct
 ## Revision Log
 | Version | Date | Files updated |Description |
 |:-----|:--------:|:------|:------|
+| v3.5 | **30/04/25** | automations_5001-6002.yaml <br> packages/solax_zappi_octopus| wait 10 minutes before discharging battery after EV has finished. <br> Added a 30 min window before Solax house battery charge where a forced dischage can't occur |
 | v3.4 | **22/04/25** | automations_5001-6002.yaml | added checks for saving session in progress |
 | v3.3 | **07/04/25** | Solax Zappi Octopus Control Dashboard  <br> packages/solax_zappi_octopus <br> automations_5001-6002.yaml| Added switches to hide/unhide bits of the dashboard <br> tidy of 5002|
 | v3.3 | **02/04/25** | packages/solax <br> packages/solax_zappi_octopus <br> automations_5001-6002.yaml |  Battery heating level added. Not sure why but it doesn't reliably set along with all the other battery heat settings. Using the Solax UI also seems flakey <br> added a check to confirm the highest min SoC of set value and user requested min SoC when discharging before charging EV. Critical that the automation has a chance to fire an event once complete otherwise car won't charge|

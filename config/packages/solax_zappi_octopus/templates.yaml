@@ -3,6 +3,7 @@
 # replace zappi serial number zappi_XXXXXXXX
 #
 # Change log
+# v3.5   Discharge Window Close time
 # v3.2   Replace zappi cloud sensor with zappi_power_ct_internal_load to avoid drop outs
 # v3.1   Better Notification Management
 #        Added system on off functionality
@@ -544,3 +545,18 @@ solax_zappi_octopus_templates:
         unit_of_measurement: "W"
         state_class: measurement
         device_class: "power"
+
+    ######################################################
+    # 30 min window for discharge before charge
+    ######################################################
+    - sensor:
+      - name: Discharge Window Closed
+        unique_id: solax_discharge_window_closed
+        state: >
+          {% if now() > today_at(states('sensor.solax_local_battery_setting_stop_charge')) %}
+          {{ ((today_at(states('sensor.solax_local_battery_setting_start_charge'))|as_timestamp-1800+86400)|as_datetime|as_local)}}
+          {% else %}
+          {{ ((today_at(states('sensor.solax_local_battery_setting_start_charge'))|as_timestamp-1800)|as_datetime|as_local)}}
+          {% endif%}
+        icon: mdi:clock-end
+        device_class: "timestamp"
