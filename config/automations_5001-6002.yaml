@@ -4,25 +4,25 @@
     Initial installation instructions\n1. This is 5001. You also need 5002 5003 5004
     and 5005 to make this work successfully. \n2. Find and replace, zappi_XXXXXXXX
     with zappi number, z_ZZZZZZZZ with Octopus account\n3. Paste into your automations.yaml\n\n#
-    Change Log\nv3.4 Added condition to check if saving session is in progress\nv3.3
-    Changed the logic slightly for setting SoC limits. Sometimes depending on which
-    mode is being set (self use or feed in) the inverter seems to randomly reject
-    the second service call. so I now set the first soc limit to match the default
-    return to mode.\nv3.2 Added an input boolean switch to enable possibility to check
-    what kind of discharge is occurring when a manual discharge is occurring.\nv3.0.4
-    Added a condition to prevent inverter reverting back to default if vehicle was
-    charging prior to a saving session starting.\nv3.0.3 Added When Condition to ensure
-    inverter mode is reset to default mode when it's time to start charging the solax
-    battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1 Fixed issue that if user plugs
-    in during a saving session a charge could be initiated\nv3.0.0 Allow discharge
-    battery before charging EV\nv2.1.4.1 Spotted a potential bug if user starts charge
-    at 23:30 where it could clash with tail battery export\nv2.1.4 Renamed automation\nv2.1.3.1
-    fixed missing scenario where min_SoC would not be set properly at 23:30 or if
-    FAST charging was selected.\nv2.1.3 More readable notifications\nv2.1.1 Update
-    dispatch trigger for octopus dispatch from on to off rather than just to off.
-    false triggers when sensor is unavailable \nv2.1 updated setting of modes and
-    SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0 Remove legacy dev
-    work"
+    Change Log v3.5 variable for loops\nv3.4 Added condition to check if saving session
+    is in progress\nv3.3 Changed the logic slightly for setting SoC limits. Sometimes
+    depending on which mode is being set (self use or feed in) the inverter seems
+    to randomly reject the second service call. so I now set the first soc limit to
+    match the default return to mode.\nv3.2 Added an input boolean switch to enable
+    possibility to check what kind of discharge is occurring when a manual discharge
+    is occurring.\nv3.0.4 Added a condition to prevent inverter reverting back to
+    default if vehicle was charging prior to a saving session starting.\nv3.0.3 Added
+    When Condition to ensure inverter mode is reset to default mode when it's time
+    to start charging the solax battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1 Fixed
+    issue that if user plugs in during a saving session a charge could be initiated\nv3.0.0
+    Allow discharge battery before charging EV\nv2.1.4.1 Spotted a potential bug if
+    user starts charge at 23:30 where it could clash with tail battery export\nv2.1.4
+    Renamed automation\nv2.1.3.1 fixed missing scenario where min_SoC would not be
+    set properly at 23:30 or if FAST charging was selected.\nv2.1.3 More readable
+    notifications\nv2.1.1 Update dispatch trigger for octopus dispatch from on to
+    off rather than just to off. false triggers when sensor is unavailable \nv2.1
+    updated setting of modes and SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0
+    Remove legacy dev work"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -333,10 +333,11 @@
         == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
         {%-endif %}\n{%-endif %}\n"
-      mode_delay: 15
-      manual_mode_delay: 40
-      settings_delay: 15
+      mode_delay: 20
+      manual_mode_delay: 65
+      settings_delay: 20
       refresh_settings_delay: 5
+      loops: 5
   - action: input_boolean.turn_on
     metadata: {}
     data: {}
@@ -424,7 +425,7 @@
               milliseconds: 0
       - if:
         - condition: template
-          value_template: '{{repeat.index == 3}}'
+          value_template: '{{repeat.index == loops}}'
         then:
         - event: Solax Zappi Octopus Control
           event_data:
@@ -437,7 +438,7 @@
       - condition: template
         value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[0]
           == min_soc and state_attr(''sensor.solax_local_settings'', ''Data'')[12]
-          == min_soc) or repeat.index == 3 }}'
+          == min_soc) or repeat.index == loops }}'
     enabled: true
   - choose:
     - conditions:
@@ -475,7 +476,7 @@
           until:
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-              == default_mode) or repeat.index == 3 }}'
+              == default_mode) or repeat.index == loops }}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: EV started charging @ {{now().strftime('%H:%M')}}.
@@ -533,7 +534,7 @@
             - condition: template
               value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
                 == 3 and state_attr(''sensor.solax_local_settings'', ''Data'')[11]
-                == 2) or repeat.index == 3 }}'
+                == 2) or repeat.index == loops }}'
         - event: Solax Zappi Octopus Control
           event_data:
             message: EV stopped charging @ {{now().strftime('%H:%M')}}. Attempting
@@ -635,7 +636,7 @@
                 until:
                 - condition: template
                   value_template: '{{ (state_attr(''sensor.solax_local_settings'',
-                    ''Data'')[10] == default_mode) or repeat.index == 3 }}'
+                    ''Data'')[10] == default_mode) or repeat.index == loops }}'
           - if:
             - condition: not
               conditions:
@@ -712,7 +713,7 @@
                       milliseconds: 0
                   - if:
                     - condition: template
-                      value_template: '{{repeat.index == 3}}'
+                      value_template: '{{repeat.index == loops}}'
                     then:
                     - event: Solax Zappi Octopus Control
                       event_data:
@@ -725,7 +726,7 @@
                   - condition: template
                     value_template: '{{ (state_attr(''sensor.solax_local_settings'',
                       ''Data'')[10] == 3 and state_attr(''sensor.solax_local_settings'',
-                      ''Data'')[11] == 2) or repeat.index == 3 }}'
+                      ''Data'')[11] == 2) or repeat.index == loops }}'
               - event: Solax Zappi Octopus Control
                 event_data:
                   message: 'EV Connected @ {{now().strftime(''%H:%M'')}}. Solax Battery
@@ -842,7 +843,7 @@
           until:
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-              == default_mode) or repeat.index == 3 }}'
+              == default_mode) or repeat.index == loops }}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: EV Connected @ {{now().strftime('%H:%M')}}. No plan to charge -
@@ -901,7 +902,7 @@
           until:
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-              == default_mode) or repeat.index == 3 }}'
+              == default_mode) or repeat.index == loops }}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: EV disconnected @ {{now().strftime('%H:%M')}}
@@ -981,7 +982,7 @@
                 milliseconds: 0
             - if:
               - condition: template
-                value_template: '{{repeat.index == 3}}'
+                value_template: '{{repeat.index == loops}}'
               then:
               - event: Solax Zappi Octopus Control
                 event_data:
@@ -994,7 +995,7 @@
             - condition: template
               value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
                 == 3 and state_attr(''sensor.solax_local_settings'', ''Data'')[11]
-                == 2) or repeat.index == 3 }}'
+                == 2) or repeat.index == loops }}'
         - event: Solax Zappi Octopus Control
           event_data:
             message: Manual Discharge @ {{now().strftime('%H:%M')}}
@@ -1044,7 +1045,7 @@
           until:
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-              == default_mode) or repeat.index == 3 }}'
+              == default_mode) or repeat.index == loops }}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: Manual Discharge Stopped @ {{now().strftime('%H:%M')}}
@@ -1137,7 +1138,7 @@
                 milliseconds: 0
             - if:
               - condition: template
-                value_template: '{{repeat.index == 3}}'
+                value_template: '{{repeat.index == loops}}'
               then:
               - event: Solax Zappi Octopus Control
                 event_data:
@@ -1150,7 +1151,7 @@
             - condition: template
               value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
                 == 3 and state_attr(''sensor.solax_local_settings'', ''Data'')[11]
-                == 2) or repeat.index == 3 }}'
+                == 2) or repeat.index == loops }}'
         - event: Solax Zappi Octopus Control
           event_data:
             message: 'Attempting Discharge @ {{now().strftime(''%H:%M'')}}. '
@@ -1194,7 +1195,7 @@
           until:
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-              == default_mode) or repeat.index == 3 }}'
+              == default_mode) or repeat.index == loops }}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: Peak Rate @ {{now().strftime('%H:%M')}}
@@ -1331,7 +1332,7 @@
                 milliseconds: 0
             - if:
               - condition: template
-                value_template: '{{repeat.index == 3}}'
+                value_template: '{{repeat.index == loops}}'
               then:
               - event: Solax Zappi Octopus Control
                 event_data:
@@ -1344,7 +1345,7 @@
             - condition: template
               value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
                 == 3 and state_attr(''sensor.solax_local_settings'', ''Data'')[11]
-                == 2) or repeat.index == 3 }}'
+                == 2) or repeat.index == loops }}'
         else:
         - repeat:
             sequence:
@@ -1368,7 +1369,7 @@
             until:
             - condition: template
               value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-                == default_mode) or repeat.index == 3 }}'
+                == default_mode) or repeat.index == loops }}'
     - conditions:
       - condition: trigger
         id:
@@ -1402,7 +1403,7 @@
           until:
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-              == default_mode) or repeat.index == 3 }}'
+              == default_mode) or repeat.index == loops }}'
     - conditions:
       - condition: trigger
         id:
@@ -1443,13 +1444,13 @@
     if it's sunny. After free electric session is done default mode is returned. \n\n#
     Initial installation instructions\n1. This is 5002 only. You also need 5001 5003
     5004 and 5005. \n2. replace z_ZZZZZZZZ with your Octopus Account Number\n3. Copy
-    and Paste into your automations.yaml\n\n# Change log\nv3.3 Added condition to
-    check if saving session is in progress\nv3.3  Added a validity check on which
-    SoC is highest for the discharge before ev charge as it is critical that an event
-    is triggered in this option to initialise EV charging.\nv3.2  Add a condition
-    to check if export prior and manual export button press.\nv3.0.0 Set an event
-    to trigger EV charging if binary_sensor.\nSolax Discharge Before EV Charge is
-    on to off\nv2.1.4 Renamed automation\nv2.1.0 - Changes to limits to catch the
+    and Paste into your automations.yaml\n\n# Change log v3.5 variable for loops\nv3.3
+    Added condition to check if saving session is in progress\nv3.3  Added a validity
+    check on which SoC is highest for the discharge before ev charge as it is critical
+    that an event is triggered in this option to initialise EV charging.\nv3.2  Add
+    a condition to check if export prior and manual export button press.\nv3.0.0 Set
+    an event to trigger EV charging if binary_sensor.\nSolax Discharge Before EV Charge
+    is on to off\nv2.1.4 Renamed automation\nv2.1.0 - Changes to limits to catch the
     battery closer to the required threshold set by user\nv2.0.0 -productionisation\n"
   triggers:
   - trigger: template
@@ -1503,9 +1504,10 @@
       entity_id: input_boolean.solax_automation_running
   - variables:
       default_mode: '{{states(''sensor.solax_default_operation_mode'')|int(default=0)}}'
-      mode_delay: 15
+      mode_delay: 30
       settings_delay: 5
       refresh_settings_delay: 5
+      loops: 5
   - choose:
     - conditions:
       - condition: trigger
@@ -1548,7 +1550,7 @@
           until:
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-              == default_mode) or repeat.index == 3 }}'
+              == default_mode) or repeat.index == loops }}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: 'Discharge finished @ {{now().strftime(''%H:%M'')}}. '
@@ -1613,7 +1615,7 @@
           until:
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-              == default_mode) or repeat.index == 3 }}'
+              == default_mode) or repeat.index == loops }}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: 'Discharge finished @ {{now().strftime(''%H:%M'')}}. '
@@ -1669,7 +1671,7 @@
           until:
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-              == default_mode) or repeat.index == 3 }}'
+              == default_mode) or repeat.index == loops }}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: 'Discharge finished @ {{now().strftime(''%H:%M'')}}. '
@@ -1724,7 +1726,7 @@
           until:
           - condition: template
             value_template: '{{ (state_attr(''sensor.solax_local_settings'', ''Data'')[10]
-              == default_mode) or repeat.index == 3 }}'
+              == default_mode) or repeat.index == loops }}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: 'Discharge finished @ {{now().strftime(''%H:%M'')}}. '
@@ -1736,6 +1738,8 @@
     data: {}
     target:
       entity_id: input_boolean.solax_automation_running
+  trace:
+    stored_traces: 20
   mode: queued
   max: 3
 
