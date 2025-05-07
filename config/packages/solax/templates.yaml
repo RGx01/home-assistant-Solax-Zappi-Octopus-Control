@@ -5,12 +5,15 @@ solax_templates:
     ######################################################
     # Solax Local Sensor Readings and Settings
     #
-    # User must set the battery size in sensor Solax Local Battery Remain Energy
-    # User must set solax_can_see_zappi_load = 1 or 0 in - name: "Solax Local House Load Power"
-    # User must add battery size to "Solax Local Battery Remain Energy"
+    # User must set the battery size in solax_local_battery_capacity
+    # User must set the inverter size in solax_local_inverter_capacity (typical max power seen during forced discharge)
+    # User must set solax_can_see_zappi_load = 1 or 0 in - name: "Solax Local House Load Power"   
     ######################################################
     # Change log
     ######################################################
+    # v3.6   Calculate remaining usable energy based off default min SoC
+    #        Added two new sensors for battery size and inverter capacity and implimented their usage in calculations
+    #.       Attempted to improve reliability of sensor data returned by rest sensor when timeouts occur and JSON is empty
     # v3.2   Removed zappi cloud sensor and replaced with zappi_power_ct_internal_load to avoid drop outs
     # v3.1   Added system on/off sensor
     #        Added sensor to compare string voltages
@@ -29,6 +32,21 @@ solax_templates:
     # - name: "Solax Local House Load Power"
     ######################################################
     - sensor:
+        ### Battery Capacity
+        - name: "Solax Local Battery Capacity"
+          unique_id: solax_local_battery_capacity
+          state: "{{ 9.2|float }}"
+          unit_of_measurement: "kWh"
+          state_class: measurement
+          icon: mdi:battery
+        ### Inverter Capacity
+        - name: "Solax Local Inverter Capacity"
+          unique_id: solax_local_inverter_capacity
+          state: "{{ 5.2|float }}"
+          unit_of_measurement: "kWh"
+          state_class: measurement
+          icon: mdi:generator-stationary
+
         - name: solax_local
           state: >
             {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10  %}
@@ -56,7 +74,7 @@ solax_templates:
                 {{ (state_attr('sensor.solax_local', 'type')) }}
               {% endif %}
             Data: >-
-              {% if state_attr('sensor.solax_rest_local', 'Data')|length > 30 or states('sensor.solax_rest_local') not in ['unknown', 'unavailable','none'] %}
+              {% if state_attr('sensor.solax_rest_local', 'Data')|length > 30 or states('sensor.solax_rest_local') not in ['unknown', 'unavailable','None',''] %}
                 {{ (state_attr('sensor.solax_rest_local', 'Data')) }}
               {% else %}
                 {{ (state_attr('sensor.solax_local', 'Data')) }}
@@ -351,7 +369,7 @@ solax_templates:
           state: >
             {% set val = state_attr('sensor.solax_local', 'Data')[14]|float(default=0.0) %}
             {% if val > 0 %}
-            {{ val/100/90 if is_number(val) and (val|float > 0) else 0 }}
+            {{ val/100/(states('sensor.solax_local_battery_capacity')|int/3*30) if is_number(val) and (val|float > 0) else 0 }}
             {% else%}
             {{ states('sensor.solax_local_battery_cell_voltage')}}
             {% endif%}
@@ -468,7 +486,8 @@ solax_templates:
         ### Estimated remaining energy 3.1 for 1 battery, 6.1 2 batts, 9.2 3 batts, 12.3 4 batts ###
         - name: "Solax Local Battery Remain Energy"
           unique_id: solax_local_battery_kwh
-          state: "{{ states('sensor.solax_local_battery_soc') | int(default=0) * 9.2 / 100 }}"
+#          state: "{{ states('sensor.solax_local_battery_soc') | int(default=0) * states('sensor.solax_local_battery_capacity')|float / 100 }}"
+          state: "{{ (states('sensor.solax_local_battery_soc')|int - states('input_number.solax_default_discharge_limit_soc')|int) /100 * states('sensor.solax_local_battery_capacity')|float }}"
           unit_of_measurement: "kWh"
           device_class: "energy"
           state_class: total

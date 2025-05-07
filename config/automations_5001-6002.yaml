@@ -4,11 +4,11 @@
     Initial installation instructions\n1. This is 5001. You also need 5002 5003 5004
     and 5005 to make this work successfully. \n2. Find and replace, zappi_XXXXXXXX
     with zappi number, z_ZZZZZZZZ with Octopus account\n3. Paste into your automations.yaml\n\n#
-    Change Log v3.5 variable for loops\nv3.4 Added condition to check if saving session
-    is in progress\nv3.3 Changed the logic slightly for setting SoC limits. Sometimes
-    depending on which mode is being set (self use or feed in) the inverter seems
-    to randomly reject the second service call. so I now set the first soc limit to
-    match the default return to mode.\nv3.2 Added an input boolean switch to enable
+    Change Log \nv3.5 variable for loops\nv3.4 Added condition to check if saving
+    session is in progress\nv3.3 Changed the logic slightly for setting SoC limits.
+    Sometimes depending on which mode is being set (self use or feed in) the inverter
+    seems to randomly reject the second service call. so I now set the first soc limit
+    to match the default return to mode.\nv3.2 Added an input boolean switch to enable
     possibility to check what kind of discharge is occurring when a manual discharge
     is occurring.\nv3.0.4 Added a condition to prevent inverter reverting back to
     default if vehicle was charging prior to a saving session starting.\nv3.0.3 Added
@@ -1084,6 +1084,10 @@
           - condition: state
             entity_id: sensor.zappi_plug_status
             state: EV Connected
+            for:
+              hours: 0
+              minutes: 10
+              seconds: 0
           - condition: template
             value_template: '{%if zappi_eco_mode_override == on %}
 
@@ -1454,9 +1458,9 @@
     battery closer to the required threshold set by user\nv2.0.0 -productionisation\n"
   triggers:
   - trigger: template
-    value_template: "{%set highestSoC = states('sensor.solax_local_feed_in_battery_min_soc')|int,\n
-      \                  states('sensor.solax_local_selfuse_battery_min_soc')|int,\n
-      \                  states('input_number.solax_discharge_limit_soc_before_ev')|int\n%}\n{{
+    value_template: "{%set highestSoC = states('sensor.solax_local_feed_in_battery_min_soc')|int
+      (default=15),\n                   states('sensor.solax_local_selfuse_battery_min_soc')|int
+      (default=15),\n                   states('input_number.solax_discharge_limit_soc_before_ev')|int\n%}\n{{
       states('sensor.solax_local_battery_soc')|int < highestSoC|max+3 }}\n"
     for:
       hours: 0

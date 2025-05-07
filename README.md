@@ -306,6 +306,7 @@ Dashboard yamls are here https://github.com/RGx01/home-assistant-Solax-Zappi-Oct
 ## Revision Log
 | Version | Date | Files updated |Description |
 |:-----|:--------:|:------|:------|
+| v3.6 | **07/05/25** | packages/solax <br> packages/solax_zappi_octopus | 1. more representative battery remaining capacity <br> 2. A more dynamic window where a forced dischage can't occur <br> 3. Calcution for number of cells based on user input battery capacity (used to approximate typical cell voltage) <br> 4. Added sensor for Solax battery size (user must set) <br> 5. Added sensor for inverter capacity (user must set to max discharge power i.e. 5.5 for a X1-hybrid-G4-5.0) | 
 | v3.5 | **30/04/25** | automations_5001-6002.yaml <br> packages/solax_zappi_octopus| wait 10 minutes before discharging battery after EV has finished. <br> Added a 30 min window before Solax house battery charge where a forced dischage can't occur |
 | v3.4 | **22/04/25** | automations_5001-6002.yaml | added checks for saving session in progress |
 | v3.3 | **07/04/25** | Solax Zappi Octopus Control Dashboard  <br> packages/solax_zappi_octopus <br> automations_5001-6002.yaml| Added switches to hide/unhide bits of the dashboard <br> tidy of 5002|
