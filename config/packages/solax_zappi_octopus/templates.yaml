@@ -555,6 +555,7 @@ solax_zappi_octopus_templates:
         unique_id: solax_discharge_window_closed
         state: >
           {% set seconds_to_discharge = states('sensor.solax_local_battery_remain_energy')|float/states('sensor.solax_local_inverter_capacity')|float*60*60 + 300 %}
+          {% set seconds_to_discharge = 20*60 %}
           {% if now() > today_at(states('sensor.solax_local_battery_setting_stop_charge')) %}
           {{ ((today_at(states('sensor.solax_local_battery_setting_start_charge'))|as_timestamp-seconds_to_discharge+86400)|as_datetime|as_local)}}
           {% else %}

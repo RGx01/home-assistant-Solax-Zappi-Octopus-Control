@@ -178,7 +178,9 @@
     from: Force Discharge
     enabled: true
   - trigger: time
-    at: input_datetime.solax_battery_start_charge_time
+    at:
+      entity_id: input_datetime.solax_battery_start_charge_time
+      offset: '-300'
     id: Charge Solax
   - trigger: time
     at: sensor.solax_local_battery_setting_stop_charge_2

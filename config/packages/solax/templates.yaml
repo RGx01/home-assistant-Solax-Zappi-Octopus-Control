@@ -42,7 +42,7 @@ solax_templates:
         ### Inverter Capacity
         - name: "Solax Local Inverter Capacity"
           unique_id: solax_local_inverter_capacity
-          state: "{{ 5.2|float }}"
+          state: "{{ 5.5|float }}"
           unit_of_measurement: "kWh"
           state_class: measurement
           icon: mdi:generator-stationary
