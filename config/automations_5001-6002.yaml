@@ -4,25 +4,25 @@
     Initial installation instructions\n1. This is 5001. You also need 5002 5003 5004
     and 5005 to make this work successfully. \n2. Find and replace, zappi_XXXXXXXX
     with zappi number, z_ZZZZZZZZ with Octopus account\n3. Paste into your automations.yaml\n\n#
-    Change Log \nv3.5 variable for loops\nv3.4 Added condition to check if saving
-    session is in progress\nv3.3 Changed the logic slightly for setting SoC limits.
-    Sometimes depending on which mode is being set (self use or feed in) the inverter
-    seems to randomly reject the second service call. so I now set the first soc limit
-    to match the default return to mode.\nv3.2 Added an input boolean switch to enable
-    possibility to check what kind of discharge is occurring when a manual discharge
-    is occurring.\nv3.0.4 Added a condition to prevent inverter reverting back to
-    default if vehicle was charging prior to a saving session starting.\nv3.0.3 Added
-    When Condition to ensure inverter mode is reset to default mode when it's time
-    to start charging the solax battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1 Fixed
-    issue that if user plugs in during a saving session a charge could be initiated\nv3.0.0
-    Allow discharge battery before charging EV\nv2.1.4.1 Spotted a potential bug if
-    user starts charge at 23:30 where it could clash with tail battery export\nv2.1.4
-    Renamed automation\nv2.1.3.1 fixed missing scenario where min_SoC would not be
-    set properly at 23:30 or if FAST charging was selected.\nv2.1.3 More readable
-    notifications\nv2.1.1 Update dispatch trigger for octopus dispatch from on to
-    off rather than just to off. false triggers when sensor is unavailable \nv2.1
-    updated setting of modes and SoC's wrt rest sensor sensor.solax_rest_local_settings\nv2.0
-    Remove legacy dev work"
+    Change Log \nv3.6 min soc calculation updated\nv3.5 variable for loops\nv3.4 Added
+    condition to check if saving session is in progress\nv3.3 Changed the logic slightly
+    for setting SoC limits. Sometimes depending on which mode is being set (self use
+    or feed in) the inverter seems to randomly reject the second service call. so
+    I now set the first soc limit to match the default return to mode.\nv3.2 Added
+    an input boolean switch to enable possibility to check what kind of discharge
+    is occurring when a manual discharge is occurring.\nv3.0.4 Added a condition to
+    prevent inverter reverting back to default if vehicle was charging prior to a
+    saving session starting.\nv3.0.3 Added When Condition to ensure inverter mode
+    is reset to default mode when it's time to start charging the solax battery.\nv3.0.2
+    further fixes to 3.0.1\nv3.0.1 Fixed issue that if user plugs in during a saving
+    session a charge could be initiated\nv3.0.0 Allow discharge battery before charging
+    EV\nv2.1.4.1 Spotted a potential bug if user starts charge at 23:30 where it could
+    clash with tail battery export\nv2.1.4 Renamed automation\nv2.1.3.1 fixed missing
+    scenario where min_SoC would not be set properly at 23:30 or if FAST charging
+    was selected.\nv2.1.3 More readable notifications\nv2.1.1 Update dispatch trigger
+    for octopus dispatch from on to off rather than just to off. false triggers when
+    sensor is unavailable \nv2.1 updated setting of modes and SoC's wrt rest sensor
+    sensor.solax_rest_local_settings\nv2.0 Remove legacy dev work"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -289,52 +289,54 @@
         == 'off'-%}  {{100}} {%-endif %} \n  {%-if states('sensor.zappi_plug_status')
         != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'off' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        {%-endif %} \n{%else%}\n  {% if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n{%else%}\n  {%if now() > today_at(\"05:30\") and now() < today_at(\"23:30\")
+        and trigger.id == 'Charging to Disconnected' %}      \n    {{states('input_number.solax_default_discharge_limit_soc')|int}}\n
+        \ {%else%}\n    {% if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'on') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}}
-        {%-endif %}\n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %}\n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'on') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'on') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{100}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'on') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'off' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'on') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'on') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'on') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{100}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'on') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'off' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'off' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on' -%} {{100}}
-        {%-endif %} \n  {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
+        {%-endif %} \n    {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        {%-endif %}\n{%-endif %}\n"
+        {%-endif %}\n  {%-endif-%}\n{%-endif %}\n"
       mode_delay: 20
       manual_mode_delay: 65
       settings_delay: 20
