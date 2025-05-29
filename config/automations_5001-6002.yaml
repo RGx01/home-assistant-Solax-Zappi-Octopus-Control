@@ -770,9 +770,10 @@
               - event: Solax Zappi Octopus Control
                 event_data:
                   message: 'EV Connected @ {{now().strftime(''%H:%M'')}}. Solax Battery
-                    will attempt to discharge at {%if now()|as_timestamp > states(''sensor.pre_export_battery_before_charging_ev_time'')|as_timestamp%}{{now().strftime(''%H:%M'')}}
-                    {% else %}{{(states(''sensor.pre_export_battery_before_charging_ev_time'')|as_datetime|as_local).strftime(''%H:%M'')}}
-                    {%endif%}prior to getting a schedule from octopus at {{states(''sensor.ev_start_time'')}}. '
+                    will attempt to discharge at {%if now()|as_timestamp<=([states(''sensor.ev_start_time''),states(''sensor.pre_export_battery_before_charging_ev_time'')]|min)|as_timestamp
+                    -%}{{(([states(''sensor.ev_start_time''),states(''sensor.pre_export_battery_before_charging_ev_time'')]|min)|as_datetime|as_local).strftime("%H:%M")}}{%-else
+                    %} {{now().strftime(''%H:%M'')}}{%-endif %} prior to getting a
+                    schedule from octopus. '
                   title: EV Connected - Waiting for Solax to Discharge Before Getting
                     Octopus Schedule
                   class: normal

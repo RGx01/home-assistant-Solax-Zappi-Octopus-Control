@@ -668,7 +668,7 @@ solax_zappi_octopus_templates:
 
             {% if starttime != None %}
               {%if starttime|as_timestamp-now()|as_timestamp < 180 and states('input_boolean.zappi_eco_mode_override') =='off' %}
-                {{trigger.from_state.state|as_local}}
+                {{"unavailable"}}
               {%else%}
                 {{starttime|as_datetime|as_local}} 
               {%endif%}
@@ -711,7 +711,7 @@ solax_zappi_octopus_templates:
 
             {% if starttime != None %}
               {%if starttime|as_timestamp-now()|as_timestamp < 180 or states('sensor.solax_local_inverter_mode') == 'Manual' %}
-                {{trigger.from_state.state|as_local}}
+                {{"unavailable"}}
               {%else%}
                 {{starttime|as_datetime|as_local}}
               {%endif%} 
