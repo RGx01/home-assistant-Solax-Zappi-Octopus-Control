@@ -64,7 +64,7 @@ solax_zappi_octopus_input_number:
       unit_of_measurement: "%"
       #initial: 18
       min: 20
-      max: 80
+      max: 100
       step: 1
       mode: box
       icon: mdi:battery-20

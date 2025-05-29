@@ -3,6 +3,7 @@
 # replace zappi serial number zappi_XXXXXXXX
 #
 # Change log
+# v3.7   Pre-emptive discharge options
 # v3.6   Dynamic Discharge Window Close time based on how long it would take to discharge - Abandonded for now
 # v3.5   Discharge Window Close time
 # v3.2   Replace zappi cloud sensor with zappi_power_ct_internal_load to avoid drop outs
@@ -41,24 +42,23 @@ solax_zappi_octopus_templates:
           state: >
             {% set wobble = states('sensor.wobble')|int(default=0)%}
             {%if today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_timestamp > today_at('23:15')|as_timestamp %}
-            {{(today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_datetime).isoformat()}}
+              {{(today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_datetime (default=now()|as_datetime))|as_local}}
             {%else%}
-            {{((today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_timestamp + (wobble|int*60))|as_datetime).isoformat()}}
+              {{((today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_timestamp + (wobble|int*60))|as_datetime (default=now()|as_datetime))|as_loacal}}
             {%endif%}
     ######################################################
     # Earliest EV Start Time
     ######################################################
     - sensor:
-        - name: Earliest EV start time
-          unique_id: 3d61ba31-cdf6-4c86-86ea-98c70dee849f
+        - name: Earliest EV Charge Start Time
+          unique_id: earliest_ev_charge_start_time
           device_class: "timestamp"
           state: >
-            {%set target_time = states('sensor.octopus_intelligent_target_time')|as_timestamp%}
+            {%set target_time = states('sensor.octopus_intelligent_target_time')|as_timestamp (default=today_at("05:30")|as_timestamp)%}
             {%set target_percentage = states('number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target')%}
             {%set ev_size = states('input_number.ev_battery_size')|int(default=10) %}
-            {%set delta_time = ((ev_size|int/7)*(target_percentage|int/100))*60*60%}
+            {%set delta_time = ((ev_size|int/6.8)*(target_percentage|int/100))*60*60%}
             {{(target_time-delta_time)|as_datetime (default=(now()|as_timestamp-delta_time)|as_datetime)}}
-
     ######################################################
     # Solar threshold calcs
     # elevation - is degrees the sun is above the horizon
@@ -99,9 +99,9 @@ solax_zappi_octopus_templates:
             {% set Sunlight_Duration_minutes = 8*HA_Sunrise_deg -%}
             {% set True_Solar_Time_min = (0.5*1440+Eq_of_Time_minutes+4*longitude-60*utc_offset)%1440 -%}
             {% if True_Solar_Time_min/4 <0 -%}
-            {% set Hour_Angle_deg = True_Solar_Time_min/4+180 -%}
+              {% set Hour_Angle_deg = True_Solar_Time_min/4+180 -%}
             {% else -%}
-            {% set Hour_Angle_deg = True_Solar_Time_min/4-180 -%}
+              {% set Hour_Angle_deg = True_Solar_Time_min/4-180 -%}
             {% endif -%}
             {% set Sunset_time_UTC = Sunset_Time_LST*24 -%}
             {% set sunset_hour = Sunset_time_UTC | int -%}
@@ -129,6 +129,9 @@ solax_zappi_octopus_templates:
               {% set starttime = now() %}
             {% endif -%}
             {{starttime|as_datetime|as_local}}
+
+
+
     ####################################################
     # Octopus depricated the time.Intelligent Target Time
     # but it's used in an automation so this is calculated
@@ -141,15 +144,15 @@ solax_zappi_octopus_templates:
           device_class: "timestamp"
           state: >
             {% if states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time') != 'unknown'%}
-            {% set t = today_at(states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[0] + ":" + states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[1]) %}
+              {% set t = today_at(states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[0] + ":" + states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[1])|as_datetime|as_local %}
             {%else%}
-            {% set t = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+18000)|as_datetime|as_local) %}
+              {% set t = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+18000)|as_datetime|as_local) %}
             {%endif%}
             {%if now()|as_timestamp > t|as_timestamp%}
-            {% set x = t|as_timestamp + 86400 %}
-            {{x|as_datetime|as_local}}
+              {% set x = t|as_timestamp + 86400 %}
+              {{x|as_datetime|as_local}}
             {%else%}
-            {{t|as_local}}
+              {{t|as_local}}
             {%endif%}
     ######################################################
     # Octopus dispatch kWh
@@ -164,11 +167,11 @@ solax_zappi_octopus_templates:
           state: >
             {%- set ns2 = namespace( total_dispatch = 0 ) -%}
             {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0) -%}
-            {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'planned_dispatches') -%}
-            {%- set ns2.total_dispatch = ns2.total_dispatch|float + dispatch.charge_in_kwh|float%}
-            {%- endfor -%}
+              {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'planned_dispatches') -%}
+                {%- set ns2.total_dispatch = ns2.total_dispatch|float + dispatch.charge_in_kwh|float%}
+              {%- endfor -%}
             {%- endif  -%}
-            {{ns2.total_dispatch}}
+            {{ns2.total_dispatch|float (default=0.0)}}
           attributes:
             total_dispatches: >
               {{state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches')|list|count}}
@@ -188,13 +191,13 @@ solax_zappi_octopus_templates:
             {% set disconnected =(states('sensor.zappi_last_disconnected')|as_timestamp-states('sensor.zappi_last_disconnected')|as_timestamp%1800)|as_datetime +timedelta(minutes=30)%}
             {% set connected = (states('sensor.zappi_last_connected')|as_timestamp-states('sensor.zappi_last_connected')|as_timestamp%1800)|as_datetime %}
             {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') | length > 0) -%}
-            {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') -%}
-            {%- if dispatch.start|as_timestamp >= disconnected|as_timestamp -%}
-            {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float (default=0.0)%}
-            {%- endif-%}
-            {%- endfor -%}
+              {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') -%}
+                {%- if dispatch.start|as_timestamp >= disconnected|as_timestamp -%}
+                  {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float (default=0.0)%}
+                {%- endif-%}
+              {%- endfor -%}
             {%- endif  %}
-            {{ns.total_dispatch}}
+            {{ns.total_dispatch|float (default=0.0)}}
 
     ######################################################
     # Zappi plug status avoiding unknown when cloud response is not available
@@ -205,9 +208,6 @@ solax_zappi_octopus_templates:
           not_to:
             - unavailable
             - unknown
-      #      not_from:
-      #        - unavailable
-      #        - unknown
       sensor:
         - name: Zappi Plug Status
           unique_id: cfa5b1f6-14c7-44e8-955a-a57321401378
@@ -242,22 +242,22 @@ solax_zappi_octopus_templates:
         - name: Zappi Last Disconnected
           unique_id: 159a0089-e859-40d4-8153-e363c9642571
           state: >
-            {{now()}}
+            {{now()|as_datetime|as_local}}
           attributes:
             Octopus_total_charge: >
               {% set ns = namespace( total_dispatch = 0 ) %}
               {% if states('sensor.zappi_last_disconnected') in ['unknown', 'unavailable','none'] %}
-                {% set disconnected = now() %}
+                {% set disconnected = now()|as_datetime|as_local %}
               {% else %}
                 {% set disconnected = states('sensor.zappi_last_disconnected') %}
               {%- endif-%}
                 {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') | length > 0) -%}
                   {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') -%}
                     {%- if dispatch.start|as_timestamp > disconnected|as_timestamp and dispatch.start|as_timestamp < states('sensor.zappi_last_connected')|as_timestamp-%}
-                      {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float (default=0.0)%}
+                      {%- set ns.total_dispatch = ns.total_dispatch|float (default=0.0) + dispatch.charge_in_kwh|float (default=0.0)%}
                     {%- endif-%}
                   {%- endfor -%}
-                  {{ns.total_dispatch}}  
+                  {{ns.total_dispatch|float (default=0.0)}}  
                 {%- endif  -%}
             
 
@@ -331,9 +331,9 @@ solax_zappi_octopus_templates:
             mobile_devices: >
               {% set ns= namespace(members=[]) %}
               {% if  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list |length >0%}
-              {% for item in  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list %}
-              {% set ns.members = ns.members + [{"device": item}] %}
-              {%- endfor -%}
+                {% for item in  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list %}
+                  {% set ns.members = ns.members + [{"device": item}] %}
+                {%- endfor -%}
               {%- endif  -%}
               {% set ns.members =  [{"device": " "}]+ns.members  %}
               {{ns.members}}
@@ -530,6 +530,32 @@ solax_zappi_octopus_templates:
           unique_id: 2e2346fe-8a52-4465-b3b4-4445fe9632a5
           state: >
             {{true if trigger.event.data.battery_discharge == "discharge before EV charge" else false}}
+    
+    ######################################################
+    # Binary Sensor triggered by events to allow Solax discharge
+    # to occur prior to 23:30
+    # 5001 check if input_boolean.daily_battery_export_before_2330
+    # If it is on, 5001 selects a path to start
+    # discharging and an event is fired that sets this binary_senor to on.
+    # When 5002 catches the min SoC, it also confirms if this binary_sensor is on,
+    # if it is then it sets it to off.
+    # Setting this binary sensor from on to off is a trigger in 5001 to check the settings for min soc.
+    ######################################################
+
+    - trigger:
+        - trigger: event
+          event_type: solax_discharge
+          event_data:
+            battery_discharge: "discharge before 2330"
+        - trigger: event
+          event_type: solax_discharge
+          event_data:
+            battery_discharge: "do nothing"
+      binary_sensor:
+        - name: Solax Discharge Before 2330
+          unique_id: solax_discharge_before_2330
+          state: >
+            {{true if trigger.event.data.battery_discharge == "discharge before 2330" else false}}
 
     ######################################################
     # for when zappi cloud sensor dips out
@@ -539,17 +565,15 @@ solax_zappi_octopus_templates:
         unique_id: zappi_power_ct_internal_load
         state: >
           {%if states('sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load') in ['unknown', 'unavailable','none'] %}
-          {{states('sensor.zappi_power_ct_internal_load')}}
+            {{states('sensor.zappi_power_ct_internal_load')}}
           {%else%}
-          {{states('sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load')}}
+            {{states('sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load')}}
           {%endif%}
         unit_of_measurement: "W"
         state_class: measurement
         device_class: "power"
 
     ######################################################
-    # 30 min window for discharge before charge
-    # Semi abandonded but may have value in future
     # Currently a 20 min window to protect the system from trying to enter a force discharge
     # just before or during the chargeing window
     # Sometimes the inverter can take a while to get into force discharge mode and it may take several iterations
@@ -559,40 +583,156 @@ solax_zappi_octopus_templates:
       - name: Discharge Window Closed
         unique_id: solax_discharge_window_closed
         state: >
-          {% set seconds_to_discharge = states('sensor.solax_local_battery_remain_energy')|float/states('sensor.solax_local_inverter_capacity')|float*60*60 + 300 %}
           {% set seconds_to_discharge = 20*60 %}
-          {% if now() > today_at(states('sensor.solax_local_battery_setting_stop_charge')) %}
-          {{ ((today_at(states('sensor.solax_local_battery_setting_start_charge'))|as_timestamp-seconds_to_discharge+86400)|as_datetime|as_local)}}
+          {% if now() > today_at(states('input_datetime.solax_battery_stop_charge_time')) %}
+            {{ ((today_at(states('input_datetime.solax_battery_start_charge_time'))|as_timestamp-seconds_to_discharge+86400)|as_datetime|as_local)}}
           {% else %}
-          {{ ((today_at(states('sensor.solax_local_battery_setting_start_charge'))|as_timestamp-seconds_to_discharge)|as_datetime|as_local)}}
+            {{ ((today_at(states('input_datetime.solax_battery_start_charge_time'))|as_timestamp-seconds_to_discharge)|as_datetime|as_local)}}
           {% endif%}
         icon: mdi:clock-end
         device_class: "timestamp"
-
+  
     ######################################################
-    # Sensor for what the SoC should be when changing inverter modes or charging EV etc
-    # Doesn't work. Automation runs faster than the sensor gets updated so SoC doesn
+    # Time it will take to discharge solax battery
     ######################################################
     - sensor:
-      - name: Solax Automation Min SoC
-        unique_id: solax_automation_min_soc
+      - name: Solax Seconds to Discharge
+        unique_id: solax_seconds_to_discharge
         state: >
-          
-          {% if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'on') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}} {%-endif %}
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'on') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'on') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{100}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'on') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'off' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'on') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'on') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'on') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{100}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'on') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'off' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'off') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'off') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'off') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'off') and states('sensor.zappi_plug_status') != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'off' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'off' and states('input_boolean.ev_solax_battery_drain') == 'on' -%} {{100}} {%-endif %} 
-          {%-if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') == 'off') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch') == 'on' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}} {%-endif %}
+          {% set capacity_left = (states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_default_discharge_limit_soc')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2)%}
+          {% set seconds_to_discharge = (capacity_left )|float/states('input_number.solax_inverter_capacity')|float (default=5.5)*60*60 %}
+          {% if states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_default_discharge_limit_soc')|int (default=20) > 14 %}
+            {{(seconds_to_discharge-(seconds_to_discharge%100)-300)|int (default=0)}}
+          {% else %}
+            {{0|int (default=0)}}
+          {% endif%}
+        attributes:
+          prior: >
+            {% set capacity_left = (states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_discharge_limit_soc_before_ev')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2)%}
+            {% set seconds_to_discharge = (capacity_left )|float/states('input_number.solax_inverter_capacity')|float (default=5.5)*60*60 %}
+            {% if states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_discharge_limit_soc_before_ev')|int (default=20) > 14 %}
+              {{(seconds_to_discharge-(seconds_to_discharge%100)-300)|int (default=0)}}
+            {% else %}
+              {{0|int (default=0)}}
+            {% endif%}
+          daily: >
+            {% set capacity_left = (states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_manual_forced_discharge_limit_soc')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2)%}
+            {% set seconds_to_discharge = (capacity_left )|float/states('input_number.solax_inverter_capacity')|float (default=5.5)*60*60 %}
+            {% if states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_manual_forced_discharge_limit_soc')|int (default=20) > 14 %}
+              {{(seconds_to_discharge-(seconds_to_discharge%100)-300)|int (default=0)}}
+            {% else %}
+              {{0|int (default=0)}}
+            {% endif%}
+        icon: mdi:timer-marker
 
-        icon: mdi:state-machine
-        device_class: "battery"
+    ######################################################
+    # Pre emptive discharge time
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: sensor.pre_export_battery_before_charging_ev_time_calc
+          not_to:
+            - unavailable
+      sensor:
+        - name: Pre Export Battery Before Charging EV Time
+          unique_id: pre_export_battery_before_charging_ev_time
+          device_class: "timestamp"
+          state: >
+            {{ trigger.to_state.state }}
+          attributes:
+            last_triggered: >-
+              {{ (trigger.to_state.last_changed|as_local) }}
+
+    - sensor:
+        - name: Pre Export Battery Before Charging EV Time Calc
+          unique_id: pre_export_battery_before_charging_ev_time_calc
+          device_class: "timestamp"
+          state: >
+            {%set starttime =(today_at("23:30")|as_timestamp +86400)|as_datetime|as_local%}
+
+            {% if states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'on' %}
+              {% if states('input_boolean.export_battery_prior') == 'on' and states('input_boolean.pre_emptive_export_battery') == 'on' and states('sensor.solax_local_inverter_mode') != 'Manual'%}
+                {% set starttime = (states('sensor.solar_export_threshold')|as_timestamp - state_attr('sensor.solax_seconds_to_discharge','prior')|int)|as_datetime|as_local %}
+              {% else %}
+                {% set starttime = None %} 
+              {% endif %}
+            {% elif states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'off' %}
+              {% if states('input_boolean.export_battery_prior') == 'on' and states('input_boolean.pre_emptive_export_battery') == 'on' %}
+                {% set starttime = (states('sensor.don_t_charge_ev_before_time_wobble')|as_timestamp - state_attr('sensor.solax_seconds_to_discharge','prior')|int)|as_datetime|as_local %}
+              {% else %}
+                {% set starttime = None %}
+              {% endif %}
+            {%else %}
+              {% set starttime = None %}
+            {% endif -%}
+
+            {% if starttime != None %}
+              {%if starttime|as_timestamp-now()|as_timestamp < 180 and states('input_boolean.zappi_eco_mode_override') =='off' %}
+                {{trigger.from_state.state|as_local}}
+              {%else%}
+                {{starttime|as_datetime|as_local}} 
+              {%endif%}
+            {%else%}
+              {{None}}
+            {%endif%}
+
+    ######################################################
+    # Octopus Night Tariff Start Time
+    # if pre-emptive on then discharge battery before 23:30 is reached
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: sensor.pre_nightly_battery_export_time_calc
+          not_to:
+            - unavailable
+      sensor:
+        - name: Pre Nightly Battery Export Time
+          unique_id: pre_nightly_battery_export_time
+          device_class: "timestamp"
+          state: >
+            {{ trigger.to_state.state }}
+          attributes:
+            last_triggered: >-
+              {{ (trigger.to_state.last_changed|as_local) }}
+
+    - sensor:
+        - name: Pre Nightly Battery Export Time Calc
+          unique_id: pre_nightly_battery_export_time_calc
+          device_class: "timestamp"
+          state: >
+            {%set starttime =(today_at("23:30")|as_timestamp +86400)|as_datetime|as_local%}
+            {% if states('input_boolean.pre_emptive_export_battery') == 'on' and states('input_boolean.export_battery') == 'on' and states('sensor.solax_local_inverter_mode') != 'Manual'%}
+              {% set starttime = (today_at("23:30")|as_timestamp - state_attr('sensor.solax_seconds_to_discharge','daily')|int)|as_datetime|as_local %}
+            {%elif states('input_boolean.pre_emptive_export_battery') == 'off' and states('input_boolean.export_battery') == 'on'%}
+              {% set starttime = None %} 
+            {%elif states('input_boolean.export_battery') == 'off'%}
+              {% set starttime = None %} 
+            {%endif%}
+
+            {% if starttime != None %}
+              {%if starttime|as_timestamp-now()|as_timestamp < 180 or states('sensor.solax_local_inverter_mode') == 'Manual' %}
+                {{trigger.from_state.state|as_local}}
+              {%else%}
+                {{starttime|as_datetime|as_local}}
+              {%endif%} 
+            {%else%}
+              {{None}}
+            {%endif%}
+                        
+
+    ######################################################
+    # binary sensor to trigger discharge if EV is connected and discharge before charging ev is on
+    ######################################################
+    # - binary_sensor:
+    #   - name: Solax Start Discharge
+    #     unique_id: solax_start_discharge
+    #     state: >
+    #       {% if now() > (states('sensor.ev_start_time')|as_timestamp-states('sensor.solax_time_to_discharge')|int)|as_datetime|as_local and states('sensor.zappi_plug_status') == 'EV Connected' and states('input_boolean.export_battery_prior') == 'on'%}
+    #         {{true}}
+    #       {% elif now() > states('sensor.ev_start_time')|as_datetime%}
+    #         {{false}}
+    #       {% else %}
+    #         {{false}}
+    #       {% endif %}
+    #     icon: mdi:clock-star-four-points-outline
+

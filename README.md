@@ -306,6 +306,7 @@ Dashboard yamls are here https://github.com/RGx01/home-assistant-Solax-Zappi-Oct
 ## Revision Log
 | Version | Date | Files updated |Description |
 |:-----|:--------:|:------|:------|
+| v3.6 | **24/05/25** | All | 1. Pre-emptive discharge - allows solax to discharge before octopus is scheduled to charge EV, Also allows battery to be exported to lower limit just before 23:30 <br> 2. Added earliest time to start EV charging based on EV size and charge rate of 6.8kWh and octopus ready time. <br> 3. Dashboard updated |
 | v3.6 | **07/05/25** | packages/solax <br> packages/solax_zappi_octopus | 1. more representative battery remaining capacity <br> 2. Calcution for number of cells based on user input battery capacity (used to approximate typical cell voltage) <br> 3. Added sensor for Solax battery size (user must set) <br> 4. Added sensor for inverter capacity (user must set to max discharge power i.e. 5.5 for a X1-hybrid-G4-5.0) | 
 | v3.5 | **30/04/25** | automations_5001-6002.yaml <br> packages/solax_zappi_octopus| wait 10 minutes before discharging battery after EV has finished. <br> Added a 30 min window before Solax house battery charge where a forced dischage can't occur |
 | v3.4 | **22/04/25** | automations_5001-6002.yaml | added checks for saving session in progress |

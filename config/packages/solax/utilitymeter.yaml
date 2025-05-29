@@ -23,7 +23,7 @@ solax_utilitymeter:
     daily_solar:
       unique_id: 91154042-717c-42f0-ab5a-3b49eee360d0
       source: sensor.solar_panels_energy
-      name: Solar Gen
+      name: Daily Solar Gen
       cycle: daily
 
     monthly_solar:
@@ -117,7 +117,7 @@ solax_utilitymeter:
     daily_grid_import:
       unique_id: adb5e49f-34f5-4980-b776-c17d240b01f1
       source: sensor.solax_local_grid_used_aggregated_energy
-      name: From Grid (Daily)
+      name: Daily In From Grid
       cycle: daily
       tariffs:
         - peak
@@ -127,7 +127,7 @@ solax_utilitymeter:
     monthly_grid_import:
       unique_id: 252fb654-eef6-4d8e-ada3-b358e7493e0b
       source: sensor.solax_local_grid_used_aggregated_energy
-      name: From Grid (Monthly)
+      name: Monthly In From Grid
       cycle: monthly
       offset:
         days: 2
@@ -240,16 +240,16 @@ solax_utilitymeter:
     ##########################################################
     #Export Meters
     ##########################################################
-    daily_grid_fed:
-      unique_id: 498a8be5-d788-410b-a687-4e4b084fc99e
-      source: sensor.solax_local_grid_export_aggregated_energy
-      name: Daily Grid Fed
-      cycle: daily
+    # daily_grid_fed:
+    #   unique_id: 498a8be5-d788-410b-a687-4e4b084fc99e
+    #   source: sensor.solax_local_grid_export_aggregated_energy
+    #   name: Daily Grid Fed
+    #   cycle: daily
 
     export_daily:
       unique_id: 2bbaf57b-73f2-4a41-83b3-0bceb2f0dbd3
       source: sensor.solax_local_grid_export_aggregated_energy
-      name: Export Daily
+      name: Daily Export
       cycle: daily
       net_consumption: false
       delta_values: false
@@ -259,7 +259,7 @@ solax_utilitymeter:
     export_monthly:
       unique_id: 04c30247-b9a2-42a7-bf20-19f1a10d2281
       source: sensor.solax_local_grid_export_aggregated_energy
-      name: Export Monthly
+      name: Monthly Export
       cycle: monthly
       net_consumption: false
       delta_values: false
@@ -275,7 +275,7 @@ solax_utilitymeter:
     ev_charging_daily_vehicle:
       unique_id: 2654432e-7161-4ce5-86e9-fe3919bd0df0
       source: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
-      name: EV Charging Daily Vehicle
+      name: Daily EV Charging Vehicle
       cycle: daily
       net_consumption: false
       delta_values: false
@@ -289,7 +289,7 @@ solax_utilitymeter:
     ev_charging_monthly_vehicle:
       unique_id: 1c511899-2af4-4953-b32f-acb6e06058d2
       source: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
-      name: EV Charging Monthly Vehicle
+      name: Monthly EV Charging Vehicle
       cycle: monthly
       net_consumption: false
       delta_values: false
@@ -305,14 +305,14 @@ solax_utilitymeter:
     zappi_charging_daily:
       unique_id: 493a5661-71ee-4b57-ae79-ca8f91aa9005
       source: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
-      name: Zappi Charging Daily
+      name: Daily Zappi Charging 
       periodically_resetting: true
       cycle: daily
 
     zappi_charging:
       unique_id: 57867e2b-e56c-4753-94f8-9d105a547b2f
       source: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
-      name: Zappi Charging
+      name: Monthly Zappi Charging
       periodically_resetting: true
       cycle: monthly
       offset:

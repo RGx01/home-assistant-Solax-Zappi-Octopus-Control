@@ -32,20 +32,20 @@ solax_templates:
     # - name: "Solax Local House Load Power"
     ######################################################
     - sensor:
-        ### Battery Capacity
-        - name: "Solax Local Battery Capacity"
-          unique_id: solax_local_battery_capacity
-          state: "{{ 9.2|float }}"
-          unit_of_measurement: "kWh"
-          state_class: measurement
-          icon: mdi:battery
-        ### Inverter Capacity
-        - name: "Solax Local Inverter Capacity"
-          unique_id: solax_local_inverter_capacity
-          state: "{{ 5.5|float }}"
-          unit_of_measurement: "kWh"
-          state_class: measurement
-          icon: mdi:generator-stationary
+        ### Battery Capacity 3.1 for 1 battery, 6.1 2 batts, 9.2 3 batts, 12.3 4 batts
+        # - name: "Solax Local Battery Capacity"
+        #   unique_id: solax_local_battery_capacity
+        #   state: "{{ 9.2|float (default=9.2)}}"
+        #   unit_of_measurement: "kWh"
+        #   state_class: measurement
+        #   icon: mdi:battery
+        # ### Inverter Capacity
+        # - name: "Solax Local Inverter Capacity"
+        #   unique_id: solax_local_inverter_capacity
+        #   state: "{{ 5.5|float (default=5.5)}}"
+        #   unit_of_measurement: "kWh"
+        #   state_class: measurement
+        #   icon: mdi:generator-stationary
 
         - name: solax_local
           state: >
@@ -369,7 +369,7 @@ solax_templates:
           state: >
             {% set val = state_attr('sensor.solax_local', 'Data')[14]|float(default=0.0) %}
             {% if val > 0 %}
-            {{ val/100/(states('sensor.solax_local_battery_capacity')|int/3*30) if is_number(val) and (val|float > 0) else 0 }}
+            {{ val/100/(states('input_number.solax_battery_capacity')|int/3*30) if is_number(val) and (val|float > 0) else 0 }}
             {% else%}
             {{ states('sensor.solax_local_battery_cell_voltage')}}
             {% endif%}
@@ -483,11 +483,11 @@ solax_templates:
           state_class: measurement
           icon: mdi:battery-charging
 
-        ### Estimated remaining energy 3.1 for 1 battery, 6.1 2 batts, 9.2 3 batts, 12.3 4 batts ###
+        ### Estimated remaining energy ###
         - name: "Solax Local Battery Remain Energy"
           unique_id: solax_local_battery_kwh
-#          state: "{{ states('sensor.solax_local_battery_soc') | int(default=0) * states('sensor.solax_local_battery_capacity')|float / 100 }}"
-          state: "{{ (states('sensor.solax_local_battery_soc')|int - states('input_number.solax_default_discharge_limit_soc')|int) /100 * states('sensor.solax_local_battery_capacity')|float }}"
+#          state: "{{ states('sensor.solax_local_battery_soc') | int(default=0) * states('input_number.solax_battery_capacity')|float / 100 }}"
+          state: "{{ (states('sensor.solax_local_battery_soc')|int - states('input_number.solax_default_discharge_limit_soc')|int) /100 * states('input_number.solax_battery_capacity')|float }}"
           unit_of_measurement: "kWh"
           device_class: "energy"
           state_class: total

@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v3.7   Added pre emptive discharge options
 # v3.2.2 Added switches to hide/unhide bits of the dashboard
 # v3.2.1 Added house load power to the Heading Card
 # v3.2   Dashboard tidy
@@ -199,6 +200,12 @@ sections:
         grid_options:
           columns: full
           rows: auto
+      - clock_size: small
+        time_format: system
+        show_seconds: false
+        type: clock
+        grid_options:
+          columns: full
     column_span: 3
     visibility:
       - condition: state
@@ -301,6 +308,9 @@ sections:
             state_color: true
           - entity: input_number.sun_degrees_above_horizon
           - entity: input_datetime.don_t_charge_ev_before_time
+          - entity: input_number.ev_battery_size
+          - entity: sensor.earliest_ev_charge_start_time
+            format: time
           - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
             name: Intelligent Charge Target
           - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
@@ -436,29 +446,70 @@ sections:
             state_color: true
           - entity: input_boolean.ev_solax_battery_drain
             state_color: true
-          - entity: input_boolean.export_battery_prior
-            state_color: true
-          - entity: input_number.solax_discharge_limit_soc_before_ev
-          - entity: input_boolean.export_battery
-            state_color: true
-          - entity: input_number.solax_manual_forced_discharge_limit_soc
           - entity: input_select.solax_default_mode
           - entity: input_number.solax_default_discharge_limit_soc
           - entity: input_number.solax_default_charge_to_limit_soc
+          - entity: input_number.solax_battery_capacity
+          - entity: input_number.solax_inverter_capacity
         grid_options:
           columns: 15
           rows: auto
-      - type: entities
+      - type: custom:power-flow-card-plus
         entities:
-          - entity: input_button.solax_force_discharge
-          - entity: input_button.solax_stop_discharge
+          battery:
+            entity: sensor.solax_local_battery_power
+            state_of_charge: sensor.solax_local_battery_soc
+            invert_state: true
+          grid:
+            entity:
+              consumption: sensor.solax_local_grid_used_power
+              production: sensor.solax_local_grid_export_power
+          home:
+            entity: sensor.solax_local_load_power
+            color_value: true
+            name: Home
+            use_metadata: true
+            override_state: true
+          individual:
+            - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
+              secondary_info: {}
+              name: Zappi
+              use_metadata: false
+              display_zero: true
+          fossil_fuel_percentage:
+            state_type: power
+            entity: sensor.electricity_maps_grid_fossil_fuel_percentage
+            color_value: true
+            color_icon: true
+            display_zero: true
+            name: Low Carbon
+            unit_white_space: true
+            use_metadata: true
+            display_zero_state: false
+          solar:
+            entity: sensor.solax_local_pv_output
+            color_value: true
+            color_icon: true
+        clickable_entities: true
+        display_zero_lines:
+          mode: transparency
+          transparency: 50
+          grey_color:
+            - 189
+            - 189
+            - 189
+        use_new_flow_rate_model: true
+        w_decimals: 0
+        kw_decimals: 1
+        min_flow_rate: 0.75
+        max_expected_power: 6000
+        min_expected_power: 0.01
+        watt_threshold: 1000
+        transparency_zero_lines: 0
+        max_flow_rate: 10
         grid_options:
-          columns: 15
+          columns: 12
           rows: auto
-        visibility:
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
       - title: Battery Heating (read-only)
         type: entities
         show_header_toggle: false
@@ -543,6 +594,24 @@ sections:
             color: accent
             tap_action:
               action: more-info
+      - type: entities
+        entities:
+          - entity: input_boolean.pre_emptive_export_battery
+            state_color: true
+          - entity: input_boolean.export_battery_prior
+            state_color: true
+          - entity: sensor.pre_export_battery_before_charging_ev_time
+            format: time
+          - entity: input_number.solax_discharge_limit_soc_before_ev
+          - entity: input_boolean.export_battery
+            state_color: true
+          - entity: sensor.pre_nightly_battery_export_time
+            format: time
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: input_button.solax_force_discharge
+          - entity: input_button.solax_stop_discharge
+        title: Solax Battery Exports
+        show_header_toggle: false
       - title: Self Use Mode Settings
         type: entities
         show_header_toggle: false
@@ -570,62 +639,6 @@ sections:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
             state: "on"
-      - type: custom:power-flow-card-plus
-        entities:
-          battery:
-            entity: sensor.solax_local_battery_power
-            state_of_charge: sensor.solax_local_battery_soc
-            invert_state: true
-          grid:
-            entity:
-              consumption: sensor.solax_local_grid_used_power
-              production: sensor.solax_local_grid_export_power
-          home:
-            entity: sensor.solax_local_load_power
-            color_value: true
-            name: Home
-            use_metadata: true
-            override_state: true
-          individual:
-            - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
-              secondary_info: {}
-              name: Zappi
-              use_metadata: false
-              display_zero: true
-          fossil_fuel_percentage:
-            state_type: power
-            entity: sensor.electricity_maps_grid_fossil_fuel_percentage
-            color_value: true
-            color_icon: true
-            display_zero: true
-            name: Low Carbon
-            unit_white_space: true
-            use_metadata: true
-            display_zero_state: false
-          solar:
-            entity: sensor.solax_local_pv_output
-            color_value: true
-            color_icon: true
-        clickable_entities: true
-        display_zero_lines:
-          mode: transparency
-          transparency: 50
-          grey_color:
-            - 189
-            - 189
-            - 189
-        use_new_flow_rate_model: true
-        w_decimals: 0
-        kw_decimals: 1
-        min_flow_rate: 0.75
-        max_expected_power: 6000
-        min_expected_power: 0.01
-        watt_threshold: 1000
-        transparency_zero_lines: 0
-        max_flow_rate: 10
-        grid_options:
-          columns: 12
-          rows: auto
     visibility:
       - condition: state
         entity: input_select.solax_work_mode
@@ -682,6 +695,24 @@ sections:
             color: accent
             tap_action:
               action: more-info
+      - type: entities
+        entities:
+          - entity: input_boolean.pre_emptive_export_battery
+            state_color: true
+          - entity: input_boolean.export_battery_prior
+            state_color: true
+          - entity: sensor.pre_export_battery_before_charging_ev_time
+            format: time
+          - entity: input_number.solax_discharge_limit_soc_before_ev
+          - entity: input_boolean.export_battery
+            state_color: true
+          - entity: sensor.pre_nightly_battery_export_time
+            format: time
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: input_button.solax_force_discharge
+          - entity: input_button.solax_stop_discharge
+        title: Solax Battery Exports
+        show_header_toggle: false
       - title: Feed In Mode Settings
         type: entities
         entities:
@@ -702,60 +733,6 @@ sections:
           - condition: state
             entity: input_boolean.solaxchargeperiod2
             state: "on"
-      - type: custom:power-flow-card-plus
-        entities:
-          battery:
-            entity: sensor.solax_local_battery_power
-            state_of_charge: sensor.solax_local_battery_soc
-            invert_state: true
-          grid:
-            entity:
-              consumption: sensor.solax_local_grid_used_power
-              production: sensor.solax_local_grid_export_power
-          home:
-            entity: sensor.solax_local_load_power
-            color_value: true
-            name: Home
-            use_metadata: true
-            secondary_info: {}
-            override_state: true
-          individual:
-            - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
-              secondary_info: {}
-              name: Zappi
-              use_metadata: false
-              display_zero: true
-          fossil_fuel_percentage:
-            state_type: power
-            entity: sensor.electricity_maps_grid_fossil_fuel_percentage
-            color_value: true
-            color_icon: true
-            display_zero: true
-            name: Low Carbon
-            unit_white_space: true
-            use_metadata: true
-            display_zero_state: false
-          solar:
-            entity: sensor.solax_local_pv_output
-            color_value: true
-            color_icon: true
-        clickable_entities: true
-        display_zero_lines:
-          mode: transparency
-          transparency: 50
-          grey_color:
-            - 189
-            - 189
-            - 189
-        use_new_flow_rate_model: true
-        w_decimals: 0
-        kw_decimals: 1
-        min_flow_rate: 0.75
-        max_expected_power: 6000
-        min_expected_power: 0.01
-        watt_threshold: 1000
-        transparency_zero_lines: 0
-        max_flow_rate: 10
     visibility:
       - condition: state
         entity: input_select.solax_work_mode
@@ -791,6 +768,24 @@ sections:
             tap_action:
               action: more-info
       - type: entities
+        entities:
+          - entity: input_boolean.pre_emptive_export_battery
+            state_color: true
+          - entity: input_boolean.export_battery_prior
+            state_color: true
+          - entity: sensor.pre_export_battery_before_charging_ev_time
+            format: time
+          - entity: input_number.solax_discharge_limit_soc_before_ev
+          - entity: input_boolean.export_battery
+            state_color: true
+          - entity: sensor.pre_nightly_battery_export_time
+            format: time
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: input_button.solax_force_discharge
+          - entity: input_button.solax_stop_discharge
+        title: Solax Battery Exports
+        show_header_toggle: false
+      - type: entities
         show_header_toggle: false
         entities:
           - entity: sensor.solax_local_inverter_mode
@@ -802,61 +797,6 @@ sections:
           entity: sensor.solax_local_battery_dump_power
           detail: 2
           hours_to_show: 24
-      - type: custom:power-flow-card-plus
-        entities:
-          battery:
-            entity: sensor.solax_local_battery_power
-            state_of_charge: sensor.solax_local_battery_soc
-            invert_state: true
-          grid:
-            entity:
-              consumption: sensor.solax_local_grid_used_power
-              production: sensor.solax_local_grid_export_power
-          home:
-            entity: sensor.solax_local_load_power
-            color_value: true
-            name: Home
-            use_metadata: true
-            secondary_info: {}
-            override_state: true
-            subtract_individual: false
-          individual:
-            - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
-              secondary_info: {}
-              name: Zappi
-              use_metadata: false
-              display_zero: true
-          fossil_fuel_percentage:
-            state_type: power
-            entity: sensor.electricity_maps_grid_fossil_fuel_percentage
-            color_value: true
-            color_icon: true
-            display_zero: true
-            name: Low Carbon
-            unit_white_space: true
-            use_metadata: true
-            display_zero_state: false
-          solar:
-            entity: sensor.solax_local_pv_output
-            color_value: true
-            color_icon: true
-        clickable_entities: true
-        display_zero_lines:
-          mode: transparency
-          transparency: 50
-          grey_color:
-            - 189
-            - 189
-            - 189
-        use_new_flow_rate_model: true
-        w_decimals: 0
-        kw_decimals: 1
-        min_flow_rate: 0.75
-        max_expected_power: 6000
-        min_expected_power: 0.01
-        watt_threshold: 1000
-        transparency_zero_lines: 0
-        max_flow_rate: 10
     visibility:
       - condition: state
         entity: input_select.solax_work_mode
@@ -1133,6 +1073,9 @@ sections:
         entities:
           - entity: select.daily_grid_import
             name: Log
+          - entity: sensor.solax_local_inverter_mode
+          - entity: sensor.solax_local_manual_mode_behaviour
+          - entity: sensor.zappi_plug_status
         fit_y_data: true
         hours_to_show: 36
         grid_options:
