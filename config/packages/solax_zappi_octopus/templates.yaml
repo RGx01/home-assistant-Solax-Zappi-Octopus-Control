@@ -649,7 +649,6 @@ solax_zappi_octopus_templates:
           device_class: "timestamp"
           state: >
             {%set starttime =(today_at("23:30")|as_timestamp +86400)|as_datetime|as_local%}
-
             {% if states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'on' %}
               {% if states('input_boolean.export_battery_prior') == 'on' and states('input_boolean.pre_emptive_export_battery') == 'on' and states('sensor.solax_local_inverter_mode') != 'Manual'%}
                 {% set starttime = (states('sensor.solar_export_threshold')|as_timestamp - state_attr('sensor.solax_seconds_to_discharge','prior')|int)|as_datetime|as_local %}
@@ -667,7 +666,7 @@ solax_zappi_octopus_templates:
             {% endif -%}
 
             {% if starttime != None %}
-              {%if starttime|as_timestamp-now()|as_timestamp < 180 and states('input_boolean.zappi_eco_mode_override') =='off' %}
+              {%if (starttime|as_timestamp-now()|as_timestamp < 180 and states('input_boolean.zappi_eco_mode_override') =='off') or states('sensor.solax_local_inverter_mode') == 'Manual'%}
                 {{"unavailable"}}
               {%else%}
                 {{starttime|as_datetime|as_local}} 

@@ -1402,6 +1402,9 @@
         - condition: template
           value_template: '{{(states(''sensor.solax_local_manual_mode_behaviour'')
             == "Do Nothing")}}'
+      - condition: trigger
+        id:
+        - Check Discharge Mode
       sequence:
       - if:
         - condition: numeric_state
