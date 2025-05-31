@@ -641,7 +641,7 @@ solax_zappi_octopus_templates:
             {{ trigger.to_state.state }}
           attributes:
             last_triggered: >-
-              {{ (trigger.to_state.last_changed|as_local) }}
+              {{ trigger.to_state.last_changed }}
 
     - sensor:
         - name: Pre Export Battery Before Charging EV Time Calc
@@ -667,7 +667,7 @@ solax_zappi_octopus_templates:
 
             {% if starttime != None %}
               {%if (starttime|as_timestamp-now()|as_timestamp < 180 and states('input_boolean.zappi_eco_mode_override') =='off') or states('sensor.solax_local_inverter_mode') == 'Manual'%}
-                {{"unavailable"}}
+                {{"unavailable"|as_local}}
               {%else%}
                 {{starttime|as_datetime|as_local}} 
               {%endif%}
@@ -692,7 +692,7 @@ solax_zappi_octopus_templates:
             {{ trigger.to_state.state }}
           attributes:
             last_triggered: >-
-              {{ (trigger.to_state.last_changed|as_local) }}
+              {{ trigger.to_state.last_changed }}
 
     - sensor:
         - name: Pre Nightly Battery Export Time Calc
@@ -710,7 +710,7 @@ solax_zappi_octopus_templates:
 
             {% if starttime != None %}
               {%if starttime|as_timestamp-now()|as_timestamp < 180 or states('sensor.solax_local_inverter_mode') == 'Manual' %}
-                {{"unavailable"}}
+                {{"unavailable"|as_local}}
               {%else%}
                 {{starttime|as_datetime|as_local}}
               {%endif%} 
