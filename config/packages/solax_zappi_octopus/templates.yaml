@@ -44,7 +44,7 @@ solax_zappi_octopus_templates:
             {%if today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_timestamp > today_at('23:15')|as_timestamp %}
               {{(today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_datetime (default=now()|as_datetime))|as_local}}
             {%else%}
-              {{((today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_timestamp + (wobble|int*60))|as_datetime (default=now()|as_datetime))|as_loacal}}
+              {{((today_at(states('input_datetime.don_t_charge_ev_before_time'))|as_timestamp + (wobble|int*60))|as_datetime (default=now()|as_datetime))|as_local}}
             {%endif%}
     ######################################################
     # Earliest EV Start Time
@@ -667,14 +667,16 @@ solax_zappi_octopus_templates:
 
             {% if starttime != None %}
               {%if (starttime|as_timestamp-now()|as_timestamp < 180 and states('input_boolean.zappi_eco_mode_override') =='off') or states('sensor.solax_local_inverter_mode') == 'Manual'%}
-                {{"unavailable"|as_local}}
+                {{states('sensor.pre_export_battery_before_charging_ev_time')|as_datetime|as_local}}
               {%else%}
                 {{starttime|as_datetime|as_local}} 
               {%endif%}
             {%else%}
               {{None}}
             {%endif%}
-
+#          availability: >
+#            {{(states('sensor.pre_export_battery_before_charging_ev_time_calc')|as_timestamp-now()|as_timestamp > 180 and states('input_boolean.zappi_eco_mode_override') =='off')}}
+##{{(states('sensor.pre_export_battery_before_charging_ev_time_calc')|as_timestamp-now()|as_timestamp > 180 and states('input_boolean.zappi_eco_mode_override') =='off')}}
     ######################################################
     # Octopus Night Tariff Start Time
     # if pre-emptive on then discharge battery before 23:30 is reached
@@ -710,14 +712,13 @@ solax_zappi_octopus_templates:
 
             {% if starttime != None %}
               {%if starttime|as_timestamp-now()|as_timestamp < 180 or states('sensor.solax_local_inverter_mode') == 'Manual' %}
-                {{"unavailable"|as_local}}
+                {{states('sensor.pre_nightly_battery_export_time')|as_datetime|as_local}}
               {%else%}
                 {{starttime|as_datetime|as_local}}
               {%endif%} 
             {%else%}
               {{None}}
             {%endif%}
-                        
 
     ######################################################
     # binary sensor to trigger discharge if EV is connected and discharge before charging ev is on

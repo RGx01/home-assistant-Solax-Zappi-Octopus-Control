@@ -1124,6 +1124,13 @@ sections:
             stat_type: change
             name: Off peak Import
           - type: statistic
+            entity: sensor.solax_local_inverter_aggregated_energy
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: Solar Yield
+          - type: statistic
             entity: sensor.solax_local_grid_export_aggregated_energy
             period:
               calendar:
@@ -1166,19 +1173,19 @@ sections:
             stat_type: change
             name: Battery Used for House
           - type: statistic
-            entity: sensor.solax_local_inverter_in_aggregated_energy
-            period:
-              calendar:
-                period: day
-            stat_type: change
-            name: AC Grid Stored
-          - type: statistic
             entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
             period:
               calendar:
                 period: day
             stat_type: change
             name: DC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_inverter_in_aggregated_energy
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: AC Grid Stored
           - type: statistic
             entity: sensor.solax_local_battery_in_from_solar_aggregated_energy
             period:
@@ -1207,6 +1214,14 @@ sections:
                 offset: -1
             stat_type: change
             name: Off peak Import
+          - type: statistic
+            entity: sensor.solax_local_inverter_aggregated_energy
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: Solar Yield
           - type: statistic
             entity: sensor.solax_local_grid_export_aggregated_energy
             period:
@@ -1299,6 +1314,14 @@ sections:
             stat_type: change
             name: Off peak Import
           - type: statistic
+            entity: sensor.solax_local_inverter_aggregated_energy
+            period:
+              calendar:
+                period: month
+                offset: 0
+            stat_type: change
+            name: Solar Yield
+          - type: statistic
             entity: sensor.solax_local_grid_export_aggregated_energy
             period:
               calendar:
@@ -1382,6 +1405,14 @@ sections:
                 offset: -1
             stat_type: change
             name: Off peak Import
+          - type: statistic
+            entity: sensor.solax_local_inverter_aggregated_energy
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: Solar Yield
           - type: statistic
             entity: sensor.solax_local_grid_export_aggregated_energy
             period:
@@ -1474,6 +1505,13 @@ sections:
             stat_type: change
             name: Off peak Import
           - type: statistic
+            entity: sensor.solax_local_inverter_aggregated_energy
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: Solar Yield
+          - type: statistic
             entity: sensor.solax_local_grid_export_aggregated_energy
             period:
               calendar:
@@ -1562,6 +1600,7 @@ sections:
           - sensor.zappi_charging
           - sensor.solax_local_grid_export_aggregated_energy
           - sensor.solax_local_house_load_aggregated_energy
+          - sensor.solax_local_inverter_aggregated_energy
           - sensor.solax_local_battery_dump_aggregated_energy
           - sensor.solax_local_battery_in_from_solar_aggregated_energy
           - sensor.solax_local_self_consumption_aggregated_energy

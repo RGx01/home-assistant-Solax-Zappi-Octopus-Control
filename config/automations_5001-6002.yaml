@@ -777,7 +777,7 @@
                   title: EV Connected - Waiting for Solax to Discharge Before Getting
                     Octopus Schedule
                   class: normal
-                enabled: true
+                enabled: false
               else:
               - wait_template: '{{states(''binary_sensor.solax_discharge_before_ev_charge'')==true}}'
                 continue_on_timeout: true
@@ -833,7 +833,7 @@
                   {%endif%}prior to getting a schedule from octopus. '
                 title: EV Connected - Waiting for Octopus schedule & Solax to Discharge
                 class: normal
-              enabled: true
+              enabled: false
           - if:
             - condition: state
               entity_id: binary_sensor.solax_discharge_before_ev_charge
