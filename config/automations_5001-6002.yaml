@@ -71,6 +71,10 @@
     to: EV Connected
     id: Disconnected To Connected
     trigger: state
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
   - entity_id:
     - sensor.zappi_plug_status
     from: Fault
@@ -630,7 +634,8 @@
               entity_id: input_boolean.export_battery_prior
               state: 'off'
             - condition: template
-              value_template: '{{trigger.id == "Solax Discharge Prior to EV"}}'
+              value_template: '{{trigger.id == "Solax Discharge Prior to EV" and now()|as_timestamp
+                >= states(''sensor.ev_start_time'')|as_timestamp}}'
           sequence:
           - if:
             - condition: or
@@ -686,8 +691,8 @@
             then:
             - event: Solax Zappi Octopus Control
               event_data:
-                message: EV Connected @ {{now().strftime('%H:%M')}}.Getting shedule
-                  at {%if now()|as_timestamp > states('sensor.ev_start_time')|as_timestamp%}
+                message: EV Connected @ {{(states('sensor.zappi_last_connected')|as_datetime|as_local).strftime("%H:%M")}}.Getting
+                  shedule at {%if now()|as_timestamp > states('sensor.ev_start_time')|as_timestamp%}
                   {{now().strftime('%H:%M')}} {% else %} {{(states('sensor.ev_start_time')|as_datetime).strftime('%H:%M')}}.
                   {% endif %}
                 title: EV Connected - Waiting for Octopus schedule
@@ -697,6 +702,9 @@
           - condition: state
             entity_id: input_boolean.export_battery_prior
             state: 'on'
+          - condition: template
+            value_template: '{{states(''sensor.pre_export_battery_before_charging_ev_time'')|as_timestamp<states(''sensor.ev_start_time'')|as_timestamp}}'
+            enabled: false
           sequence:
           - if:
             - condition: or
@@ -769,15 +777,11 @@
                       ''Data'')[11] == 2) or repeat.index == loops }}'
               - event: Solax Zappi Octopus Control
                 event_data:
-                  message: 'EV Connected @ {{(states(''sensor.zappi_last_connected'')|as_datetime|as_local).strftime("%H:%M")}}.
-                    Solax Battery will attempt to discharge at {%if now()|as_timestamp<=([states(''sensor.ev_start_time''),states(''sensor.pre_export_battery_before_charging_ev_time'')]|min)|as_timestamp
-                    -%}{{(([states(''sensor.ev_start_time''),states(''sensor.pre_export_battery_before_charging_ev_time'')]|min)|as_datetime|as_local).strftime("%H:%M")}}{%-else
-                    %} {{now().strftime(''%H:%M'')}}{%-endif %} prior to getting a
-                    schedule from octopus. '
-                  title: EV Connected - Waiting for Solax to Discharge Before Getting
-                    Octopus Schedule
+                  message: 'Solax discharging to {{states(''input_number.solax_discharge_limit_soc_before_ev'')}}
+                    before charging EV. EV Connected @ {{(states(''sensor.zappi_last_connected'')|as_datetime|as_local).strftime("%H:%M")}}. '
+                  title: Pre Discharge
                   class: normal
-                enabled: false
+                enabled: true
               else:
               - wait_template: '{{states(''binary_sensor.solax_discharge_before_ev_charge'')==true}}'
                 continue_on_timeout: true
@@ -789,13 +793,6 @@
               - wait_template: '{{states(''binary_sensor.solax_discharge_before_ev_charge'')==false}}'
                 continue_on_timeout: true
                 timeout: '5'
-              - event: Solax Zappi Octopus Control
-                event_data:
-                  message: Forced discharge failed because the battery is already
-                    too close to target SoC @ {{now().strftime('%H:%M')}}
-                  title: Forced Discharge Before EV Charge - Failed
-                  class: normal
-                enabled: true
             else:
             - if:
               - condition: template
