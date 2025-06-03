@@ -65,6 +65,7 @@ solax_zappi_octopus_input_select:
         - Cheap Rate
         - Peak Rate
         - Octopus Dispatch
+        - Pre Discharge
       icon: mdi:alert
 
 
