@@ -52,7 +52,7 @@ octopus_saving_sessions_templates:
               {% set next_event =None %} 
               {%endif%}
               {% set upcoming_event = current_event if (current_event != None) else next_event %} 
-              {{ (now() + timedelta(days=7)).strftime('%Y-%m-%d 00:00:00') if (upcoming_event == None) else upcoming_event (default=(now() + timedelta(days=7)).strftime('%Y-%m-%d 00:00:00'))}}
+              {{ (now() + timedelta(days=7)).strftime('%Y-%m-%d 00:00:00') if (upcoming_event == None) else upcoming_event}}
             session_end: >
               {% if state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','current_joined_event_end') != 'unknown'%}
               {% set current_event_end = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','current_joined_event_end') %} 
@@ -62,7 +62,7 @@ octopus_saving_sessions_templates:
               {% set next_event_end =None %} 
               {%endif%}
               {% set upcoming_event_end = current_event_end if (current_event_end != None) else next_event_end %} 
-              {{ (now() + timedelta(days=7)).strftime('%Y-%m-%d 01:00:00') if (upcoming_event_end == None) else upcoming_event_end (default=(now() + timedelta(days=7)).strftime('%Y-%m-%d 01:00:00'))}}
+              {{ (now() + timedelta(days=7)).strftime('%Y-%m-%d 01:00:00') if (upcoming_event_end == None) else upcoming_event_end}}
 
     ######################################################
     #Octopus free electric start
