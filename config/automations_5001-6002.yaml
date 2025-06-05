@@ -703,8 +703,10 @@
             entity_id: input_boolean.export_battery_prior
             state: 'on'
           - condition: template
-            value_template: '{{states(''sensor.pre_export_battery_before_charging_ev_time'')|as_timestamp<states(''sensor.ev_start_time'')|as_timestamp}}'
-            enabled: false
+            value_template: "{{states('sensor.pre_export_battery_before_charging_ev_time')|as_timestamp
+              \n< states('sensor.ev_start_time')|as_timestamp\n\nor\n\nstates('sensor.solax_local_battery_soc')|int
+              \n< states('input_number.solax_discharge_limit_soc_before_ev')|int +14}}"
+            enabled: true
           sequence:
           - if:
             - condition: or
