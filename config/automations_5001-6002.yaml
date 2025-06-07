@@ -635,7 +635,7 @@
               state: 'off'
             - condition: template
               value_template: '{{trigger.id == "Solax Discharge Prior to EV" and now()|as_timestamp
-                >= states(''sensor.ev_start_time'')|as_timestamp}}'
+                >= states(''sensor.ev_start_time'')|as_timestamp }}'
           sequence:
           - if:
             - condition: or
@@ -702,11 +702,6 @@
           - condition: state
             entity_id: input_boolean.export_battery_prior
             state: 'on'
-          - condition: template
-            value_template: "{{states('sensor.pre_export_battery_before_charging_ev_time')|as_timestamp
-              \n< states('sensor.ev_start_time')|as_timestamp\n\nor\n\nstates('sensor.solax_local_battery_soc')|int
-              \n< states('input_number.solax_discharge_limit_soc_before_ev')|int +14}}"
-            enabled: true
           sequence:
           - if:
             - condition: or
@@ -779,22 +774,26 @@
                       ''Data'')[11] == 2) or repeat.index == loops }}'
               - event: Solax Zappi Octopus Control
                 event_data:
-                  message: 'Solax discharging to {{states(''input_number.solax_discharge_limit_soc_before_ev'')}}
+                  message: 'Solax discharging to {{states(''input_number.solax_discharge_limit_soc_before_ev'')|int}}%
                     before charging EV. EV Connected @ {{(states(''sensor.zappi_last_connected'')|as_datetime|as_local).strftime("%H:%M")}}. '
                   title: Pre Discharge
                   class: normal
                 enabled: true
               else:
-              - wait_template: '{{states(''binary_sensor.solax_discharge_before_ev_charge'')==true}}'
-                continue_on_timeout: true
-                timeout: '5'
-              - event: solax_discharge
-                event_data:
-                  battery_discharge: do nothing
-                enabled: true
-              - wait_template: '{{states(''binary_sensor.solax_discharge_before_ev_charge'')==false}}'
-                continue_on_timeout: true
-                timeout: '5'
+              - if:
+                - condition: template
+                  value_template: ' {{now()|as_timestamp >= states(''sensor.ev_start_time'')|as_timestamp}}'
+                then:
+                - wait_template: '{{states(''binary_sensor.solax_discharge_before_ev_charge'')==true}}'
+                  continue_on_timeout: true
+                  timeout: '5'
+                - event: solax_discharge
+                  event_data:
+                    battery_discharge: do nothing
+                  enabled: true
+                - wait_template: '{{states(''binary_sensor.solax_discharge_before_ev_charge'')==false}}'
+                  continue_on_timeout: true
+                  timeout: '5'
             else:
             - if:
               - condition: template
@@ -837,6 +836,10 @@
             - condition: state
               entity_id: binary_sensor.solax_discharge_before_ev_charge
               state: 'off'
+              for:
+                hours: 0
+                minutes: 5
+                seconds: 0
             then:
             - event: Solax Zappi Octopus Control
               event_data:
