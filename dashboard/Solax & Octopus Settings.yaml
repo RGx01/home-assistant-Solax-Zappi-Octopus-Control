@@ -308,9 +308,6 @@ sections:
             state_color: true
           - entity: input_number.sun_degrees_above_horizon
           - entity: input_datetime.don_t_charge_ev_before_time
-          - entity: input_number.ev_battery_size
-          - entity: sensor.earliest_ev_charge_start_time
-            format: time
           - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
             name: Intelligent Charge Target
           - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
