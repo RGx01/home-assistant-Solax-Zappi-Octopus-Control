@@ -306,6 +306,14 @@
         - condition: state
           entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
           state: 'on'
+      - condition: and
+        conditions:
+        - condition: trigger
+          id:
+          - Solax Discharge Prior to EV
+        - condition: state
+          entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+          state: 'on'
   - condition: template
     value_template: '{{now()|as_timestamp-states(''sensor.uptime'')|as_timestamp>80}}
 
