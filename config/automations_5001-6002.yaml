@@ -3029,12 +3029,14 @@
         target:
           entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
         action: switch.turn_off
+        enabled: false
       - metadata: {}
         data:
           option: Fast
         target:
           entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
         action: select.select_option
+        enabled: false
       - event: Solax Zappi Octopus Control
         event_data:
           message: 'Free electric session started @ {{now().strftime(''%H:%M'')}}. '
