@@ -1173,7 +1173,7 @@
 
               {%else%}
 
-              {{(now()|as_timestamp-states(''sensor.pre_emptive_solax_discharge_time'')|as_timestamp)|abs
+              {{(now()|as_timestamp-states(''sensor.pre_export_battery_before_charging_ev_time'')|as_timestamp)|abs
               > 15*60}}
 
               {%endif%}'
