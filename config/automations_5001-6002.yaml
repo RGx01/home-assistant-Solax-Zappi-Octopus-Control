@@ -1166,7 +1166,8 @@
               minutes: 10
               seconds: 0
           - condition: template
-            value_template: '{%if zappi_eco_mode_override == on %}
+            value_template: '{%if states(''input_boolean.zappi_eco_mode_override'')
+              == on %}
 
               {{(now()|as_timestamp-states(''sensor.zappi_last_connected'')|as_timestamp)|abs
               > 15*60}}
