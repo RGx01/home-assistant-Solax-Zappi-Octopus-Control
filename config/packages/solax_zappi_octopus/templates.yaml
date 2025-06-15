@@ -166,7 +166,7 @@ solax_zappi_octopus_templates:
           state_class: total
           state: >
             {%- set ns2 = namespace( total_dispatch = 0 ) -%}
-            {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0) -%}
+            {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') != None) -%}
               {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'planned_dispatches') -%}
                 {%- set ns2.total_dispatch = ns2.total_dispatch|float + dispatch.charge_in_kwh|float%}
               {%- endfor -%}
@@ -174,7 +174,21 @@ solax_zappi_octopus_templates:
             {{ns2.total_dispatch|float (default=0.0)}}
           attributes:
             total_dispatches: >
-              {{state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches')|list|count}}
+              {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') != None) -%}
+                {{state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches')|list|count}}
+              {%- else -%}
+                {{0}}
+              {%- endif  %}
+            dispatches: >
+              {% set ns3= namespace(members=[]) %}
+              {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') != None) -%}
+                {% for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'planned_dispatches') -%}
+                  {% set ns3.members = ns3.members + [{ "dispatch":(dispatch.start|as_datetime|as_local).strftime('%H:%M') + " to " + (dispatch.end | as_datetime | as_local).strftime('%H:%M') }] %}
+                {%- endfor -%}
+                {{ns3.members}}
+              {%- else -%}
+                {{None}}
+              {%- endif  %}
 
     ######################################################
     # Octopus completed dispatch kWh
@@ -190,7 +204,7 @@ solax_zappi_octopus_templates:
             {% set ns = namespace( total_dispatch = 0 ) %}
             {% set disconnected =(states('sensor.zappi_last_disconnected')|as_timestamp-states('sensor.zappi_last_disconnected')|as_timestamp%1800)|as_datetime +timedelta(minutes=30)%}
             {% set connected = (states('sensor.zappi_last_connected')|as_timestamp-states('sensor.zappi_last_connected')|as_timestamp%1800)|as_datetime %}
-            {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') | length > 0) -%}
+            {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') != None) -%}
               {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') -%}
                 {%- if dispatch.start|as_timestamp >= disconnected|as_timestamp -%}
                   {%- set ns.total_dispatch = ns.total_dispatch|float + dispatch.charge_in_kwh|float (default=0.0)%}
@@ -381,11 +395,6 @@ solax_zappi_octopus_templates:
               {% else %}
                 {{[{"device": " "}]}}
               {% endif %}
-
-        # {% if states('input_select.solax_automation_notification_devices') != ' ' %}}
-        #   {% set old = {"device": states('input_select.solax_automation_notification_devices')} %}
-        #   {% set current1 = state_attr('sensor.solax_zappi_octopus_devices_to_notify', 'device')| reject("equalto", old) |list  %}
-        # {% endif %}
 
     ######################################################
     ### Notification list
@@ -682,9 +691,7 @@ solax_zappi_octopus_templates:
             {%else%}
               {{None}}
             {%endif%}
-#          availability: >
-#            {{(states('sensor.pre_export_battery_before_charging_ev_time_calc')|as_timestamp-now()|as_timestamp > 180 and states('input_boolean.zappi_eco_mode_override') =='off')}}
-##{{(states('sensor.pre_export_battery_before_charging_ev_time_calc')|as_timestamp-now()|as_timestamp > 180 and states('input_boolean.zappi_eco_mode_override') =='off')}}
+
     ######################################################
     # Octopus Night Tariff Start Time
     # if pre-emptive on then discharge battery before 23:30 is reached
@@ -743,4 +750,32 @@ solax_zappi_octopus_templates:
     #         {{false}}
     #       {% endif %}
     #     icon: mdi:clock-star-four-points-outline
+
+    ######################################################
+    # Hours of charge required
+    ######################################################    
+    - sensor:
+      - name:  Calculated EV Charge Start Time
+        unique_id: calculated_ev_charge_start_time
+        state: >
+          {% set seconds =(states('number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target')|int/100*states('input_number.ev_battery_size')|int/6.8*60*60)|int %}
+          {% set start = (states('sensor.octopus_intelligent_target_time')|as_timestamp - (seconds)) %}
+          {% if today_at("23:30")|as_timestamp < start%}
+            {{today_at("23:30").strftime('%H:%M')}}
+          {%else%}
+            {{((start+1800)|as_datetime|as_local).strftime('%H:%M')}}
+          {% endif%}
+
+    - trigger:
+        - trigger: state
+          entity_id: input_boolean.use_clever_time
+          not_to:
+            - unavailable
+      action:
+        - service: input_datetime.set_datetime
+          data_template:
+            entity_id: input_datetime.don_t_charge_ev_before_time
+            time: >
+              {{ states('sensor.calculated_ev_charge_start_time')}}
+
 

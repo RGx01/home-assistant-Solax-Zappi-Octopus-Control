@@ -16,6 +16,9 @@ solax_zappi_octopus_input_boolean:
     zappi_eco_mode_override:
       name: Octopus Schedule at Anytime 
       icon: mdi:ev-station
+    use_clever_time:
+      name: Use Calculated EV Start Time 
+      icon: mdi:ev-station
     #Prevent EV charging before sunset
     solar_export_priority:
       name: Octopus Schedule after Sun Elevation Threshold

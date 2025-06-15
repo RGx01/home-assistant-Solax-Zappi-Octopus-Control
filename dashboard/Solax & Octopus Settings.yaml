@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v3.8   Added function to estimate what time EV needs to start based on % charge required and target time
 # v3.7   Added pre emptive discharge options
 # v3.2.2 Added switches to hide/unhide bits of the dashboard
 # v3.2.1 Added house load power to the Heading Card
@@ -298,6 +299,20 @@ sections:
               - name
               - state
             name: Completed
+      - type: markdown
+        content: >-
+          {% if state_attr('sensor.octopus_total_planned_dispatch','dispatches')
+          != None%}    
+
+          Planned Dispatches
+
+          {% set current =
+          state_attr('sensor.octopus_total_planned_dispatch','dispatches')|list|
+          map(attribute='dispatch') | list %}
+            {% for dispatch in current%}
+              {{dispatch}}
+            {% endfor %}
+          {%endif%}
       - type: entities
         entities:
           - entity: sensor.ev_start_time
@@ -306,6 +321,7 @@ sections:
             state_color: true
           - entity: input_boolean.solar_export_priority
             state_color: true
+          - entity: input_boolean.use_clever_time
           - entity: input_number.sun_degrees_above_horizon
           - entity: input_datetime.don_t_charge_ev_before_time
           - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
@@ -320,6 +336,8 @@ sections:
             name: Minimum Green Level
           - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
             name: Zappi Charge Mode
+          - entity: input_number.ev_battery_size
+          - entity: sensor.calculated_ev_charge_start_time
         show_header_toggle: false
         state_color: true
         title: Octopus Device Settings
@@ -1170,19 +1188,19 @@ sections:
             stat_type: change
             name: Battery Used for House
           - type: statistic
-            entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
-            period:
-              calendar:
-                period: day
-            stat_type: change
-            name: DC Grid Stored
-          - type: statistic
             entity: sensor.solax_local_inverter_in_aggregated_energy
             period:
               calendar:
                 period: day
             stat_type: change
             name: AC Grid Stored
+          - type: statistic
+            entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: DC Grid Stored
           - type: statistic
             entity: sensor.solax_local_battery_in_from_solar_aggregated_energy
             period:

@@ -4,8 +4,9 @@
     Initial installation instructions\n1. This is 5001. You also need 5002 5003 5004
     and 5005 to make this work successfully. \n2. Find and replace, zappi_XXXXXXXX
     with zappi number, z_ZZZZZZZZ with Octopus account\n3. Paste into your automations.yaml\n\n#
-    Change Log \nv3.7 Pre-emptive discharge of solax before EV charging option (when
-    EV is connected)\n         Pre-emptive discharge before 23:30 when EV is disconnected\nv3.6
+    Change Log \nv3.8 Estimated time EV needs to charge based on required % and registered
+    EV size\nv3.7 Pre-emptive discharge of solax before EV charging option (when EV
+    is connected)\n         Pre-emptive discharge before 23:30 when EV is disconnected\nv3.6
     Min soc calculation updated in variables\nv3.5 Variable for loops (to confirm
     solax commands have been applied should be set to min of 3)\nv3.4 Added condition
     to check if saving session is in progress\nv3.3 Changed the logic slightly for
@@ -205,6 +206,10 @@
     from: 'on'
     to: 'off'
     id: Solax Discharge Prior to EV
+  - trigger: state
+    entity_id:
+    - number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
+    id: charge target
   conditions: []
   actions:
   - choose:
@@ -220,6 +225,7 @@
           entity_id:
           - input_boolean.solar_export_priority
           - input_boolean.export_battery_prior
+          - input_boolean.use_clever_time
     - conditions:
       - condition: trigger
         id:
@@ -230,6 +236,36 @@
         data: {}
         target:
           entity_id:
+          - input_boolean.zappi_eco_mode_override
+          - input_boolean.use_clever_time
+    - conditions:
+      - condition: trigger
+        id:
+        - charge target
+      - condition: state
+        entity_id: input_boolean.zappi_eco_mode_override
+        state: 'off'
+      - condition: state
+        entity_id: input_boolean.solar_export_priority
+        state: 'off'
+      sequence:
+      - if:
+        - condition: state
+          entity_id: input_boolean.use_clever_time
+          state: 'on'
+        then:
+        - action: input_datetime.set_datetime
+          data_template:
+            entity_id: input_datetime.don_t_charge_ev_before_time
+            time: '{{ states(''sensor.calculated_ev_charge_start_time'')}}
+
+              '
+      - action: input_boolean.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id:
+          - input_boolean.solar_export_priority
           - input_boolean.zappi_eco_mode_override
     enabled: true
   - condition: not
@@ -1170,7 +1206,8 @@
               == on %}
 
               {{(now()|as_timestamp-states(''sensor.zappi_last_connected'')|as_timestamp)|abs
-              > 15*60}}
+              > 15*60 and states(''select.myenergi_zappi_XXXXXXXX_charge_mode'') not
+              in [''Eco'',''Eco+'',''Fast'']}}
 
               {%else%}
 
