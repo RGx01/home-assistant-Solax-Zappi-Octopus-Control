@@ -350,6 +350,13 @@
         - condition: state
           entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
           state: 'on'
+      - condition: and
+        conditions:
+        - condition: trigger
+          id:
+          - Check Discharge Mode
+        - condition: template
+          value_template: '{{states(''sensor.solax_local_inverter_mode'')!= "Manual"}}'
   - condition: template
     value_template: '{{now()|as_timestamp-states(''sensor.uptime'')|as_timestamp>80}}
 

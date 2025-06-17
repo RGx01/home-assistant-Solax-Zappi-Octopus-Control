@@ -121,10 +121,12 @@ solax_zappi_octopus_templates:
           device_class: "timestamp"
           # {% set starttime = [states('sensor.don_t_charge_ev_before_time_wobble'),states('sensor.solar_export_threshold')] | max %}
           state: >
-            {% if states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'on' %}
+            {% if states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'on' and states('input_boolean.use_clever_time') == 'off'%}
               {% set starttime = states('sensor.solar_export_threshold') %}
-            {% elif states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'off' %}
+            {% elif states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'off' and states('input_boolean.use_clever_time') == 'off' %}
               {% set starttime = states('sensor.don_t_charge_ev_before_time_wobble') %}
+            {% elif states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'off' and states('input_boolean.use_clever_time') == 'on' %}
+              {% set starttime = today_at(states('sensor.calculated_ev_charge_start_time')) %}
             {%else %}
               {% set starttime = now() %}
             {% endif -%}
