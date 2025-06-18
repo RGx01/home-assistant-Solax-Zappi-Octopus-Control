@@ -155,6 +155,11 @@
     id: Only allow EV charging after sunset
   - trigger: state
     entity_id:
+    - input_boolean.use_clever_time
+    to: 'on'
+    id: use clever time
+  - trigger: state
+    entity_id:
     - input_boolean.ev_solax_battery_drain
     - input_boolean.use_grid_during_octopus_dispatch
     id: Battery usage options
@@ -169,9 +174,7 @@
     trigger: numeric_state
     value_template: '{{ state.state | float(0)  - 1 }}'
   - trigger: time
-    at:
-      entity_id: sensor.octopus_intelligent_target_time
-      offset: '-1'
+    at: sensor.octopus_intelligent_target_time
     id: Dispatch Finished
   - trigger: state
     entity_id:
@@ -241,13 +244,7 @@
     - conditions:
       - condition: trigger
         id:
-        - charge target
-      - condition: state
-        entity_id: input_boolean.zappi_eco_mode_override
-        state: 'off'
-      - condition: state
-        entity_id: input_boolean.solar_export_priority
-        state: 'off'
+        - use clever time
       sequence:
       - if:
         - condition: state
@@ -315,6 +312,7 @@
       - condition: trigger
         id:
         - Only allow EV charging after sunset
+        - use clever time
       - condition: and
         conditions:
         - condition: trigger
