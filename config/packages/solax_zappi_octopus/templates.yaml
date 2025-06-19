@@ -660,7 +660,7 @@ solax_zappi_octopus_templates:
           device_class: "timestamp"
           state: >
             {%set starttime =(today_at("23:30")|as_timestamp +86400)|as_datetime|as_local%}
-            {% if states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'on' %}
+            {% if states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'on' and states('input_boolean.use_clever_time') == 'off' %}
               {% if states('input_boolean.export_battery_prior') == 'on' and states('input_boolean.pre_emptive_export_battery') == 'on' %}
                 {% if state_attr('sensor.solax_seconds_to_discharge','prior')|int == 0 %}
                   {% set starttime = states('sensor.pre_export_battery_before_charging_ev_time')|as_datetime|as_local %}
@@ -670,12 +670,22 @@ solax_zappi_octopus_templates:
               {% else %}
                 {% set starttime = None %} 
               {% endif %}
-            {% elif states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'off' %}
+            {% elif states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'off' and states('input_boolean.use_clever_time') == 'off' %}
               {% if states('input_boolean.export_battery_prior') == 'on' and states('input_boolean.pre_emptive_export_battery') == 'on' %}
                 {% if state_attr('sensor.solax_seconds_to_discharge','prior')|int == 0 %}
                   {% set starttime = states('sensor.pre_export_battery_before_charging_ev_time')|as_datetime|as_local %}
                 {% else %}
                   {% set starttime = (states('sensor.don_t_charge_ev_before_time_wobble')|as_timestamp - state_attr('sensor.solax_seconds_to_discharge','prior')|int)|as_datetime|as_local %}
+                {% endif %}
+              {% else %}
+                {% set starttime = None %}
+              {% endif %}
+            {% elif states('input_boolean.zappi_eco_mode_override') == 'off' and states('input_boolean.solar_export_priority') == 'off' and states('input_boolean.use_clever_time') == 'on' %}
+              {% if states('input_boolean.export_battery_prior') == 'on' and states('input_boolean.pre_emptive_export_battery') == 'on' %}
+                {% if state_attr('sensor.solax_seconds_to_discharge','prior')|int == 0 %}
+                  {% set starttime = states('sensor.pre_export_battery_before_charging_ev_time')|as_datetime|as_local %}
+                {% else %}
+                  {% set starttime = (today_at(states('sensor.calculated_ev_charge_start_time'))|as_timestamp - state_attr('sensor.solax_seconds_to_discharge','prior')|int)|as_datetime|as_local %}
                 {% endif %}
               {% else %}
                 {% set starttime = None %}
@@ -693,7 +703,6 @@ solax_zappi_octopus_templates:
             {%else%}
               {{None}}
             {%endif%}
-
     ######################################################
     # Octopus Night Tariff Start Time
     # if pre-emptive on then discharge battery before 23:30 is reached
