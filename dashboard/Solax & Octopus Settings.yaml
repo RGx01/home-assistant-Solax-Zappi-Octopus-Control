@@ -338,6 +338,7 @@ sections:
             name: Zappi Charge Mode
           - entity: input_number.ev_battery_size
           - entity: sensor.calculated_ev_charge_start_time
+            format: time
         show_header_toggle: false
         state_color: true
         title: Octopus Device Settings
@@ -1675,3 +1676,4 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
+

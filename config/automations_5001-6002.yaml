@@ -257,6 +257,7 @@
             time: '{{ states(''sensor.calculated_ev_charge_start_time'')}}
 
               '
+        enabled: false
       - action: input_boolean.turn_off
         metadata: {}
         data: {}
