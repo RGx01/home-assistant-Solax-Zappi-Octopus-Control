@@ -16,6 +16,9 @@ solax_zappi_octopus_input_boolean:
     zappi_eco_mode_override:
       name: Octopus Schedule at Anytime 
       icon: mdi:ev-station
+    use_fixed_time:
+      name: Octopus Schedule at fixed time
+      icon: mdi:ev-station
     use_clever_time:
       name: Octopus Schedule at Calculated Time 
       icon: mdi:ev-station
@@ -49,7 +52,7 @@ solax_zappi_octopus_input_boolean:
       icon: mdi:heating-coil
     #Export battery switch is used to determine if the remainder of solax battery can be dumped back to the grid during off peak
     export_battery:
-      name: Nightly Battery Export
+      name: Nightly Battery Export (EV Disconnected)
       icon: mdi:battery-arrow-down
     #Attempt to discharge battery before programmed EV charge time /cheap rate time
     pre_emptive_export_battery:

@@ -146,9 +146,9 @@ They are displayed but there is little reason to ever change them once set.
 
 
 
-## Saving Sessions and Free Electric Dashboard
+## Saving Sessions and Free Electric Dashboard -Decommissioned
 ![Screenshot 2025-03-24 at 21 22 53](https://github.com/user-attachments/assets/314d39ec-d72b-4739-909a-fedbfbe6eab9)
-### Octopus Saving Sessions
+### Octopus Saving Sessions -Decommissioned
 This automation auto joins saving sessions that are announced via the Octopus API. Some Sessions are only notified by email so a manual method is provided. The automation handles stopping the EV from charging if it is charging prior to the session. 5001 also handles the charger starting to charging during a saving session should an EV be connected within the session. 6002 will also attempt to get an octopus schedule after the session has finished.
 <ol start=70>
 	<li>6002 - Octopus - Saving Sessions Automation - turns automation on/off.</li>
@@ -163,7 +163,7 @@ This automation auto joins saving sessions that are announced via the Octopus AP
 	<li>Saving Session Manual Program - If a saving session is announced via email, first change the above fields and then set this to on.</li>
 </ol>
 
-### Octopus Free Electricity (1hr Session)
+### Octopus Free Electricity (1hr Session) -Decommissioned
 On the free electric day the inverter will use Feed In priority to leave capacity to charge the battery. This will prevent solar SoC filling the battery if the default mode is Self Use.
 <ol start=80>
 	<li>6001 - Octopus - Free Electric Automation - turns automation on/off.</li>
@@ -189,12 +189,12 @@ On the free electric day the inverter will use Feed In priority to leave capacit
 ### Prerequisite Integrations
 * Electricity Maps https://www.home-assistant.io/integrations/co2signal/
 * HACS https://hacs.xyz/docs/use/
-* Octopus Energy (by bottlecapdave) Min v13.5.0 https://bottlecapdave.github.io/HomeAssistant-OctopusEnergy/
+* Octopus Energy (by bottlecapdave) Min v16 https://bottlecapdave.github.io/HomeAssistant-OctopusEnergy/
 * Myenergi https://github.com/CJNE/ha-myenergi
 * Uptime https://www.home-assistant.io/integrations/uptime/
 * Powercalc https://docs.powercalc.nl/quick-start/
 * Power Flow Card Plus https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.2.0
-* Forecast.solar https://www.home-assistant.io/integrations/forecast_solar
+* Solcast https://github.com/BJReplay/ha-solcast-solar?tab=readme-ov-file#configuration
 
 ## Steps
 I will aim to provide a script to do the bulk of these steps when I get time.
@@ -306,6 +306,7 @@ Dashboard yamls are here https://github.com/RGx01/home-assistant-Solax-Zappi-Oct
 ## Revision Log
 | Version | Date | Files updated |Description |
 |:-----|:--------:|:------|:------|
+| v4.0 | **27/07/25**| All | Solcast replaces Forecast.solar <br> Battery SoH sensor - requires semi regular charges from grid from 15-100% <br> Improved predictive discharges|
 | v3.6 | **24/05/25** | All | 1. Pre-emptive discharge - allows solax to discharge before octopus is scheduled to charge EV, Also allows battery to be exported to lower limit just before 23:30 <br> 2. Added earliest time to start EV charging based on EV size and charge rate of 6.8kWh and octopus ready time. <br> 3. Dashboard updated |
 | v3.6 | **07/05/25** | packages/solax <br> packages/solax_zappi_octopus | 1. more representative battery remaining capacity <br> 2. Calcution for number of cells based on user input battery capacity (used to approximate typical cell voltage) <br> 3. Added sensor for Solax battery size (user must set) <br> 4. Added sensor for inverter capacity (user must set to max discharge power i.e. 5.5 for a X1-hybrid-G4-5.0) | 
 | v3.5 | **30/04/25** | automations_5001-6002.yaml <br> packages/solax_zappi_octopus| wait 10 minutes before discharging battery after EV has finished. <br> Added a 30 min window before Solax house battery charge where a forced dischage can't occur |
@@ -361,23 +362,7 @@ Automations can take a long time to run. I wish it could be made to be more snap
 ### 5005 - Solax Zappi Octopus Control - Notifier
 * Sends notifications based on Events created in automations.
 * Can be turned off by using input_bool.solax_zappi_octopus_control_notifications.
-### 6001 - Octopus - Free Electric Automation
-* Use the UI to set the day and times of the free electric.
-* Use the UI to set the target battery SoC.
-* Use the UI to set when the battery should discharge (usually early in morning just in case it's sunny later).
-* UI can be used to use the target battery SoC as the "charge to SoC" if you don't wish to export battery.
-* The automation will set the Zappi to FAST during free electric period.
-### 6002 - Octopus - Saving Sessions Automation
-* Template Sensor is required for this to work - sensor.octopus_is_there_a_saving_session_today.
-* Automatically joins a session.
-* Allows for joining manually.
-* Allows for setting a target battery discharge SoC.
-* Allows for setting Prep charge to SoC
-* Allows for setting of Prep time
-* Checks if prep SoC is reached and stops charging
-* Prepares the by charging the battery at peak rate or tries to get an Octopus dispatch if Zappi is connected and charges the battery.
-* During saving session the zappi is stopped and battery is discharged.
-* After saving session a dispatch is requested if Zappi is connected.
+
 
 ## Initial User Requirements
 <ol>

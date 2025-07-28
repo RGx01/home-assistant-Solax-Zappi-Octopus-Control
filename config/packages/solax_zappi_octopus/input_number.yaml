@@ -25,7 +25,7 @@ solax_zappi_octopus_input_number:
       name: Feed In Min SoC
       unit_of_measurement: "%"
       #initial: 15
-      min: 15
+      min: 10
       max: 100
       step: 1
       mode: slider
@@ -43,7 +43,7 @@ solax_zappi_octopus_input_number:
       name: Self Use Min SoC
       unit_of_measurement: "%"
       #initial: 15
-      min: 15
+      min: 10
       max: 100
       step: 1
       mode: slider
@@ -53,7 +53,7 @@ solax_zappi_octopus_input_number:
       name: Daily/Forced Discharge SoC
       unit_of_measurement: "%"
       #initial: 18
-      min: 15
+      min: 10
       max: 80
       step: 1
       mode: box
@@ -63,7 +63,7 @@ solax_zappi_octopus_input_number:
       name: Discharge to SoC (Before charging EV)
       unit_of_measurement: "%"
       #initial: 18
-      min: 20
+      min: 10
       max: 100
       step: 1
       mode: box
@@ -73,7 +73,7 @@ solax_zappi_octopus_input_number:
       name: Default Minimum SoC
       unit_of_measurement: "%"
       #initial: 18
-      min: 15
+      min: 10
       max: 100
       step: 1
       mode: box

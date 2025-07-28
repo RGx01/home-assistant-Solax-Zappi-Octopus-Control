@@ -1,5 +1,8 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v4.0.  Predicted production using Solcast
+#        Added a Battery SoH sensor to help discharge pridictions
+#        Added a predicted Shcedule start time based on EV battery size
 # v3.8   Added function to estimate what time EV needs to start based on % charge required and target time
 # v3.7   Added pre emptive discharge options
 # v3.2.2 Added switches to hide/unhide bits of the dashboard
@@ -319,15 +322,21 @@ sections:
             format: time
           - entity: input_boolean.zappi_eco_mode_override
             state_color: true
+          - entity: input_boolean.use_fixed_time
+          - entity: input_datetime.don_t_charge_ev_before_time
           - entity: input_boolean.solar_export_priority
             state_color: true
-          - entity: input_boolean.use_clever_time
+          - entity: sensor.solar_export_threshold
+            format: time
           - entity: input_number.sun_degrees_above_horizon
-          - entity: input_datetime.don_t_charge_ev_before_time
+          - entity: input_boolean.use_clever_time
+          - entity: sensor.calculated_ev_charge_start_time
+            format: time
           - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
             name: Intelligent Charge Target
           - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
             name: Intelligent Target Time
+          - entity: input_number.ev_battery_size
           - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
             state_color: true
             name: Intelligent Smart Charge
@@ -336,9 +345,6 @@ sections:
             name: Minimum Green Level
           - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
             name: Zappi Charge Mode
-          - entity: input_number.ev_battery_size
-          - entity: sensor.calculated_ev_charge_start_time
-            format: time
         show_header_toggle: false
         state_color: true
         title: Octopus Device Settings
@@ -570,7 +576,7 @@ sections:
           - type: entity
             show_state: true
             show_icon: false
-            entity: sensor.energy_production_today_remaining
+            entity: sensor.solcast_pv_forecast_forecast_remaining_today
             tap_action:
               action: more-info
             state_content:
@@ -626,6 +632,7 @@ sections:
           - entity: input_number.solax_manual_forced_discharge_limit_soc
           - entity: input_button.solax_force_discharge
           - entity: input_button.solax_stop_discharge
+          - entity: sensor.solax_local_battery_soh
         title: Solax Battery Exports
         show_header_toggle: false
       - title: Self Use Mode Settings
@@ -671,7 +678,7 @@ sections:
           - type: entity
             show_state: true
             show_icon: false
-            entity: sensor.energy_production_today_remaining
+            entity: sensor.solcast_pv_forecast_forecast_remaining_today
             tap_action:
               action: more-info
             state_content:
@@ -727,6 +734,7 @@ sections:
           - entity: input_number.solax_manual_forced_discharge_limit_soc
           - entity: input_button.solax_force_discharge
           - entity: input_button.solax_stop_discharge
+          - entity: sensor.solax_local_battery_soh
         title: Solax Battery Exports
         show_header_toggle: false
       - title: Feed In Mode Settings
@@ -799,6 +807,7 @@ sections:
           - entity: input_number.solax_manual_forced_discharge_limit_soc
           - entity: input_button.solax_force_discharge
           - entity: input_button.solax_stop_discharge
+          - entity: sensor.solax_local_battery_soh
         title: Solax Battery Exports
         show_header_toggle: false
       - type: entities
@@ -919,6 +928,7 @@ sections:
           - entity: sensor.export_daily
           - entity: sensor.solax_local_battery_remain_energy
           - entity: sensor.daily_grid_ac_stored
+          - entity: sensor.solcast_pv_forecast_forecast_remaining_today
         grid_options:
           columns: 36
           rows: auto
@@ -1035,6 +1045,7 @@ sections:
           - entity: sensor.solax_local_battery_dump_power
           - entity: sensor.solax_local_grid_export_power
           - entity: sensor.solax_local_inverter_in_power
+          - entity: sensor.solcast_pv_forecast_power_now
         grid_options:
           columns: 36
           rows: auto
@@ -1676,4 +1687,7 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
+
+
+
 
