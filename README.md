@@ -10,8 +10,6 @@
   	* [Solax Control](#solax-control)
   	* [Battery Heating](#battery-heating)
   	* [Self Use Mode Settings](#self-use-mode-settings)
-  	* [Saving Sessions and Free Electric Dashboard](#octopus-saving-sessions)
-  	* [Octopus Free Electricity (1hr Session)](#octopus-free-electricity-1hr-session)
 * [INSTALL INSTRUCTIONS](#install-instructions)
 	* [Prerequisite Integrations](#prerequisite-integrations)
 	* [Steps](#steps)
@@ -26,8 +24,6 @@
 	* [5003 - Solax Set UI Options](#5003---solax-set-ui-options)
 	* [5004 - Solax Reload Settings](#5004---solax-reload-settings)
 	* [5005 - Solax Zappi Octopus Control - Notifier](#5005---solax-zappi-octopus-control---notifier)
-	* [6001 - Octopus - Free Electric Automation](#6001---octopus---free-electric-automation)
-	* [6002 - Octopus - Saving Sessions Automation](#6002---octopus---saving-sessions-automation)
 * [Initial User Requirements](#initial-user-requirements)
 * [Future Dev Work](#future-dev-work)
 * [Problems Found During Development](#problems-found-during-development)
@@ -42,7 +38,7 @@
 This started out as a Home Assistant project to create a UI to control my Solax inverter locally. It's now a project to automate the control of the my Solax inverter, Zappi EV charger and Octopus Energy interactions including Octoplus Saving Sessions and Free Electric sessions. The idea isn't entirely new (see credits below) but the project now goes beyond my original idea and now provides the opportunity to automatically control for scenarios (described in the requirements below). 
 [INSTALL INSTRUCTIONS](#install-instructions)
 
-The project is split into 3 parts:
+The project is split into 2 parts:
 <br> 
 Part 1 can be used in its own right and creates all the sensors and provides all the rest/restful local connections. This may be useful if you want to build your own interfaces/automations on top.
 <br>
@@ -52,10 +48,6 @@ Part 1 can be used in its own right and creates all the sensors and provides all
 	* config/packages/solax_zappi_octopus
  	* Automations 5001-5005
   	* Dashboard Solax & Octopus Settings.yaml	 
-* The third part provides integration with Octoplus Saving Sessions and Free Electric Sessions.
-	* config/packages/octopus_saving_sessions
- 	* Automations 6001-6002
-  	* Dashboard Octopus Saving Sessions.yaml
 
 ## Credits and Acknowledgments
 The Solax interactions are possible due to work published by @Colin Robbins and @Kamil Baczkowicz. I've tried to simplify things by putting their work into a package. Essentially it becomes a building block for my automations and dashboards. Suggested reading: 
@@ -146,36 +138,6 @@ They are displayed but there is little reason to ever change them once set.
 
 
 
-## Saving Sessions and Free Electric Dashboard -Decommissioned
-![Screenshot 2025-03-24 at 21 22 53](https://github.com/user-attachments/assets/314d39ec-d72b-4739-909a-fedbfbe6eab9)
-### Octopus Saving Sessions -Decommissioned
-This automation auto joins saving sessions that are announced via the Octopus API. Some Sessions are only notified by email so a manual method is provided. The automation handles stopping the EV from charging if it is charging prior to the session. 5001 also handles the charger starting to charging during a saving session should an EV be connected within the session. 6002 will also attempt to get an octopus schedule after the session has finished.
-<ol start=70>
-	<li>6002 - Octopus - Saving Sessions Automation - turns automation on/off.</li>
-	<li>Preparation Time (minutes) - Only active if set to > 5 minutes. Preparation is only worth doing if the octopoints saved is greater than the peak rate used. However if the EV is charging during preparation window then it's still worth preparing.</li>
-	<li>If preparing, the battery will stop charging at this SoC.</li>
-	<li>Target Battery Discharge SoC - Once this SoC is hit during the saving session the inverter will return to default mode specified in Solax Control above.</li>
-	<li>Try for a Dispatch During Prep - This probably only applies to large EV users where you can pretty much guarantee if you plug in you can get a dispatch.</li>
-	<li>Try for a Dispatch After Session - Tries for an octopus schedule after the session ends.</li>
-	<li>Saving Session Today - This is changed automatically, no need to adjust.</li>
-	<li>Octopus Saving Session Start - This is changed automatically, no need to adjust unless there is an session only announced via email.</li>
-	<li>Octopus Saving Session End - This is changed automatically, no need to adjust unless there is an session only announced via email.</li>
-	<li>Saving Session Manual Program - If a saving session is announced via email, first change the above fields and then set this to on.</li>
-</ol>
-
-### Octopus Free Electricity (1hr Session) -Decommissioned
-On the free electric day the inverter will use Feed In priority to leave capacity to charge the battery. This will prevent solar SoC filling the battery if the default mode is Self Use.
-<ol start=80>
-	<li>6001 - Octopus - Free Electric Automation - turns automation on/off.</li>
-	<li>Octopus Free Electricity Start - set the time for free electric.</li>
-	<li>Octopus Free Electric Stop - Time the 1hr session will finish.</li>
-	<li>Use Target SoC as Charge to Soc - normally if you allow charge from grid (during periods set in 65 and 66 above) it will charge battery to the default level. Setting this option will charge the battery to the SoC level below. The idea is to leave capacity available to charge during the free electric session. However if this is left off, the below SoC will be achieved by a forced discharge at the time specified below.</li>
-	<li>Target Battery SoC - Target to reach before Free Electric Session.</li>
-	<li>Export Battery @Time to Target SoC - used if 83 above is off.</li>
-	<li>Free Electricity Today - sensor to indicate if the Free Electric Session is today.</li>
-</ol>
-
-
 ### Using the Inverter SoC Controls to Control When the Battery Discharges
 <img width="525" alt="Screenshot 2025-01-29 at 17 01 42" src="https://github.com/user-attachments/assets/4413fdbe-e1ce-46bd-a021-929edd766c1f" />
 
@@ -219,7 +181,6 @@ If you have previous used similar Solax automations/config be aware that some re
 
 #### Step 3
 3. copy the contents from
- * https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config/packages/octopus_saving_sessions
  * https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config/packages/solax
  * https://github.com/RGx01/home-assistant-Solax-Zappi-Octopus-Control/tree/main/config/packages/solax_zappi_octopus
 
@@ -230,7 +191,7 @@ If you have previous used similar Solax automations/config be aware that some re
  * Zappi number i.e find zappi_XXXXXXXX and replace with zappi_12345678
  * Solax registration number  i.e find YYYYYYYYYY and replace with 1234567890
  * Octopus account details i.e. find z_ZZZZZZZZ and replace with a_42036969
- * Static IP address of your inverter i.e. find http://192.168.xxx.xxx/ and replace with http://192.168.1.30/
+ * Static IP address of your inverter i.e. find http://192.168.xxx.xxx/ and replace with http://192.your.inverter.ip/
 
 #### Step 5
 5. In the solax package templates.yaml 
@@ -306,7 +267,7 @@ Dashboard yamls are here https://github.com/RGx01/home-assistant-Solax-Zappi-Oct
 ## Revision Log
 | Version | Date | Files updated |Description |
 |:-----|:--------:|:------|:------|
-| v4.0 | **27/07/25**| All | Solcast replaces Forecast.solar <br> Battery SoH sensor - requires semi regular charges from grid from 15-100% <br> Improved predictive discharges|
+| v4.0 | **27/07/25**| All | Solcast replaces Forecast.solar <br> Battery SoH sensor - requires semi regular charges from grid from 15-100% <br> Improved predictive discharges <br> Removed saving sessions/free electric session|
 | v3.6 | **24/05/25** | All | 1. Pre-emptive discharge - allows solax to discharge before octopus is scheduled to charge EV, Also allows battery to be exported to lower limit just before 23:30 <br> 2. Added earliest time to start EV charging based on EV size and charge rate of 6.8kWh and octopus ready time. <br> 3. Dashboard updated |
 | v3.6 | **07/05/25** | packages/solax <br> packages/solax_zappi_octopus | 1. more representative battery remaining capacity <br> 2. Calcution for number of cells based on user input battery capacity (used to approximate typical cell voltage) <br> 3. Added sensor for Solax battery size (user must set) <br> 4. Added sensor for inverter capacity (user must set to max discharge power i.e. 5.5 for a X1-hybrid-G4-5.0) | 
 | v3.5 | **30/04/25** | automations_5001-6002.yaml <br> packages/solax_zappi_octopus| wait 10 minutes before discharging battery after EV has finished. <br> Added a 30 min window before Solax house battery charge where a forced dischage can't occur |
