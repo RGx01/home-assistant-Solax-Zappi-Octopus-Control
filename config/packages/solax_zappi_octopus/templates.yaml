@@ -736,9 +736,10 @@ solax_zappi_octopus_templates:
           #{% set production_remaining = states('sensor.energy_production_today_remaining')|float -%}
           state: >
             {% set starttime =(today_at("23:30")|as_timestamp +86400)|as_datetime|as_local%}
-            {% set sunset = today_at((states('sensor.sun_next_setting')|as_datetime|as_local).strftime('%H:%M'))-%} 
+            {% set sunset = today_at((states('sensor.sun_next_setting')|as_datetime|as_local).strftime('%H:%M'))-%}
+            {% set inverter_eta = 0.97|float %}
             {% set seconds_until_sunset = ((sunset|as_timestamp-now()|as_timestamp)) -%} 
-            {% set production_remaining = states('sensor.solcast_pv_forecast_forecast_remaining_today')|float -%}
+            {% set production_remaining = states('sensor.solcast_pv_forecast_forecast_remaining_today')|float * inverter_eta|float -%}
             {% set production_remaining_last_change = states.sensor.solcast_pv_forecast_forecast_remaining_today.last_changed|as_datetime|as_local -%}
             {% set production_seconds_until_sunset = (sunset|as_timestamp-production_remaining_last_change|as_timestamp) -%} 
             {% set production_per_hour = production_remaining|float/(production_seconds_until_sunset/60/60)-%} 

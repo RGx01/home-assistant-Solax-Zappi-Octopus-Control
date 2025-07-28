@@ -1045,7 +1045,6 @@ sections:
           - entity: sensor.solax_local_battery_dump_power
           - entity: sensor.solax_local_grid_export_power
           - entity: sensor.solax_local_inverter_in_power
-          - entity: sensor.solcast_pv_forecast_power_now
         grid_options:
           columns: 36
           rows: auto
@@ -1091,6 +1090,7 @@ sections:
           - entity: sensor.solax_local_pv_output
           - entity: sensor.solax_local_pv_output_string_1
           - entity: sensor.solax_local_pv_output_string_2
+          - entity: sensor.solcast_pv_forecast_power_now
         grid_options:
           columns: 36
           rows: auto
@@ -1687,7 +1687,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-
-
-
-
