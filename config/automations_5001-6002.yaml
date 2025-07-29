@@ -1420,6 +1420,9 @@
       - condition: trigger
         id:
         - Battery at min SoC
+      - condition: state
+        entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+        state: 'off'
       sequence:
       - event: Solax Zappi Octopus Control
         event_data:
