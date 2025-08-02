@@ -322,32 +322,85 @@ sections:
             format: time
           - entity: input_boolean.zappi_eco_mode_override
             state_color: true
+          - entity: input_boolean.use_clever_time
+            state_color: true
           - entity: input_boolean.use_fixed_time
-          - entity: input_datetime.don_t_charge_ev_before_time
+            state_color: true
           - entity: input_boolean.solar_export_priority
             state_color: true
-          - entity: sensor.solar_export_threshold
-            format: time
-          - entity: input_number.sun_degrees_above_horizon
-          - entity: input_boolean.use_clever_time
-          - entity: sensor.calculated_ev_charge_start_time
-            format: time
-          - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
-            name: Intelligent Charge Target
-          - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
-            name: Intelligent Target Time
-          - entity: input_number.ev_battery_size
-          - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
-            state_color: true
-            name: Intelligent Smart Charge
-          - entity: input_boolean.zappi_eco_always
-          - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
-            name: Minimum Green Level
-          - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
-            name: Zappi Charge Mode
         show_header_toggle: false
         state_color: true
         title: Octopus Device Settings
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_boolean.solar_export_priority
+            state: "on"
+        card:
+          type: entities
+          entities:
+            - entity: input_number.sun_degrees_above_horizon
+            - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
+            - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
+            - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
+            - entity: input_number.ev_battery_size
+            - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+            - entity: input_boolean.zappi_eco_always
+            - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_boolean.zappi_eco_mode_override
+            state: "on"
+        card:
+          type: entities
+          entities:
+            - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
+            - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
+            - entity: input_number.ev_battery_size
+            - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+            - entity: input_boolean.zappi_eco_always
+            - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
+            - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_boolean.use_clever_time
+            state: "on"
+        card:
+          type: entities
+          entities:
+            - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
+            - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
+            - entity: input_number.ev_battery_size
+            - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+            - entity: input_boolean.zappi_eco_always
+            - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
+            - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
+      - type: conditional
+        conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity: input_boolean.solar_export_priority
+                state: "off"
+              - condition: state
+                entity: input_boolean.zappi_eco_mode_override
+                state: "off"
+              - condition: state
+                entity: input_boolean.use_clever_time
+                state: "off"
+        card:
+          type: entities
+          entities:
+            - entity: input_datetime.don_t_charge_ev_before_time
+            - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
+            - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
+            - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
+            - entity: input_number.ev_battery_size
+            - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+            - entity: input_boolean.zappi_eco_always
+            - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
       - type: vertical-stack
         cards:
           - type: entities
@@ -1091,6 +1144,7 @@ sections:
           - entity: sensor.solax_local_pv_output_string_1
           - entity: sensor.solax_local_pv_output_string_2
           - entity: sensor.solcast_pv_forecast_power_now
+          - entity: sensor.zappi_power_ct_internal_load
         grid_options:
           columns: 36
           rows: auto

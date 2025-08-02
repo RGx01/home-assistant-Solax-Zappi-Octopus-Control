@@ -74,7 +74,7 @@
     trigger: state
     for:
       hours: 0
-      minutes: 1
+      minutes: 10
       seconds: 0
   - entity_id:
     - sensor.zappi_plug_status
@@ -179,7 +179,9 @@
     trigger: numeric_state
     value_template: '{{ state.state | float(0)  - 1 }}'
   - trigger: time
-    at: sensor.octopus_intelligent_target_time
+    at:
+      entity_id: sensor.octopus_intelligent_target_time
+      offset: 00:02:00
     id: Dispatch Finished
   - trigger: state
     entity_id:
@@ -628,6 +630,9 @@
         - condition: template
           value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
             != 3)}}'
+        - condition: numeric_state
+          entity_id: sensor.octopus_total_planned_dispatch
+          below: 1
         then:
         - repeat:
             sequence:
@@ -1437,6 +1442,7 @@
       - condition: numeric_state
         entity_id: sensor.octopus_total_planned_dispatch
         below: 1
+        enabled: false
       sequence:
       - action: switch.turn_off
         metadata: {}
