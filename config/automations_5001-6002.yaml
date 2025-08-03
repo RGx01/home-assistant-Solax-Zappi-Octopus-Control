@@ -1691,12 +1691,12 @@
       (default=15),\n                   states('sensor.solax_local_selfuse_battery_min_soc')|int
       (default=15),\n                   states('input_number.solax_discharge_limit_soc_before_ev')|int
       (default =20)\n%}\n{{ states('sensor.solax_local_battery_soc')|int (default=100)
-      < highestSoC|max|int+3 and states('binary_sensor.solax_discharge_before_ev_charge')
+      < highestSoC|max|int+0 and states('binary_sensor.solax_discharge_before_ev_charge')
       == 'on'}}\n"
     for:
       hours: 0
-      minutes: 1
-      seconds: 1
+      minutes: 0
+      seconds: 0
     id: Normal Stop Discharge Prior
   - trigger: time
     at: sensor.ev_start_time
@@ -1706,31 +1706,31 @@
     below: input_number.solax_manual_forced_discharge_limit_soc
     for:
       hours: 0
-      minutes: 1
-      seconds: 1
+      minutes: 0
+      seconds: 0
     id: Normal Stop Discharge
     trigger: numeric_state
-    value_template: '{{ state.state | float(0)  - 3 }}'
+    value_template: '{{ state.state | float(0)  - 0 }}'
   - entity_id:
     - sensor.solax_local_battery_soc
     below: input_number.octopus_free_session_battery_prep_soc
     for:
       hours: 0
-      minutes: 1
-      seconds: 1
+      minutes: 0
+      seconds: 0
     id: FreeElectric
     trigger: numeric_state
-    value_template: '{{ state.state | float(0)  - 3 }}'
+    value_template: '{{ state.state | float(0)  - 0 }}'
   - entity_id:
     - sensor.solax_local_battery_soc
     below: input_number.octopus_saving_session_target_battery_soc
     for:
       hours: 0
-      minutes: 1
-      seconds: 1
+      minutes: 0
+      seconds: 0
     id: Saving Session Stop Discharge
     trigger: numeric_state
-    value_template: '{{ state.state | float(0)  - 3 }}'
+    value_template: '{{ state.state | float(0)  - 0 }}'
   conditions:
   - condition: template
     value_template: '{{ (states(''sensor.solax_local_inverter_mode'') == ''Manual'')|bool==true}}'
