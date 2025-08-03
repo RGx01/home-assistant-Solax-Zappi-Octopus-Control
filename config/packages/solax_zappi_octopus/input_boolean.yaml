@@ -11,9 +11,9 @@ solax_zappi_octopus_input_boolean:
     solax_zappi_octopus_control_notifications:
       name: Automation Notifications
       icon: mdi:bell
-    #zappi_eco_mode_overriden switch if you switch this on automations will ignore other criteria like scheduled charge time and allow Octopus to create schedules during the day
+    #octopus schedule anytime switch if you switch this on automations will ignore other criteria like scheduled charge time and allow Octopus to create schedules during the day
     #Use this when you want to charge the car during the day when octopus has surplus.
-    zappi_eco_mode_override:
+    octopus_schedule_anytime:
       name: Octopus Schedule at Anytime 
       icon: mdi:ev-station
     use_fixed_time:

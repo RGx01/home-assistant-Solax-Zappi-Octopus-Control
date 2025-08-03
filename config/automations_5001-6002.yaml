@@ -74,7 +74,9 @@
     trigger: state
     for:
       hours: 0
-      minutes: 10
+      minutes: '{{states(''input_number.delay_when_ev_connected'')}}
+
+        '
       seconds: 0
   - entity_id:
     - sensor.zappi_plug_status
@@ -145,7 +147,7 @@
     trigger: state
   - trigger: state
     entity_id:
-    - input_boolean.zappi_eco_mode_override
+    - input_boolean.octopus_schedule_anytime
     to: 'on'
     id: Allow Octopus to Determine Schedule
   - trigger: state
@@ -247,7 +249,7 @@
         data: {}
         target:
           entity_id:
-          - input_boolean.zappi_eco_mode_override
+          - input_boolean.octopus_schedule_anytime
           - input_boolean.use_clever_time
           - input_boolean.use_fixed_time
     - conditions:
@@ -273,7 +275,7 @@
         target:
           entity_id:
           - input_boolean.solar_export_priority
-          - input_boolean.zappi_eco_mode_override
+          - input_boolean.octopus_schedule_anytime
           - input_boolean.use_fixed_time
     - conditions:
       - condition: trigger
@@ -286,7 +288,7 @@
         target:
           entity_id:
           - input_boolean.solar_export_priority
-          - input_boolean.zappi_eco_mode_override
+          - input_boolean.octopus_schedule_anytime
           - input_boolean.use_clever_time
     enabled: true
   - condition: not
@@ -733,7 +735,7 @@
                 after: sensor.ev_start_time
                 before: sensor.octopus_intelligent_target_time
               - condition: state
-                entity_id: input_boolean.zappi_eco_mode_override
+                entity_id: input_boolean.octopus_schedule_anytime
                 state: 'on'
             then:
             - metadata: {}
@@ -796,7 +798,7 @@
             - condition: or
               conditions:
               - condition: state
-                entity_id: input_boolean.zappi_eco_mode_override
+                entity_id: input_boolean.octopus_schedule_anytime
                 state: 'on'
               - condition: template
                 value_template: '{{now()|as_timestamp>=([states(''sensor.ev_start_time''),states(''sensor.pre_export_battery_before_charging_ev_time'')]|min)|as_timestamp
@@ -1239,7 +1241,7 @@
               minutes: 10
               seconds: 0
           - condition: template
-            value_template: '{%if states(''input_boolean.zappi_eco_mode_override'')
+            value_template: '{%if states(''input_boolean.octopus_schedule_anytime'')
               == on %}
 
               {{(now()|as_timestamp-states(''sensor.zappi_last_connected'')|as_timestamp)|abs

@@ -98,3 +98,12 @@ solax_zappi_octopus_input_number:
       step: 1
       mode: box
       icon: mdi:car-battery
+    # Delay automation when EV first connected
+    delay_when_ev_connected:
+      name: Delay after EV is Connected
+      unit_of_measurement: "minutes"
+      min: 0
+      max: 15
+      step: 1
+      mode: box
+      icon: mdi:car-clock

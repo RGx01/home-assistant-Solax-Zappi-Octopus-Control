@@ -318,7 +318,7 @@ sections:
           {%endif%}
       - type: entities
         entities:
-          - entity: input_boolean.zappi_eco_mode_override
+          - entity: input_boolean.octopus_schedule_anytime
             state_color: true
           - entity: input_boolean.use_clever_time
             state_color: true
@@ -346,7 +346,7 @@ sections:
       - type: conditional
         conditions:
           - condition: state
-            entity: input_boolean.zappi_eco_mode_override
+            entity: input_boolean.octopus_schedule_anytime
             state: "on"
         card:
           type: entities
@@ -378,7 +378,7 @@ sections:
                 entity: input_boolean.solar_export_priority
                 state: "off"
               - condition: state
-                entity: input_boolean.zappi_eco_mode_override
+                entity: input_boolean.octopus_schedule_anytime
                 state: "off"
               - condition: state
                 entity: input_boolean.use_clever_time
