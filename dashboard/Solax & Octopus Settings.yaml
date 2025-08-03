@@ -318,8 +318,6 @@ sections:
           {%endif%}
       - type: entities
         entities:
-          - entity: sensor.ev_start_time
-            format: time
           - entity: input_boolean.zappi_eco_mode_override
             state_color: true
           - entity: input_boolean.use_clever_time
@@ -339,14 +337,12 @@ sections:
         card:
           type: entities
           entities:
+            - entity: sensor.ev_start_time
+              format: time
             - entity: input_number.sun_degrees_above_horizon
-            - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
             - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
             - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
-            - entity: input_number.ev_battery_size
-            - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
-            - entity: input_boolean.zappi_eco_always
-            - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
+          title: Schedule After Sunset
       - type: conditional
         conditions:
           - condition: state
@@ -355,13 +351,11 @@ sections:
         card:
           type: entities
           entities:
+            - entity: sensor.ev_start_time
+              format: time
             - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
             - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
-            - entity: input_number.ev_battery_size
-            - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
-            - entity: input_boolean.zappi_eco_always
-            - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
-            - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
+          title: Schedule Anytime
       - type: conditional
         conditions:
           - condition: state
@@ -370,13 +364,12 @@ sections:
         card:
           type: entities
           entities:
+            - entity: sensor.ev_start_time
+              format: time
+            - entity: input_number.ev_battery_size
             - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
             - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
-            - entity: input_number.ev_battery_size
-            - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
-            - entity: input_boolean.zappi_eco_always
-            - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
-            - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
+          title: Single Dispatch
       - type: conditional
         conditions:
           - condition: and
@@ -393,14 +386,27 @@ sections:
         card:
           type: entities
           entities:
+            - entity: sensor.ev_start_time
+              format: time
             - entity: input_datetime.don_t_charge_ev_before_time
-            - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
             - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
             - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
-            - entity: input_number.ev_battery_size
-            - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
-            - entity: input_boolean.zappi_eco_always
-            - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
+          title: Schedule After Fixed Time
+      - type: entities
+        entities:
+          - entity: input_boolean.zappi_eco_always
+          - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
+        show_header_toggle: false
+        state_color: true
+        title: Eco Settings
+      - type: entities
+        entities:
+          - entity: automation.solax_zappi_octopus_control
+          - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+          - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
+        show_header_toggle: false
+        state_color: true
+        title: Charging Status - 5001 Controlled
       - type: vertical-stack
         cards:
           - type: entities
@@ -1741,3 +1747,4 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
+

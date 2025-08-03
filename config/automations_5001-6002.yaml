@@ -1755,6 +1755,7 @@
       - condition: state
         entity_id: input_boolean.saving_session_active
         state: 'off'
+        enabled: false
       - condition: state
         entity_id: sensor.zappi_plug_status
         state: EV Connected
@@ -1811,6 +1812,7 @@
       - condition: state
         entity_id: input_boolean.saving_session_active
         state: 'off'
+        enabled: false
       - condition: or
         conditions:
         - condition: time

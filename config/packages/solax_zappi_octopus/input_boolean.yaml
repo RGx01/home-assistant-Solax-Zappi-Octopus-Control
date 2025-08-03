@@ -17,10 +17,10 @@ solax_zappi_octopus_input_boolean:
       name: Octopus Schedule at Anytime 
       icon: mdi:ev-station
     use_fixed_time:
-      name: Octopus Schedule at fixed time
+      name: Octopus Schedule at Fixed Time
       icon: mdi:ev-station
     use_clever_time:
-      name: Octopus Schedule at Calculated Time 
+      name: Octopus Schedule a Single Dispatch 
       icon: mdi:ev-station
     #Prevent EV charging before sunset
     solar_export_priority:
