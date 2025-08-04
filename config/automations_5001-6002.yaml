@@ -183,7 +183,7 @@
   - trigger: time
     at:
       entity_id: sensor.octopus_intelligent_target_time
-      offset: 00:02:00
+      offset: '120'
     id: Dispatch Finished
   - trigger: state
     entity_id:

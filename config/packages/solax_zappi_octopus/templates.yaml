@@ -173,7 +173,7 @@ solax_zappi_octopus_templates:
             {%- set ns2 = namespace( total_dispatch = 0 ) -%}
             {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') != None) -%}               
               {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'planned_dispatches') -%}
-                  {%- set ns2.total_dispatch = ns2.total_dispatch|float + ((dispatch.end|as_timestamp - dispatch.start|as_timestamp)|int/60/60*6.8) %}
+                  {%- set ns2.total_dispatch = ns2.total_dispatch|float + ((dispatch.end|as_timestamp - dispatch.start|as_timestamp)|int/60/60*7.0) %}
               {%- endfor -%}
             {%- endif  -%}
             {{ns2.total_dispatch|float (default=0.0)}}
