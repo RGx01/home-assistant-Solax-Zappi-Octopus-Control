@@ -328,7 +328,7 @@ sections:
             state_color: true
         show_header_toggle: false
         state_color: true
-        title: Octopus Device Settings
+        title: Octopus Schedule
       - type: conditional
         conditions:
           - condition: state
@@ -402,11 +402,12 @@ sections:
       - type: entities
         entities:
           - entity: automation.solax_zappi_octopus_control
+          - entity: input_number.delay_when_ev_connected
           - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
           - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
         show_header_toggle: false
         state_color: true
-        title: Charging Status - 5001 Controlled
+        title: Device Status - 5001 Controlled
       - type: vertical-stack
         cards:
           - type: entities
@@ -721,6 +722,26 @@ sections:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
             state: "on"
+      - type: entities
+        entities:
+          - entity: automation.octopus_free_electric_automation
+        state_color: true
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: automation.octopus_free_electric_automation
+            state: "on"
+        card:
+          type: entities
+          entities:
+            - entity: input_datetime.octopus_free_electricity_start
+            - entity: sensor.octopus_free_electric_stop
+              secondary_info: none
+              format: time
+            - entity: input_boolean.octopus_free_electric_soc_use
+            - entity: input_number.octopus_free_session_battery_prep_soc
+            - entity: input_datetime.octopus_free_electricity_prep
+            - entity: binary_sensor.free_electricity_today
     visibility:
       - condition: state
         entity: input_select.solax_work_mode
@@ -816,6 +837,26 @@ sections:
           - condition: state
             entity: input_boolean.solaxchargeperiod2
             state: "on"
+      - type: entities
+        entities:
+          - entity: automation.octopus_free_electric_automation
+        state_color: true
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: automation.octopus_free_electric_automation
+            state: "on"
+        card:
+          type: entities
+          entities:
+            - entity: input_datetime.octopus_free_electricity_start
+            - entity: sensor.octopus_free_electric_stop
+              secondary_info: none
+              format: time
+            - entity: input_boolean.octopus_free_electric_soc_use
+            - entity: input_number.octopus_free_session_battery_prep_soc
+            - entity: input_datetime.octopus_free_electricity_prep
+            - entity: binary_sensor.free_electricity_today
     visibility:
       - condition: state
         entity: input_select.solax_work_mode
@@ -1747,4 +1788,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-

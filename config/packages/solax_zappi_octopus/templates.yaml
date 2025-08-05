@@ -522,17 +522,33 @@ solax_zappi_octopus_templates:
       action:
         - event: octopus_tariff
           event_data:
-            tariff: "offpeak"
+            tariff: >
+              {% if now()|as_timestamp >= state_attr('input_datetime.octopus_free_electricity_start','timestamp')-120 and states('binary_sensor.free_electricity_today') == 'on'  %}
+                {{"free"}}
+              {%else%}
+                {{"offpeak"}}
+              {% endif%}
             time: >
               {{now()|as_datetime}}
         - service: select.select_option
           data:
             entity_id: select.daily_grid_import
-            option: "offpeak"
+            option: >
+              {% if now()|as_timestamp >= state_attr('input_datetime.octopus_free_electricity_start','timestamp')-120 and states('binary_sensor.free_electricity_today') == 'on'  %}
+                {{"free"}}
+              {%else%}
+                {{"offpeak"}}
+              {% endif%}
         - service: select.select_option
           data:
             entity_id: select.monthly_grid_import
-            option: "offpeak"
+            option: >
+              {% if now()|as_timestamp >= state_attr('input_datetime.octopus_free_electricity_start','timestamp')-120 and states('binary_sensor.free_electricity_today') == 'on'  %}
+                {{"free"}}
+              {%else%}
+                {{"offpeak"}}
+              {% endif%}
+
 
     - trigger:
         - trigger: state
@@ -542,17 +558,32 @@ solax_zappi_octopus_templates:
       action:
         - event: octopus_tariff
           event_data:
-            tariff: "peak"
+            tariff: >
+              {% if now()|as_timestamp >= state_attr('input_datetime.octopus_free_electricity_start','timestamp')-120 and states('binary_sensor.free_electricity_today') == 'on'  %}
+                {{"free"}}
+              {%else%}
+                {{"peak"}}
+              {% endif%}
             time: >
               {{now()|as_datetime}}
         - service: select.select_option
           data:
             entity_id: select.daily_grid_import
-            option: "peak"
+            option: >
+              {% if now()|as_timestamp >= state_attr('input_datetime.octopus_free_electricity_start','timestamp')-120 and states('binary_sensor.free_electricity_today') == 'on'  %}
+                {{"free"}}
+              {%else%}
+                {{"peak"}}
+              {% endif%}
         - service: select.select_option
           data:
             entity_id: select.monthly_grid_import
-            option: "peak"
+            option: >
+              {% if now()|as_timestamp >= state_attr('input_datetime.octopus_free_electricity_start','timestamp')-120 and states('binary_sensor.free_electricity_today') == 'on'  %}
+                {{"free"}}
+              {%else%}
+                {{"peak"}}
+              {% endif%}
     ######################################################
 
     ######################################################

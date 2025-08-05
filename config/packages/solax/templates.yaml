@@ -11,6 +11,7 @@ solax_templates:
     ######################################################
     # Change log
     ######################################################
+    # v4.    Fixed (bodge) in from solar and in from grid when battery is charged from both in forced charge
     # v3.6   Calculate remaining usable energy based off default min SoC
     #        Added two new sensors for battery size and inverter capacity and implimented their usage in calculations
     #.       Attempted to improve reliability of sensor data returned by rest sensor when timeouts occur and JSON is empty
@@ -32,21 +33,6 @@ solax_templates:
     # - name: "Solax Local House Load Power"
     ######################################################
     - sensor:
-        ### Battery Capacity 3.1 for 1 battery, 6.1 2 batts, 9.2 3 batts, 12.3 4 batts
-        # - name: "Solax Local Battery Capacity"
-        #   unique_id: solax_local_battery_capacity
-        #   state: "{{ 9.2|float (default=9.2)}}"
-        #   unit_of_measurement: "kWh"
-        #   state_class: measurement
-        #   icon: mdi:battery
-        # ### Inverter Capacity
-        # - name: "Solax Local Inverter Capacity"
-        #   unique_id: solax_local_inverter_capacity
-        #   state: "{{ 5.5|float (default=5.5)}}"
-        #   unit_of_measurement: "kWh"
-        #   state_class: measurement
-        #   icon: mdi:generator-stationary
-
         - name: solax_local
           state: >
             {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10  %}
@@ -475,8 +461,9 @@ solax_templates:
         - name: "Solax Local Battery Use In From Grid"
           unique_id: solax_local_battery_use_in_from_grid
           state: >
-            {% set bat = states('sensor.solax_local_battery_power')|int(default=0) %}
-            {% set gridPwr = states('sensor.solax_local_grid_power')|int(default=0) %} 
+            {% set gridPwr = states('sensor.solax_local_grid_power')|int(default=0) %}
+            {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,5500)|int (default=0) %}
+            {% set bat = states('sensor.solax_local_battery_power')|int - pvPwr|int  %}
             {{ bat if is_number(bat) and (bat|int > 0 and gridPwr > 0) else 0 }}
           unit_of_measurement: "W"
           state_class: measurement
@@ -487,11 +474,11 @@ solax_templates:
         - name: "Solax Local Battery In From Solar"
           unique_id: solax_local_battery_in_from_solar
           state: >
-            {% set bat = states('sensor.solax_local_battery_use_in')|int(default=0) %}
+            {% set grid = states('sensor.solax_local_battery_use_in_from_grid')|int (default = 0) %}
+            {% set bat = states('sensor.solax_local_battery_use_in')|int(default=0) - grid|int%}
             {% set invPwr = states('sensor.solax_local_inverter_power')|int(default=0) %} 
             {% set pvPwr = states('sensor.solax_local_pv_output')|int(default=0) %} 
             {% set gridPwr = states('sensor.solax_local_grid_power')|int(default=0) %} 
-            {% set gridExpPwr = states('sensor.solax_local_grid_export_power')|int(default=0) %} 
             {{ (bat) if  (pvPwr > 0 and invPwr >0) else 0 }}
           unit_of_measurement: "W"
           state_class: measurement
