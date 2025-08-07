@@ -5,7 +5,7 @@ octopus_saving_sessions_templates:
   template:
     ######################################################
     # Octopus free/saving sensors
-    # v4.    Removed saving sessions because they are pointless
+    # v4.    Plannning to removed saving sessions because they are pointless
     #.       Refined free sessions to new IOG tariff as of 4/8/2025
     # v2.1.3 moved tariff switching for free electric to this package
     # v2.1.2 Enhancements to Free Electric

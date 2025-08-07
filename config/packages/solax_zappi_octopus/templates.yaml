@@ -153,7 +153,7 @@ solax_zappi_octopus_templates:
             {%else%}
               {% set t = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+18000)|as_datetime|as_local) %}
             {%endif%}
-            {%if now()|as_timestamp > t|as_timestamp%}
+            {%if now()|as_timestamp > t|as_timestamp+180%}
               {% set x = t|as_timestamp + 86400 %}
               {{x|as_datetime|as_local}}
             {%else%}
@@ -717,11 +717,7 @@ solax_zappi_octopus_templates:
         state: >
           {% set battery_soh = (states('sensor.solax_local_battery_soh')|float/100)|float%} 
           {% set capacity_left = (states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_default_discharge_limit_soc')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2) * battery_soh%}
-          {% if states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_default_discharge_limit_soc')|int (default=20) > 14 %}
-            {{capacity_left|float (default=0.0)}}
-          {% else %}
-            {{0.0|float (default=0.0)}}
-          {% endif%}
+          {{capacity_left|float (default=0.0)}}
         attributes:
           prior: >
             {% set battery_soh = (states('sensor.solax_local_battery_soh')|float/100)|float%} 

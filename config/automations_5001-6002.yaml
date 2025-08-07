@@ -1701,6 +1701,7 @@
   - trigger: time
     at: sensor.ev_start_time
     id: Normal Stop Discharge Prior
+    enabled: false
   - entity_id:
     - sensor.solax_local_battery_soc
     below: input_number.solax_manual_forced_discharge_limit_soc

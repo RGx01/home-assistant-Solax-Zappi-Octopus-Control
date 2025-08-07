@@ -399,7 +399,7 @@ solax_templates:
           state: >
             {% set val = state_attr('sensor.solax_local', 'Data')[14]|float(default=0.0) %}
             {% if val > 0 %}
-            {{ val/100/(states('input_number.solax_battery_capacity')|int/3*30) if is_number(val) and (val|float > 0) else 0 }}
+            {{ val/100/(states('input_number.solax_battery_capacity')|int/3*32) if is_number(val) and (val|float > 0) else 0 }}
             {% else%}
             {{ states('sensor.solax_local_battery_cell_voltage')}}
             {% endif%}
