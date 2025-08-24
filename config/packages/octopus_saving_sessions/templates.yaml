@@ -65,6 +65,23 @@ octopus_saving_sessions_templates:
               {% set upcoming_event_end = current_event_end if (current_event_end != None) else next_event_end %} 
               {{ (now() + timedelta(days=7)).strftime('%Y-%m-%d 01:00:00') if (upcoming_event_end == None) else upcoming_event_end}}
 
+    # Free electric
+    # - trigger:
+    #     - trigger: time_pattern
+    #       minutes: /30
+    #     - trigger: state
+    #       entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session
+    #       not_to:
+    #         - unavailable
+    #         - unknown
+    #     - trigger: state
+    #       entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session
+    #       attribute: next_event_start
+    #   sensor:
+    #     - name: "Octopus - Is there Free Electric today?"
+    #       unique_id: octopus_is_there_free_electric_today
+    #       state: >
+
     ######################################################
     #Octopus free electric start
     ######################################################
@@ -92,27 +109,54 @@ octopus_saving_sessions_templates:
         - name: Free Electricity Today
           unique_id: free_electricity_today
           state: >
+            {% set event = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events')|last %} 
+            {% set event_start = event['start'] %}
+            {% set event_end = event['end'] %}
             {%if states('automation.octopus_free_electric_automation') == 'on' and 
-            today_at()|as_timestamp ==  (states('input_datetime.octopus_free_electricity_start')|as_datetime).date()|as_timestamp 
-            and now()|as_timestamp <= states('sensor.octopus_free_electric_stop')|as_timestamp %}
-            {{true}}
+            today_at()|as_timestamp ==  (event_start|as_datetime|as_local).date()|as_timestamp 
+            and now()|as_timestamp <= event_end|as_timestamp %}
+              {{true}}
             {%else%}
-            {{false}}
+              {{false}}
             {%endif%}
+          attributes:
+            session_start: >
+                {% set event = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events')|last %} 
+                {% set event_start = event['start'] %}
+                {{ event_start|as_datetime|as_local }}
+            session_end: >
+                {% set event = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events')|last %} 
+                {% set event_end = event['end'] %}
+                {{ event_end|as_datetime|as_local }}
+            duration: >
+                {% set event = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events')|last %} 
+                {% set event_duration = event['duration_in_minutes'] %}
+                {{ event_duration|int}}
 
     - trigger:
         - trigger: state
-          entity_id: input_datetime.octopus_free_electricity_start
-        - trigger: state
-          entity_id: input_datetime.octopus_free_electricity_stop
+          entity_id: binary_sensor.free_electricity_today
+          attribute: session_start
+          not_to:
+            - unavailable
+            - unknown
       action:
+        - service: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.octopus_free_electricity_start
+          data:
+            datetime: >
+              {% set event = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events')|last %} 
+              {% set event_start = event['start'] %}
+              {{ (event_start)|as_datetime|as_local}}
         - service: input_datetime.set_datetime
           target:
             entity_id: input_datetime.octopus_free_electricity_stop
           data:
             datetime: >
-              {{ (states('input_datetime.octopus_free_electricity_start')|as_timestamp +3600)|as_datetime|as_local}}
-          #{{ (((states('input_datetime.octopus_free_electricity_start')|as_timestamp)-(states('input_datetime.octopus_free_electricity_start')|as_timestamp)%(24*60*60))|as_datetime).strftime('%Y-%m-%d ') + ((states('input_datetime.octopus_free_electricity_stop')|as_datetime).strftime('%H:%M')) }}
+              {% set event = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events')|last %} 
+              {% set event_end = event['end'] %}
+              {{ (event_end)|as_datetime|as_local}}
 
     ######################################################
 
@@ -146,11 +190,6 @@ octopus_saving_sessions_templates:
           for:
             minutes: 2
       action:
-        # - event: octopus_tariff
-        #   event_data:
-        #     tariff: "freeEnd"
-        #     time: >
-        #       {{now()|as_datetime}}
         - event: octopus_tariff
           event_data:
             tariff: >

@@ -7,6 +7,10 @@ solax_zappi_octopus_input_boolean:
     # v3.0 Discharge Solax before EV charge
     # v2.1 Battery Warmer
     ###########################################
+    # Solax can see zappi loads
+    solax_can_see_zappi_loads:
+      name: Solax Can See Zappi Loads
+      icon: mdi:flash
     # mute notifications
     solax_zappi_octopus_control_notifications:
       name: Automation Notifications
@@ -26,6 +30,9 @@ solax_zappi_octopus_input_boolean:
     solar_export_priority:
       name: Octopus Schedule after Sun Elevation Threshold
       icon: mdi:solar-power
+    priorise_export_over_ev:
+      name: Prioritise Battery Export Over Octopus Schedule
+      icon: mdi:transmission-tower-export
     #Prevent EV discharging Solax Battery
     ev_solax_battery_drain:
       name: Prevent Zappi Draining Battery

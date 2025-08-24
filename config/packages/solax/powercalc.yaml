@@ -3,6 +3,7 @@
 # v3.0.0 Added battery in from grid (stored from grid)
 solax_powercalc:
   powercalc:
+    force_update_frequency: 00:01:00
     sensors:
       - entity_id: sensor.solax_local_pv_output
         power_sensor_id: sensor.solax_local_pv_output
@@ -89,3 +90,5 @@ solax_powercalc:
         name: Solax Local Battery Dump Aggregated
         fixed:
           power: "{{states('sensor.solax_local_battery_dump_power')}}"
+
+

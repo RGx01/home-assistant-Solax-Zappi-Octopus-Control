@@ -50,7 +50,7 @@
     - sensor.zappi_plug_status
     from: Charging
     to: EV Connected
-    id: Finished Charging
+    id: Paused EV Charging
     trigger: state
     for:
       hours: 0
@@ -60,7 +60,7 @@
     - sensor.zappi_plug_status
     from: Waiting for EV
     to: EV Connected
-    id: Finished Charging
+    id: Paused EV Charging
     trigger: state
     for:
       hours: 0
@@ -222,6 +222,14 @@
     entity_id:
     - number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
     id: charge target
+  - trigger: state
+    entity_id:
+    - binary_sensor.solax_local_battery_charging_period
+    id: Solax charging from grid
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 59
   conditions: []
   actions:
   - choose:
@@ -340,7 +348,6 @@
         - Only allow EV charging after sunset
         - use clever time
         - use fixed time
-        - Allow Octopus to Determine Schedule
       - condition: and
         conditions:
         - condition: trigger
@@ -412,8 +419,10 @@
         == 'off'-%}  {{100}} {%-endif %} \n  {%-if states('sensor.zappi_plug_status')
         != 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'off' and states('input_boolean.ev_solax_battery_drain') == 'off'-%}  {{states('input_number.solax_default_discharge_limit_soc')|int}}
-        {%-endif %} \n{%else%}\n  {%if now() > today_at(\"05:30\") and now() < today_at(\"23:30\")
-        and trigger.id == 'Charging to Disconnected' %}      \n    {{states('input_number.solax_default_discharge_limit_soc')|int}}\n
+        {%-endif %}\n{%elif states('binary_sensor.solax_local_battery_charging_period')
+        == 'on'%}\n  {{states('input_number.solax_default_discharge_limit_soc')|int}}\n{%else%}\n
+        \ {%if now() > today_at(\"05:30\") and now() < today_at(\"23:30\") and trigger.id
+        == 'Charging to Disconnected' %}      \n    {{states('input_number.solax_default_discharge_limit_soc')|int}}\n
         \ {%else%}\n    {% if (states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')
         == 'on') and states('sensor.zappi_plug_status') == 'Charging' and states('input_boolean.use_grid_during_octopus_dispatch')
         == 'on' and states('input_boolean.ev_solax_battery_drain') == 'on'-%}  {{100}}
@@ -487,10 +496,15 @@
       sequence:
       - condition: not
         conditions:
-        - condition: template
-          value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[0]
-            == min_soc and state_attr(''sensor.solax_local_settings'', ''Data'')[12]
-            == min_soc)}}'
+        - condition: or
+          conditions:
+          - condition: state
+            entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+            state: unavailable
+          - condition: template
+            value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[0]
+              == min_soc and state_attr(''sensor.solax_local_settings'', ''Data'')[12]
+              == min_soc)}}'
         enabled: true
       - choose:
         - conditions:
@@ -616,7 +630,7 @@
     - conditions:
       - condition: trigger
         id:
-        - Finished Charging
+        - Paused EV Charging
       sequence:
       - if:
         - condition: time
@@ -627,7 +641,7 @@
           state: 'on'
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
-          value_template: '{{ state.state | float(0)  - 14 }}'
+          value_template: '{{ state.state | float(0)  - 9 }}'
           above: input_number.solax_manual_forced_discharge_limit_soc
         - condition: template
           value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
@@ -678,11 +692,19 @@
         else:
         - event: Solax Zappi Octopus Control
           event_data:
-            message: EV stopped charging @ {{now().strftime('%H:%M')}}. Zappi charge
+            message: EV paused charging @ {{now().strftime('%H:%M')}}. Zappi charge
               session {{states('sensor.myenergi_zappi_XXXXXXXX_charge_added_session')}}kWh.
-            title: EV Stopped Charging.
+            title: Octopus Paused Charging.
             class: normal
           enabled: true
+        enabled: false
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: EV paused charging @ {{now().strftime('%H:%M')}}. Zappi charge
+            session {{states('sensor.myenergi_zappi_XXXXXXXX_charge_added_session')}}kWh.
+          title: Octopus Paused Charging.
+          class: normal
+        enabled: true
     - conditions:
       - condition: trigger
         id:
@@ -812,7 +834,7 @@
               - condition: numeric_state
                 entity_id: sensor.solax_local_battery_soc
                 above: input_number.solax_discharge_limit_soc_before_ev
-                value_template: '{{ state.state | float(0)  - 14 }}'
+                value_template: '{{ state.state | float(0)  - 9 }}'
               then:
               - action: select.select_option
                 metadata: {}
@@ -1102,7 +1124,7 @@
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
           above: input_number.solax_manual_forced_discharge_limit_soc
-          value_template: '{{ state.state | float(0)  - 14 }}'
+          value_template: '{{ state.state | float(0)  - 9 }}'
         then:
         - repeat:
             sequence:
@@ -1261,7 +1283,7 @@
           state: 'on'
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
-          value_template: '{{ state.state | float(0)  - 14 }}'
+          value_template: '{{ state.state | float(0)  - 9 }}'
           above: input_number.solax_manual_forced_discharge_limit_soc
         - condition: template
           value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
@@ -1525,7 +1547,7 @@
       - if:
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
-          value_template: '{{ state.state | float(0)  - 14 }}'
+          value_template: '{{ state.state | float(0)  - 9 }}'
           above: input_number.solax_manual_forced_discharge_limit_soc
         then:
         - event: Solax Zappi Octopus Control
@@ -1700,18 +1722,15 @@
     id: Normal Stop Discharge Prior
   - trigger: time
     at: sensor.ev_start_time
-    id: Normal Stop Discharge Prior
-    enabled: false
-  - entity_id:
-    - sensor.solax_local_battery_soc
-    below: input_number.solax_manual_forced_discharge_limit_soc
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 0
+    id: Normal Stop Discharge Prior time trigger
+    enabled: true
+  - trigger: template
+    value_template: "{%set highestSoC = states('sensor.solax_local_feed_in_battery_min_soc')|int
+      (default=15),\n                   states('sensor.solax_local_selfuse_battery_min_soc')|int
+      (default=15),\n                   states('input_number.solax_manual_forced_discharge_limit_soc')|int
+      (default =20)\n%}\n{{ states('sensor.solax_local_battery_soc')|int (default=100)
+      < highestSoC|max|int+1 }}\n"
     id: Normal Stop Discharge
-    trigger: numeric_state
-    value_template: '{{ state.state | float(0)  - 1 }}'
   - entity_id:
     - sensor.solax_local_battery_soc
     below: input_number.octopus_free_session_battery_prep_soc
@@ -1752,6 +1771,7 @@
       - condition: trigger
         id:
         - Normal Stop Discharge Prior
+        - Normal Stop Discharge Prior time trigger
       - condition: state
         entity_id: input_boolean.export_battery_prior
         state: 'on'
@@ -1763,6 +1783,16 @@
         entity_id: sensor.zappi_plug_status
         state: EV Connected
       sequence:
+      - condition: not
+        conditions:
+        - condition: template
+          value_template: '{{(trigger.id == ''Normal Stop Discharge Prior time trigger''
+            and states(''sensor.ev_start_time'')|as_timestamp == today_at(''23:30'')|as_timestamp)
+            or
+
+            (trigger.id == ''Normal Stop Discharge Prior time trigger'' and states(''input_boolean.priorise_export_over_ev'')==''on'')
+
+            }}'
       - repeat:
           sequence:
           - data:
@@ -2188,6 +2218,15 @@
       - data:
           level: '{{states(''input_number.solax_feed_in_battery_min_soc'')}}'
         action: rest_command.solax_local_set_feedin_battery_min_soc
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 20
+          milliseconds: 0
+        enabled: true
+      - data:
+          level: '{{states(''input_number.solax_feed_in_battery_min_soc'')}}'
+        action: rest_command.solax_local_set_selfuse_battery_min_soc
     - conditions:
       - condition: trigger
         id:
@@ -2196,6 +2235,15 @@
       - data:
           level: '{{states(''input_number.solax_selfuse_battery_min_soc'')}}'
         action: rest_command.solax_local_set_selfuse_battery_min_soc
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 20
+          milliseconds: 0
+        enabled: true
+      - data:
+          level: '{{states(''input_number.solax_selfuse_battery_min_soc'')}}'
+        action: rest_command.solax_local_set_feedin_battery_min_soc
     - conditions:
       - condition: trigger
         id:
@@ -2363,8 +2411,8 @@
       sequence:
       - action: rest_command.solax_local_set_forced_charge_start
         data:
-          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_battery_start_charge_time'',
-            ''timestamp'') - 0) %}{{ end_time.hour + end_time.minute * 256 }}'
+          value: '{% set end_time = as_datetime(state_attr(''input_datetime.solax_battery_start_charge_time'',''timestamp'')
+            - 0) %} {{ end_time.hour + end_time.minute * 256 }}'
     - conditions:
       - condition: trigger
         id:
@@ -2928,10 +2976,11 @@
     trigger: time
   - trigger: time_pattern
     minutes: /17
+  - event_type: octopus_energy_all_octoplus_free_electricity_sessions
+    trigger: event
+    id: Octopus New Free Electric
+    enabled: true
   conditions:
-  - condition: state
-    entity_id: binary_sensor.free_electricity_today
-    state: 'on'
   - condition: state
     entity_id: input_boolean.solax_automation_running
     state: 'off'
@@ -2948,12 +2997,16 @@
       mode_delay: 15
       settings_delay: 15
       refresh_settings_delay: 10
+      free_electric_event_entity: event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events
     enabled: true
   - choose:
     - conditions:
       - condition: trigger
         id:
         - Prepare
+      - condition: state
+        entity_id: binary_sensor.free_electricity_today
+        state: 'on'
       sequence:
       - if:
         - condition: state
@@ -3109,6 +3162,9 @@
       - condition: trigger
         id:
         - start
+      - condition: state
+        entity_id: binary_sensor.free_electricity_today
+        state: 'on'
       sequence:
       - action: automation.turn_off
         metadata: {}
@@ -3196,10 +3252,14 @@
               minutes: 0
               seconds: '{{refresh_settings_delay}}'
               milliseconds: 0
+        enabled: false
     - conditions:
       - condition: trigger
         id:
         - stop
+      - condition: state
+        entity_id: binary_sensor.free_electricity_today
+        state: 'on'
       sequence:
       - repeat:
           sequence:
@@ -3274,6 +3334,19 @@
           title: Free Electric Finished
           class: high
         enabled: true
+      - metadata: {}
+        data: {}
+        target:
+          entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+        action: switch.turn_off
+        enabled: true
+      - metadata: {}
+        data:
+          option: Stopped
+        target:
+          entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
+        action: select.select_option
+        enabled: true
       - action: automation.turn_on
         metadata: {}
         data: {}
@@ -3298,6 +3371,9 @@
       - condition: template
         value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]!=
           3)}}'
+      - condition: state
+        entity_id: binary_sensor.free_electricity_today
+        state: 'on'
       sequence:
       - if:
         - condition: numeric_state
@@ -3344,6 +3420,24 @@
             title: Free Electric Prep
             class: high
           enabled: true
+    - conditions:
+      - condition: trigger
+        id:
+        - Octopus New Free Electric
+      sequence:
+      - if:
+        - condition: template
+          value_template: "{% set event = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events')|last
+            %} \n{% set event_start = event['start'].date() %}\n{{event_start|as_timestamp>now()|as_timestamp}}"
+        then:
+        - event: Solax Zappi Octopus Control
+          event_data:
+            message: "{% set event = state_attr(free_electric_event_entity,\n  'events')|last
+              %} {% set event_start = event['start'] %}It starts at {{event_start.strftime('%H:%M')
+              }} on {{ event_start.day }}/{{event_start.month }} for {{ event.duration_in_minutes
+              | int }} minutes.\n"
+            title: Octopus Free Electric Session
+            class: high
   - action: input_boolean.turn_off
     metadata: {}
     data: {}

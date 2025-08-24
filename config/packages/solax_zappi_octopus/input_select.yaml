@@ -52,7 +52,7 @@ solax_zappi_octopus_input_select:
         - ' '
         - EV Charging Started
         - EV Stopped Charging - Attempting Battery Export.
-        - EV Stopped Charging.
+        - Octopus Paused Charging.
         - EV Connected - Waiting for Octopus schedule
         - EV Connected - Waiting for Solax to Discharge Before Getting Octopus Schedule
         - EV Connected - No Charge Plan

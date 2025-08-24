@@ -367,11 +367,11 @@ solax_templates:
           unique_id: solax_local_self_consumption_power
           state: >
             {% if states('sensor.solax_local_inverter_power')|int(default=0) < 1000 and states('sensor.solax_local_inverter_power')|int(default=0) >0%}
-            {% set invloss = 75 %}
+              {% set invloss = 75 %}
             {% else %}
-            {% set invloss =0 %}
+              {% set invloss =0 %}
             {% endif%}
-            {% set val = states('sensor.solax_local_inverter_power')|int(default=0) + invloss - states('sensor.solax_local_grid_export_power')|int(default=0)%}
+              {% set val = states('sensor.solax_local_inverter_power')|int(default=0) + invloss - states('sensor.solax_local_grid_export_power')|int(default=0)%}
             {{ val if is_number(val) and (val|int > 0) else 0 }}
           unit_of_measurement: "W"
           state_class: measurement
@@ -385,9 +385,9 @@ solax_templates:
           state: >
             {% set val = state_attr('sensor.solax_local', 'Data')[14]|float(default=0.0) %}
             {% if val > 0 %}
-            {{ val/100 if is_number(val) and (val|float > 0) else 0 }}
+              {{ val/100 if is_number(val) and (val|float > 0) else 0 }}
             {% else%}
-            {{ states('sensor.solax_local_battery_voltage')}}
+              {{ states('sensor.solax_local_battery_voltage')}}
             {% endif%}
           unit_of_measurement: "V"
           state_class: measurement
@@ -399,9 +399,9 @@ solax_templates:
           state: >
             {% set val = state_attr('sensor.solax_local', 'Data')[14]|float(default=0.0) %}
             {% if val > 0 %}
-            {{ val/100/(states('input_number.solax_battery_capacity')|int/3*32) if is_number(val) and (val|float > 0) else 0 }}
+              {{ val/100/(states('input_number.solax_battery_capacity')|int/3*32) if is_number(val) and (val|float > 0) else 0 }}
             {% else%}
-            {{ states('sensor.solax_local_battery_cell_voltage')}}
+              {{ states('sensor.solax_local_battery_cell_voltage')}}
             {% endif%}
           unit_of_measurement: "V"
           state_class: measurement
@@ -461,8 +461,8 @@ solax_templates:
         - name: "Solax Local Battery Use In From Grid"
           unique_id: solax_local_battery_use_in_from_grid
           state: >
-            {% set gridPwr = states('sensor.solax_local_grid_power')|int(default=0) %}
-            {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,5500)|int (default=0) %}
+            {% set gridPwr = states('sensor.solax_local_grid_used_power')|int(default=0) %}
+            {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,states('input_number.solax_inverter_capacity')|float*1000)|int (default=0) %}
             {% set bat = states('sensor.solax_local_battery_power')|int - pvPwr|int  %}
             {{ bat if is_number(bat) and (bat|int > 0 and gridPwr > 0) else 0 }}
           unit_of_measurement: "W"
@@ -477,8 +477,7 @@ solax_templates:
             {% set grid = states('sensor.solax_local_battery_use_in_from_grid')|int (default = 0) %}
             {% set bat = states('sensor.solax_local_battery_use_in')|int(default=0) - grid|int%}
             {% set invPwr = states('sensor.solax_local_inverter_power')|int(default=0) %} 
-            {% set pvPwr = states('sensor.solax_local_pv_output')|int(default=0) %} 
-            {% set gridPwr = states('sensor.solax_local_grid_power')|int(default=0) %} 
+            {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,states('input_number.solax_inverter_capacity')|float*1000)|int (default=0) %}
             {{ (bat) if  (pvPwr > 0 and invPwr >0) else 0 }}
           unit_of_measurement: "W"
           state_class: measurement
@@ -490,18 +489,35 @@ solax_templates:
           unique_id: solax_local_battery_use_out
           state: >
             {% set batAdj = states('sensor.solax_local_battery_power_adjusted')|int(default=0) %}
-            {{ (0 - batAdj) if is_number(batAdj) and (batAdj|int < 0) and states('sensor.solax_local_inverter_mode') != 'Manual' and states('sensor.solax_local_manual_mode_behaviour') != 'Force Discharge' else 0 }}
+            {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,states('input_number.solax_inverter_capacity')|float*1000)|int (default=0) %}
+            {% set load = states('sensor.solax_local_inverter_power')| float(default=0.0) - states('sensor.solax_local_feedin_power')|float %}
+            {%if states('sensor.solax_local_inverter_mode') != 'Manual' and states('sensor.solax_local_manual_mode_behaviour') != 'Force Discharge'%}
+              {{(0 - batAdj) if is_number(batAdj) and (batAdj|int < 0) else 0 }}
+            {%elif states('sensor.solax_local_inverter_mode') == 'Manual' and states('sensor.solax_local_manual_mode_behaviour') == 'Force Discharge'%}
+              {{(load - pvPwr) if load > pvPwr else 0 }}
+            {%endif%}
           unit_of_measurement: "W"
           state_class: measurement
           device_class: power
           icon: mdi:battery
 
         # Grid feed-in (Manual Battery Export)
+#        - name: "Solax Local Battery Dump Power"
+#          unique_id: solax_local_battery_dump_power
+#          state: >
+#            {% set val = states('sensor.solax_local_grid_power')|int(default=0) %}
+#            {{ (0 - val) if is_number(val) and (val|int < 0) and states('sensor.solax_local_inverter_mode') == 'Manual' and states('sensor.solax_local_manual_mode_behaviour') == 'Force Discharge' else 0 }}
+#          unit_of_measurement: "W"
+#          state_class: measurement
+#          device_class: "power"
+
+        # Battery Export power (discharging)
         - name: "Solax Local Battery Dump Power"
           unique_id: solax_local_battery_dump_power
           state: >
-            {% set val = states('sensor.solax_local_grid_power')|int(default=0) %}
-            {{ (0 - val) if is_number(val) and (val|int < 0) and states('sensor.solax_local_inverter_mode') == 'Manual' and states('sensor.solax_local_manual_mode_behaviour') == 'Force Discharge' else 0 }}
+            {% set batAdj = max(states('sensor.solax_local_battery_power_adjusted')|int,states('input_number.solax_inverter_capacity')|float*-1000)|int (default=0) %}
+            {% set load = states('sensor.solax_local_inverter_power')| float(default=0.0) - states('sensor.solax_local_feedin_power')|float %}
+            {{ (0 - batAdj) if is_number(batAdj) and (batAdj|int < 0) and states('sensor.solax_local_inverter_mode') == 'Manual' and states('sensor.solax_local_manual_mode_behaviour') == 'Force Discharge' else 0 }}
           unit_of_measurement: "W"
           state_class: measurement
           device_class: "power"
@@ -587,9 +603,10 @@ solax_templates:
           unique_id: solax_local_house_load_power
           # if your solax system can see load from zappi then set solax_can_see_zappi_load =1 elso set it to 0
           state: >
-            {%set solax_can_see_zappi_load = 1%}
-            {%if solax_can_see_zappi_load|bool == true%}
-              {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) - states('sensor.zappi_power_ct_internal_load') | float(default=0) }}
+            {% set solax_can_see_zappi_load = states('input_boolean.solax_can_see_zappi_loads') %}
+            {% set zappi_load_fiddle = states('sensor.zappi_power_ct_internal_load')|float - (states('sensor.myenergi_zappi_XXXXXXXX_grid_ct2')|float + states('sensor.solax_local_feedin_power')|float) if states('sensor.zappi_power_ct_internal_load')|int != 0 else 0 %}
+            {%if solax_can_see_zappi_load == 'on'%}
+              {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) - zappi_load_fiddle | float(default=0) }}
             {%else%}
               {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) }}
             {%endif%}

@@ -523,7 +523,9 @@ sections:
         entities:
           - entity: input_boolean.solax_system_enable
             name: Inverter Off/On
+            state_color: true
           - entity: input_select.solax_work_mode
+          - entity: input_boolean.solax_can_see_zappi_loads
           - entity: input_boolean.use_grid_during_octopus_dispatch
             state_color: true
           - entity: input_boolean.ev_solax_battery_drain
@@ -931,6 +933,21 @@ sections:
         state: "on"
   - type: grid
     cards:
+      - type: history-graph
+        entities:
+          - entity: select.daily_grid_import
+            name: Log
+          - entity: binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+          - entity: binary_sensor.solax_local_battery_charging_period
+          - entity: sensor.solax_local_inverter_mode
+          - entity: sensor.solax_local_manual_mode_behaviour
+          - entity: sensor.zappi_plug_status
+          - entity: sensor.solax_runmode
+        fit_y_data: true
+        hours_to_show: 36
+        grid_options:
+          columns: 36
+          rows: auto
       - type: heading
         heading_style: title
         badges:
@@ -1026,8 +1043,7 @@ sections:
           - entity: sensor.daily_house_load
           - entity: sensor.daily_manual_battery_export
           - entity: sensor.export_daily
-          - entity: sensor.solax_local_battery_remain_energy
-          - entity: sensor.daily_grid_ac_stored
+          - entity: sensor.solax_discharge_capacity
           - entity: sensor.solcast_pv_forecast_forecast_remaining_today
         grid_options:
           columns: 36
@@ -1139,7 +1155,7 @@ sections:
           - entity: sensor.solax_local_battery_use_in
           - entity: sensor.solax_local_battery_use_in_from_grid
           - entity: sensor.solax_local_battery_in_from_solar
-          - entity: sensor.solax_local_battery_power
+          - entity: sensor.solax_local_battery_power_adjusted
           - entity: sensor.solax_local_self_consumption_power
           - entity: sensor.solax_local_house_load_power
           - entity: sensor.solax_local_battery_dump_power
@@ -1204,6 +1220,7 @@ sections:
           - entity: sensor.solax_local_inverter_mode
           - entity: sensor.solax_local_manual_mode_behaviour
           - entity: sensor.zappi_plug_status
+          - entity: sensor.solax_runmode
         fit_y_data: true
         hours_to_show: 36
         grid_options:
@@ -1217,6 +1234,7 @@ sections:
         grid_options:
           columns: 36
           rows: auto
+        min_y_axis: 3
       - title: Battery Temperature
         type: history-graph
         hours_to_show: 36
@@ -1238,6 +1256,13 @@ sections:
       - type: vertical-stack
         cards:
           - type: statistic
+            entity: sensor.monthly_grid_import_free
+            period:
+              calendar:
+                period: day
+            stat_type: change
+            name: Free Import
+          - type: statistic
             entity: sensor.monthly_grid_import_peak
             period:
               calendar:
@@ -1300,13 +1325,6 @@ sections:
                 period: day
             stat_type: change
             name: Battery Used for House
-          - type: statistic
-            entity: sensor.solax_local_inverter_in_aggregated_energy
-            period:
-              calendar:
-                period: day
-            stat_type: change
-            name: AC Grid Stored
           - type: statistic
             entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
             period:
@@ -1327,6 +1345,14 @@ sections:
       - type: vertical-stack
         cards:
           - type: statistic
+            entity: sensor.monthly_grid_import_free
+            period:
+              calendar:
+                period: day
+                offset: -1
+            stat_type: change
+            name: Free Import
+          - type: statistic
             entity: sensor.monthly_grid_import_peak
             period:
               calendar:
@@ -1398,14 +1424,6 @@ sections:
                 offset: -1
             stat_type: change
             name: Battery Used for House
-          - type: statistic
-            entity: sensor.solax_local_inverter_in_aggregated_energy
-            period:
-              calendar:
-                period: day
-                offset: -1
-            stat_type: change
-            name: AC Grid Stored
           - type: statistic
             entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
             period:
@@ -1427,6 +1445,13 @@ sections:
         title: Yesterday
       - type: vertical-stack
         cards:
+          - type: statistic
+            entity: sensor.monthly_grid_import_free
+            period:
+              calendar:
+                period: month
+            stat_type: change
+            name: Free Import
           - type: statistic
             entity: sensor.monthly_grid_import_peak
             period:
@@ -1492,13 +1517,6 @@ sections:
             stat_type: change
             name: Battery Used for House
           - type: statistic
-            entity: sensor.solax_local_inverter_in_aggregated_energy
-            period:
-              calendar:
-                period: month
-            stat_type: change
-            name: AC Grid Stored
-          - type: statistic
             entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
             period:
               calendar:
@@ -1517,6 +1535,14 @@ sections:
         title: This Month
       - type: vertical-stack
         cards:
+          - type: statistic
+            entity: sensor.monthly_grid_import_free
+            period:
+              calendar:
+                period: month
+                offset: -1
+            stat_type: change
+            name: Free Import
           - type: statistic
             entity: sensor.monthly_grid_import_peak
             period:
@@ -1589,14 +1615,6 @@ sections:
                 offset: -1
             stat_type: change
             name: Battery Used for House
-          - type: statistic
-            entity: sensor.solax_local_inverter_in_aggregated_energy
-            period:
-              calendar:
-                period: month
-                offset: -1
-            stat_type: change
-            name: AC Grid Stored
           - type: statistic
             entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
             period:
@@ -1619,6 +1637,13 @@ sections:
       - type: vertical-stack
         cards:
           - type: statistic
+            entity: sensor.monthly_grid_import_free
+            period:
+              calendar:
+                period: year
+            stat_type: change
+            name: Free Import
+          - type: statistic
             entity: sensor.monthly_grid_import_peak
             period:
               calendar:
@@ -1681,13 +1706,6 @@ sections:
                 period: year
             stat_type: change
             name: Battery Used for House
-          - type: statistic
-            entity: sensor.solax_local_inverter_in_aggregated_energy
-            period:
-              calendar:
-                period: year
-            stat_type: change
-            name: AC Grid Stored
           - type: statistic
             entity: sensor.solax_local_battery_in_from_grid_aggregated_energy
             period:
@@ -1788,3 +1806,4 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
+
