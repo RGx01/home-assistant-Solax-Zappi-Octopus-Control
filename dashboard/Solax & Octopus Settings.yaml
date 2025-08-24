@@ -684,6 +684,7 @@ sections:
             state_color: true
           - entity: input_boolean.export_battery_prior
             state_color: true
+          - entity: input_boolean.priorise_export_over_ev
           - entity: sensor.pre_export_battery_before_charging_ev_time
             format: time
           - entity: input_number.solax_discharge_limit_soc_before_ev
@@ -697,6 +698,7 @@ sections:
           - entity: sensor.solax_local_battery_soh
         title: Solax Battery Exports
         show_header_toggle: false
+        state_color: true
       - title: Self Use Mode Settings
         type: entities
         show_header_toggle: false
@@ -806,6 +808,7 @@ sections:
             state_color: true
           - entity: input_boolean.export_battery_prior
             state_color: true
+          - entity: input_boolean.priorise_export_over_ev
           - entity: sensor.pre_export_battery_before_charging_ev_time
             format: time
           - entity: input_number.solax_discharge_limit_soc_before_ev
@@ -819,6 +822,7 @@ sections:
           - entity: sensor.solax_local_battery_soh
         title: Solax Battery Exports
         show_header_toggle: false
+        state_color: true
       - title: Feed In Mode Settings
         type: entities
         entities:
@@ -899,6 +903,7 @@ sections:
             state_color: true
           - entity: input_boolean.export_battery_prior
             state_color: true
+          - entity: input_boolean.priorise_export_over_ev
           - entity: sensor.pre_export_battery_before_charging_ev_time
             format: time
           - entity: input_number.solax_discharge_limit_soc_before_ev
@@ -912,6 +917,7 @@ sections:
           - entity: sensor.solax_local_battery_soh
         title: Solax Battery Exports
         show_header_toggle: false
+        state_color: true
       - type: entities
         show_header_toggle: false
         entities:
@@ -1762,6 +1768,21 @@ sections:
       - condition: state
         entity: input_boolean.solax_octopus_hide_stats
         state: "on"
+  - cards:
+      - type: heading
+        heading: Battery Capacity
+        heading_style: title
+      - title: " Grid Stored/Theoretical Grid Stored = Battery SoH"
+        type: history-graph
+        hours_to_show: 720
+        entities:
+          - sensor.solax_local_battery_soh
+          - sensor.solax_local_min_soc
+          - sensor.solax_local_max_soc
+        grid_options:
+          columns: full
+          rows: 8
+    column_span: 3
 cards: []
 badges:
   - type: entity
@@ -1806,4 +1827,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-
