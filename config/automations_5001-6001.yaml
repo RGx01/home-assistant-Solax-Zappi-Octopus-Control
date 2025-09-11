@@ -2227,6 +2227,16 @@
     event_data:
       class: high
     id: High
+  - trigger: event
+    event_type: Solax Control
+    event_data:
+      class: normal
+    id: Normal
+  - trigger: event
+    event_type: Solax Control
+    event_data:
+      class: high
+    id: High
   conditions: []
   actions:
   - action: logbook.log

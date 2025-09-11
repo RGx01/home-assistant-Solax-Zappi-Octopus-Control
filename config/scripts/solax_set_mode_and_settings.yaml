@@ -187,7 +187,7 @@ solax_set_mode_and_settings:
             - choose:
                 - conditions: "{{ not success }}"
                   sequence:
-                    - event: Solax Zappi Octopus Control
+                    - event: Solax Control
                       event_data:
                         message: >-
                           Mode/settings not fully set after {{ outer_loop }} retries or timeout.
