@@ -1,0 +1,26 @@
+solax_zappi_octopus_input_button:
+  input_button:
+    # Refresh solax settings
+    refresh:
+      name: Refresh
+      icon: mdi:button-pointer
+
+    # Force Solax Discharge
+    solax_force_discharge:
+      name: Solax Force Discharge
+      icon: mdi:button-pointer
+
+    # Stop Solax Discharge
+    solax_stop_discharge:
+      name: Solax Stop Discharge
+      icon: mdi:button-pointer
+
+    # Reset Solax Zappi Octopus notification Exclusions
+    solax_zappi_octopus_reset_notification_exclusions:
+      name: Reset Notification Exclusions
+      icon: mdi:button-pointer
+
+    # Reset Solax Zappi Octopus Mobile List
+    solax_zappi_octopus_reset_device_list:
+      name: Reset Device List
+      icon: mdi:button-pointer

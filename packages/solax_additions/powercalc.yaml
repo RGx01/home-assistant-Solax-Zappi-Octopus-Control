@@ -1,0 +1,94 @@
+########################################
+# v1.0 solax_additions_powercalc
+########################################
+solax_additions_powercalc:
+  powercalc:
+    force_update_frequency: 00:01:00
+    sensors:
+      - entity_id: sensor.solax_local_pv_output
+        power_sensor_id: sensor.solax_local_pv_output
+        name: Solax Local Solar Panels Aggregated
+        fixed:
+          power: "{{ states('sensor.solax_local_pv_output')| int(default=0) }}"
+
+      - entity_id: sensor.solax_local_inverter_power
+        power_sensor_id: sensor.solax_local_inverter_power
+        name: Solax Local Inverter Aggregated
+        fixed:
+          power: "{{ states('sensor.solax_local_inverter_power')| int(default=0) }}"
+
+      - entity_id: sensor.solax_local_inverter_in_power
+        power_sensor_id: sensor.solax_local_inverter_in_power
+        name: Solax Local Inverter In Aggregated
+        fixed:
+          power: "{{ states('sensor.solax_local_inverter_in_power')| int(default=0) }}"
+
+      - entity_id: sensor.solax_local_inverter_out_power
+        power_sensor_id: sensor.solax_local_inverter_out_power
+        name: Solax Local Inverter Out Aggregated
+        fixed:
+          power: "{{ states('sensor.solax_local_inverter_out_power')| int(default=0) }}"
+
+      - entity_id: sensor.solax_local_battery_in_from_solar
+        power_sensor_id: sensor.solax_local_battery_in_from_solar
+        name: Solax Local Battery In From Solar Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_battery_in_from_solar')}}"
+
+      - entity_id: sensor.solax_local_battery_use_in_from_grid
+        power_sensor_id: sensor.solax_local_battery_use_in_from_grid
+        name: Solax Local Battery In From Grid Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_battery_use_in_from_grid')}}"
+
+      - entity_id: sensor.solax_local_battery_use_in
+        power_sensor_id: sensor.solax_local_battery_use_in
+        name: Solax Local Battery In Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_battery_use_in')}}"
+
+      - entity_id: sensor.solax_local_battery_use_out
+        power_sensor_id: sensor.solax_local_battery_use_out
+        name: Solax Local Battery Out Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_battery_use_out')}}"
+
+      - entity_id: sensor.solax_local_grid_used_power
+        power_sensor_id: sensor.solax_local_grid_used_power
+        name: Solax Local Grid Used Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_grid_used_power')}}"
+
+      - entity_id: sensor.solax_local_grid_export_power
+        power_sensor_id: sensor.solax_local_grid_export_power
+        name: Solax Local Grid Export Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_grid_export_power')}}"
+
+      - entity_id: sensor.solax_local_load_power
+        power_sensor_id: sensor.solax_local_load_power
+        name: Solax Local Load Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_load_power')}}"
+
+      - entity_id: sensor.solax_local_house_load_power
+        power_sensor_id: sensor.solax_local_house_load_power
+        name: Solax Local House Load Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_house_load_power')}}"
+
+      - entity_id: sensor.solax_local_self_consumption_power
+        power_sensor_id: sensor.solax_local_self_consumption_power
+        name: Solax Local Self Consumption Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_self_consumption_power')}}"
+
+      #solax_local_battery_use_out
+
+      - entity_id: sensor.solax_local_battery_dump_power
+        power_sensor_id: sensor.solax_local_battery_dump_power
+        name: Solax Local Battery Dump Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_battery_dump_power')}}"
+
+

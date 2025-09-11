@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v5.0   Refactored
 # v4.0.  Predicted production using Solcast
 #        Added a Battery SoH sensor to help discharge pridictions
 #        Added a predicted Shcedule start time based on EV battery size
@@ -23,14 +24,8 @@ sections:
   - type: grid
     cards:
       - type: heading
-        heading: Power Flow
         heading_style: title
         badges:
-          - type: entity
-            show_state: false
-            show_icon: true
-            entity: input_boolean.solax_automation_running
-            color: pink
           - type: entity
             show_state: true
             show_icon: true
@@ -40,38 +35,6 @@ sections:
               - condition: state
                 entity: sensor.zappi_plug_status
                 state_not: EV Disconnected
-            tap_action:
-              action: more-info
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.ev_start_time
-            visibility:
-              - condition: state
-                entity: sensor.zappi_plug_status
-                state: EV Connected
-              - condition: state
-                entity: >-
-                  binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
-                state: "off"
-            state_content:
-              - name
-              - state
-            name: Schedule
-            tap_action:
-              action: more-info
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.ev_start_time
-            visibility:
-              - condition: state
-                entity: sensor.zappi_plug_status
-                state: EV Disconnected
-            state_content:
-              - name
-              - state
-            name: Schedule
             tap_action:
               action: more-info
           - type: entity
@@ -92,193 +55,7 @@ sections:
             name: Completed
             visibility:
               - condition: state
-                entity: >-
-                  binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
-                state: "on"
-              - condition: state
-                entity: sensor.zappi_plug_status
-                state: EV Connected
-            tap_action:
-              action: more-info
-            state_content:
-              - name
-              - state
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.octopus_completed_dispatch
-            visibility:
-              - condition: state
-                entity: sensor.zappi_plug_status
-                state: Charging
-            tap_action:
-              action: more-info
-            state_content:
-              - name
-              - state
-            name: Completed
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.solax_local_battery_soc
-            state_content:
-              - name
-              - state
-            color: green
-            name: Battery
-            tap_action:
-              action: more-info
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.solax_local_battery_temperature
-            tap_action:
-              action: more-info
-            state_content:
-              - name
-              - state
-            name: Battery Temp
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.solax_local_house_load_power
-            name: House Load
-            tap_action:
-              action: more-info
-            state_content:
-              - name
-              - state
-      - type: custom:power-flow-card-plus
-        entities:
-          battery:
-            entity: sensor.solax_local_battery_power
-            state_of_charge: sensor.solax_local_battery_soc
-            invert_state: true
-          grid:
-            entity:
-              consumption: sensor.solax_local_grid_used_power
-              production: sensor.solax_local_grid_export_power
-          home:
-            entity: sensor.solax_local_load_power
-            color_value: true
-            name: Home
-            use_metadata: true
-            override_state: true
-          individual:
-            - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
-              secondary_info: {}
-              name: Zappi
-              use_metadata: false
-              display_zero: true
-          fossil_fuel_percentage:
-            state_type: power
-            entity: sensor.electricity_maps_grid_fossil_fuel_percentage
-            color_value: true
-            color_icon: true
-            display_zero: true
-            name: Low Carbon
-            unit_white_space: true
-            use_metadata: true
-            display_zero_state: false
-          solar:
-            entity: sensor.solax_local_pv_output
-            color_value: true
-            color_icon: true
-        clickable_entities: true
-        display_zero_lines:
-          mode: transparency
-          transparency: 50
-          grey_color:
-            - 189
-            - 189
-            - 189
-        use_new_flow_rate_model: true
-        w_decimals: 0
-        kw_decimals: 1
-        min_flow_rate: 0.75
-        max_expected_power: 6000
-        min_expected_power: 0.01
-        watt_threshold: 1000
-        transparency_zero_lines: 0
-        max_flow_rate: 10
-        grid_options:
-          columns: full
-          rows: auto
-      - clock_size: small
-        time_format: system
-        show_seconds: false
-        type: clock
-        grid_options:
-          columns: full
-    column_span: 3
-    visibility:
-      - condition: state
-        entity: input_boolean.solax_octopus_hide_settings
-        state: "off"
-  - type: grid
-    cards:
-      - type: heading
-        heading_style: title
-        badges:
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.zappi_plug_status
-            color: green
-            visibility:
-              - condition: state
-                entity: sensor.zappi_plug_status
-                state_not: EV Disconnected
-            tap_action:
-              action: more-info
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.ev_start_time
-            visibility:
-              - condition: state
-                entity: sensor.zappi_plug_status
-                state: EV Connected
-              - condition: state
-                entity: >-
-                  binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
-                state: "off"
-            state_content:
-              - name
-              - state
-            name: Schedule
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.ev_start_time
-            visibility:
-              - condition: state
-                entity: sensor.zappi_plug_status
-                state: EV Disconnected
-            state_content:
-              - name
-              - state
-            name: Schedule
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.octopus_total_planned_dispatch
-            name: Planned Dispatch
-            state_content:
-              - name
-              - state
-            color: green
-            tap_action:
-              action: more-info
-          - type: entity
-            show_state: true
-            show_icon: false
-            entity: sensor.octopus_completed_dispatch
-            name: Completed
-            visibility:
-              - condition: state
-                entity: >-
-                  binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+                entity: binary_sensor.octopus_intelligent_dispatching
                 state: "on"
               - condition: state
                 entity: sensor.zappi_plug_status
@@ -328,11 +105,51 @@ sections:
             state_color: true
         show_header_toggle: false
         state_color: true
-        title: Octopus Schedule
+        title: Octopus Schedule Type
+        visibility:
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "off"
+        card:
+          type: entities
+          entities:
+            - type: conditional
+              conditions:
+                - entity: binary_sensor.solax_battery_export_allowed
+                  state: "on"
+              row:
+                entity: sensor.ev_start_time
+                format: time
+            - type: conditional
+              conditions:
+                - entity: input_boolean.export_battery_prior
+                  state_not: "off"
+                - entity: binary_sensor.solax_battery_export_allowed
+                  state: "on"
+              row:
+                entity: sensor.pre_export_battery_before_charging_ev_time
+                format: time
+            - type: conditional
+              conditions:
+                - entity: input_boolean.export_battery
+                  state_not: "off"
+                - entity: sensor.zappi_plug_status
+                  state: EV Disconnected
+              row:
+                entity: sensor.pre_nightly_battery_export_time
+                format: time
       - type: conditional
         conditions:
           - condition: state
             entity: input_boolean.solar_export_priority
+            state: "on"
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
             state: "on"
         card:
           type: entities
@@ -340,26 +157,32 @@ sections:
             - entity: sensor.ev_start_time
               format: time
             - entity: input_number.sun_degrees_above_horizon
-            - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
-            - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
+            - entity: number.octopus_intelligent_charge_target
+            - entity: select.octopus_intelligent_target_time
           title: Schedule After Sunset
       - type: conditional
         conditions:
           - condition: state
             entity: input_boolean.octopus_schedule_anytime
             state: "on"
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
         card:
           type: entities
           entities:
             - entity: sensor.ev_start_time
               format: time
-            - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
-            - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
+            - entity: number.octopus_intelligent_charge_target
+            - entity: select.octopus_intelligent_target_time
           title: Schedule Anytime
       - type: conditional
         conditions:
           - condition: state
             entity: input_boolean.use_clever_time
+            state: "on"
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
             state: "on"
         card:
           type: entities
@@ -367,8 +190,8 @@ sections:
             - entity: sensor.ev_start_time
               format: time
             - entity: input_number.ev_battery_size
-            - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
-            - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
+            - entity: number.octopus_intelligent_charge_target
+            - entity: select.octopus_intelligent_target_time
           title: Single Dispatch
       - type: conditional
         conditions:
@@ -383,31 +206,42 @@ sections:
               - condition: state
                 entity: input_boolean.use_clever_time
                 state: "off"
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
         card:
           type: entities
           entities:
             - entity: sensor.ev_start_time
               format: time
             - entity: input_datetime.don_t_charge_ev_before_time
-            - entity: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
-            - entity: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
+            - entity: number.octopus_intelligent_charge_target
+            - entity: select.octopus_intelligent_target_time
           title: Schedule After Fixed Time
       - type: entities
         entities:
           - entity: input_boolean.zappi_eco_always
-          - entity: number.myenergi_zappi_XXXXXXXX_minimum_green_level
+          - entity: number.zappi_minimum_green_level
         show_header_toggle: false
         state_color: true
         title: Eco Settings
+        visibility:
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
       - type: entities
         entities:
           - entity: automation.solax_zappi_octopus_control
           - entity: input_number.delay_when_ev_connected
-          - entity: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
-          - entity: select.myenergi_zappi_XXXXXXXX_charge_mode
+          - entity: switch.octopus_intelligent_smart_charge
+          - entity: select.zappi_charge_mode
         show_header_toggle: false
         state_color: true
         title: Device Status - 5001 Controlled
+        visibility:
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
       - type: vertical-stack
         cards:
           - type: entities
@@ -471,10 +305,6 @@ sections:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
             state: "on"
-    visibility:
-      - condition: state
-        entity: input_boolean.solax_octopus_hide_settings
-        state: "on"
   - type: grid
     cards:
       - type: heading
@@ -485,6 +315,8 @@ sections:
             show_icon: true
             entity: input_boolean.solax_automation_running
             color: pink
+            tap_action:
+              action: more-info
           - type: entity
             show_state: true
             show_icon: true
@@ -517,27 +349,6 @@ sections:
             state_content:
               - name
               - state
-      - title: Solax Control
-        type: entities
-        show_header_toggle: false
-        entities:
-          - entity: input_boolean.solax_system_enable
-            name: Inverter Off/On
-            state_color: true
-          - entity: input_select.solax_work_mode
-          - entity: input_boolean.solax_can_see_zappi_loads
-          - entity: input_boolean.use_grid_during_octopus_dispatch
-            state_color: true
-          - entity: input_boolean.ev_solax_battery_drain
-            state_color: true
-          - entity: input_select.solax_default_mode
-          - entity: input_number.solax_default_discharge_limit_soc
-          - entity: input_number.solax_default_charge_to_limit_soc
-          - entity: input_number.solax_battery_capacity
-          - entity: input_number.solax_inverter_capacity
-        grid_options:
-          columns: 15
-          rows: auto
       - type: custom:power-flow-card-plus
         entities:
           battery:
@@ -555,7 +366,7 @@ sections:
             use_metadata: true
             override_state: true
           individual:
-            - entity: sensor.myenergi_zappi_XXXXXXXX_power_ct_internal_load
+            - entity: sensor.zappi_power_ct_internal_load
               secondary_info: {}
               name: Zappi
               use_metadata: false
@@ -594,6 +405,100 @@ sections:
         grid_options:
           columns: 12
           rows: auto
+      - title: Solax Controls/Default Behaviours
+        type: entities
+        show_header_toggle: false
+        entities:
+          - entity: input_boolean.solax_system_enable
+            name: Inverter Off/On
+            state_color: true
+          - entity: input_select.solax_work_mode
+          - entity: input_boolean.solax_can_see_zappi_loads
+          - entity: input_boolean.use_grid_during_octopus_dispatch
+            state_color: true
+          - entity: input_boolean.ev_solax_battery_drain
+            state_color: true
+          - entity: input_select.solax_default_mode
+          - entity: input_number.solax_default_discharge_limit_soc
+          - entity: input_number.solax_default_charge_to_limit_soc
+          - entity: input_number.solax_battery_capacity
+          - entity: input_number.solax_inverter_capacity
+        grid_options:
+          columns: 15
+          rows: auto
+        state_color: true
+        visibility:
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
+      - title: Self Use Mode Settings
+        type: entities
+        show_header_toggle: false
+        entities:
+          - entity: input_number.solax_selfuse_battery_min_soc
+          - entity: input_number.solax_selfuse_charge_to_soc
+          - entity: input_datetime.solax_battery_start_discharge_time
+          - entity: input_datetime.solax_battery_stop_discharge_time
+          - entity: input_boolean.self_use_enable_charge_from_grid
+            state_color: true
+          - entity: input_datetime.solax_battery_start_charge_time
+          - entity: input_datetime.solax_battery_stop_charge_time
+          - entity: input_boolean.solaxchargeperiod2
+            state_color: true
+        state_color: true
+        visibility:
+          - condition: state
+            entity: input_select.solax_work_mode
+            state: Self Use
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
+      - title: Feed In Mode Settings
+        type: entities
+        entities:
+          - entity: input_number.solax_feed_in_battery_min_soc
+          - entity: input_number.solax_feed_in_charge_to_soc
+          - entity: input_datetime.solax_battery_start_discharge_time
+          - entity: input_datetime.solax_battery_stop_discharge_time
+          - entity: input_datetime.solax_battery_start_charge_time
+          - entity: input_datetime.solax_battery_stop_charge_time
+          - entity: input_boolean.solaxchargeperiod2
+            state_color: true
+        visibility:
+          - condition: state
+            entity: input_select.solax_work_mode
+            state: Feed In Priority
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: input_datetime.solax_start_charge_2
+          - entity: input_datetime.solax_stop_charge_2
+        visibility:
+          - condition: state
+            entity: input_boolean.solaxchargeperiod2
+            state: "on"
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: sensor.solax_local_inverter_mode
+          - entity: sensor.solax_local_manual_mode_behaviour
+          - entity: input_select.solax_manual_modes
+        title: Manual Mode Settings
+        header:
+          type: graph
+          entity: sensor.solax_local_battery_dump_power
+          detail: 2
+          hours_to_show: 24
+        visibility:
+          - condition: state
+            entity: input_select.solax_work_mode
+            state: Manual
       - title: Battery Heating (read-only)
         type: entities
         show_header_toggle: false
@@ -626,10 +531,6 @@ sections:
           columns: 15
           rows: auto
     column_span: 1
-    visibility:
-      - condition: state
-        entity: input_boolean.solax_octopus_hide_settings
-        state: "on"
   - type: grid
     cards:
       - type: heading
@@ -678,51 +579,83 @@ sections:
             color: accent
             tap_action:
               action: more-info
+        tap_action:
+          action: none
       - type: entities
         entities:
+          - entity: binary_sensor.solax_battery_export_allowed
           - entity: input_boolean.pre_emptive_export_battery
             state_color: true
-          - entity: input_boolean.export_battery_prior
-            state_color: true
-          - entity: input_boolean.priorise_export_over_ev
-          - entity: sensor.pre_export_battery_before_charging_ev_time
-            format: time
-          - entity: input_number.solax_discharge_limit_soc_before_ev
-          - entity: input_boolean.export_battery
-            state_color: true
-          - entity: sensor.pre_nightly_battery_export_time
-            format: time
-          - entity: input_number.solax_manual_forced_discharge_limit_soc
-          - entity: input_button.solax_force_discharge
-          - entity: input_button.solax_stop_discharge
-          - entity: sensor.solax_local_battery_soh
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery_prior
+                state_not: "off"
+            row:
+              entity: sensor.pre_export_battery_before_charging_ev_time
+              format: time
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery
+                state_not: "off"
+              - entity: sensor.zappi_plug_status
+                state: EV Disconnected
+            row:
+              entity: sensor.pre_nightly_battery_export_time
+              format: time
         title: Solax Battery Exports
         show_header_toggle: false
         state_color: true
-      - title: Self Use Mode Settings
-        type: entities
-        show_header_toggle: false
-        entities:
-          - entity: input_number.solax_selfuse_battery_min_soc
-          - entity: input_number.solax_selfuse_charge_to_soc
-          - entity: input_datetime.solax_battery_start_discharge_time
-          - entity: input_datetime.solax_battery_stop_discharge_time
-          - entity: input_boolean.self_use_enable_charge_from_grid
-            state_color: true
-          - entity: input_datetime.solax_battery_start_charge_time
-          - entity: input_datetime.solax_battery_stop_charge_time
-          - entity: input_boolean.solaxchargeperiod2
-            state_color: true
-        state_color: true
-      - type: entities
-        show_header_toggle: false
-        entities:
-          - entity: input_datetime.solax_start_charge_2
-          - entity: input_datetime.solax_stop_charge_2
         visibility:
           - condition: state
-            entity: input_boolean.solaxchargeperiod2
+            entity: input_boolean.solax_octopus_hide_settings
             state: "on"
+      - type: entities
+        entities:
+          - entity: input_boolean.export_battery_prior
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery_prior
+                state_not: "off"
+            row:
+              entity: input_number.solax_discharge_limit_soc_before_ev
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery_prior
+                state_not: "off"
+            row:
+              entity: input_boolean.priorise_export_over_ev
+        title: Export Before Charging EV
+        show_header_toggle: false
+        state_color: true
+        visibility:
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
+      - type: entities
+        entities:
+          - entity: input_boolean.export_battery
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery
+                state_not: "off"
+            row:
+              entity: input_number.solax_manual_forced_discharge_limit_soc
+        title: Nightly Export
+        show_header_toggle: false
+        state_color: true
+        visibility:
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
+      - type: entities
+        entities:
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: input_button.solax_force_discharge
+          - entity: input_button.solax_stop_discharge
+        title: Force Discharge
+        show_header_toggle: false
+        state_color: true
+        visibility:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
             state: "on"
@@ -730,128 +663,35 @@ sections:
         entities:
           - entity: automation.octopus_free_electric_automation
         state_color: true
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: automation.octopus_free_electric_automation
-            state: "on"
-        card:
-          type: entities
-          entities:
-            - entity: input_datetime.octopus_free_electricity_start
-            - entity: sensor.octopus_free_electric_stop
-              secondary_info: none
-              format: time
-            - entity: input_boolean.octopus_free_electric_soc_use
-            - entity: input_number.octopus_free_session_battery_prep_soc
-            - entity: input_datetime.octopus_free_electricity_prep
-            - entity: binary_sensor.free_electricity_today
-    visibility:
-      - condition: state
-        entity: input_select.solax_work_mode
-        state: Self Use
-      - condition: state
-        entity: input_boolean.solax_octopus_hide_settings
-        state: "on"
-    column_span: 1
-  - type: grid
-    cards:
-      - type: heading
-        heading_style: title
-        badges:
-          - type: entity
-            show_state: true
-            show_icon: false
-            entity: sensor.solcast_pv_forecast_forecast_remaining_today
-            tap_action:
-              action: more-info
-            state_content:
-              - name
-              - state
-            name: Forecast
-          - type: entity
-            show_state: true
-            show_icon: false
-            entity: sensor.solax_local_pv_output
-            color: green
-            state_content:
-              - name
-              - state
-            name: PV
-            tap_action:
-              action: more-info
-          - type: entity
-            show_state: true
-            show_icon: false
-            entity: sensor.solax_local_inverter_power
-            name: Inverter Power
-            state_content:
-              - name
-              - state
-            color: accent
-            tap_action:
-              action: more-info
-          - type: entity
-            show_state: true
-            show_icon: false
-            entity: sensor.solax_local_grid_export_power
-            name: Export
-            state_content:
-              - name
-              - state
-            color: accent
-            tap_action:
-              action: more-info
-      - type: entities
-        entities:
-          - entity: input_boolean.pre_emptive_export_battery
-            state_color: true
-          - entity: input_boolean.export_battery_prior
-            state_color: true
-          - entity: input_boolean.priorise_export_over_ev
-          - entity: sensor.pre_export_battery_before_charging_ev_time
-            format: time
-          - entity: input_number.solax_discharge_limit_soc_before_ev
-          - entity: input_boolean.export_battery
-            state_color: true
-          - entity: sensor.pre_nightly_battery_export_time
-            format: time
-          - entity: input_number.solax_manual_forced_discharge_limit_soc
-          - entity: input_button.solax_force_discharge
-          - entity: input_button.solax_stop_discharge
-          - entity: sensor.solax_local_battery_soh
-        title: Solax Battery Exports
-        show_header_toggle: false
-        state_color: true
-      - title: Feed In Mode Settings
-        type: entities
-        entities:
-          - entity: input_number.solax_feed_in_battery_min_soc
-          - entity: input_number.solax_feed_in_charge_to_soc
-          - entity: input_datetime.solax_battery_start_discharge_time
-          - entity: input_datetime.solax_battery_stop_discharge_time
-          - entity: input_datetime.solax_battery_start_charge_time
-          - entity: input_datetime.solax_battery_stop_charge_time
-          - entity: input_boolean.solaxchargeperiod2
-            state_color: true
-      - type: entities
-        show_header_toggle: false
-        entities:
-          - entity: input_datetime.solax_start_charge_2
-          - entity: input_datetime.solax_stop_charge_2
         visibility:
           - condition: state
-            entity: input_boolean.solaxchargeperiod2
+            entity: input_boolean.solax_octopus_hide_settings
             state: "on"
-      - type: entities
-        entities:
-          - entity: automation.octopus_free_electric_automation
-        state_color: true
       - type: conditional
         conditions:
-          - condition: state
-            entity: automation.octopus_free_electric_automation
-            state: "on"
+          - condition: or
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: or
+                    conditions:
+                      - condition: state
+                        entity: binary_sensor.upcoming_free_electricity
+                        state: "on"
+                      - condition: state
+                        entity: binary_sensor.free_electricity_today
+                        state: "on"
+                  - condition: state
+                    entity: input_boolean.solax_octopus_hide_settings
+                    state: "off"
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: automation.octopus_free_electric_automation
+                    state: "on"
+                  - condition: state
+                    entity: input_boolean.solax_octopus_hide_settings
+                    state: "on"
         card:
           type: entities
           entities:
@@ -863,87 +703,14 @@ sections:
             - entity: input_number.octopus_free_session_battery_prep_soc
             - entity: input_datetime.octopus_free_electricity_prep
             - entity: binary_sensor.free_electricity_today
-    visibility:
-      - condition: state
-        entity: input_select.solax_work_mode
-        state: Feed In Priority
-      - condition: state
-        entity: input_boolean.solax_octopus_hide_settings
-        state: "on"
-  - type: grid
-    cards:
-      - type: heading
-        heading_style: title
-        badges:
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.solax_local_inverter_power
-            name: Inverter Power
-            state_content:
-              - name
-              - state
-            color: accent
-            tap_action:
-              action: more-info
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.solax_local_grid_export_power
-            name: Export
-            state_content:
-              - name
-              - state
-            color: accent
-            tap_action:
-              action: more-info
-      - type: entities
-        entities:
-          - entity: input_boolean.pre_emptive_export_battery
-            state_color: true
-          - entity: input_boolean.export_battery_prior
-            state_color: true
-          - entity: input_boolean.priorise_export_over_ev
-          - entity: sensor.pre_export_battery_before_charging_ev_time
-            format: time
-          - entity: input_number.solax_discharge_limit_soc_before_ev
-          - entity: input_boolean.export_battery
-            state_color: true
-          - entity: sensor.pre_nightly_battery_export_time
-            format: time
-          - entity: input_number.solax_manual_forced_discharge_limit_soc
-          - entity: input_button.solax_force_discharge
-          - entity: input_button.solax_stop_discharge
-          - entity: sensor.solax_local_battery_soh
-        title: Solax Battery Exports
-        show_header_toggle: false
-        state_color: true
-      - type: entities
-        show_header_toggle: false
-        entities:
-          - entity: sensor.solax_local_inverter_mode
-          - entity: sensor.solax_local_manual_mode_behaviour
-          - entity: input_select.solax_manual_modes
-        title: Manual Mode Settings
-        header:
-          type: graph
-          entity: sensor.solax_local_battery_dump_power
-          detail: 2
-          hours_to_show: 24
-    visibility:
-      - condition: state
-        entity: input_select.solax_work_mode
-        state: Manual
-      - condition: state
-        entity: input_boolean.solax_octopus_hide_settings
-        state: "on"
+    column_span: 1
   - type: grid
     cards:
       - type: history-graph
         entities:
           - entity: select.daily_grid_import
             name: Log
-          - entity: binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+          - entity: binary_sensor.octopus_intelligent_dispatching
           - entity: binary_sensor.solax_local_battery_charging_period
           - entity: sensor.solax_local_inverter_mode
           - entity: sensor.solax_local_manual_mode_behaviour
@@ -1304,7 +1071,7 @@ sections:
             stat_type: change
             name: Forced Battery Export
           - type: statistic
-            entity: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+            entity: sensor.zappi_charging
             period:
               calendar:
                 period: day
@@ -1399,7 +1166,7 @@ sections:
             stat_type: change
             name: Forced Battery Export
           - type: statistic
-            entity: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+            entity: sensor.zappi_charging
             period:
               calendar:
                 period: day
@@ -1495,7 +1262,7 @@ sections:
             stat_type: change
             name: Forced Battery Export
           - type: statistic
-            entity: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+            entity: sensor.zappi_charging
             period:
               calendar:
                 period: month
@@ -1590,7 +1357,7 @@ sections:
             stat_type: change
             name: Forced Battery Export
           - type: statistic
-            entity: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+            entity: sensor.zappi_charging
             period:
               calendar:
                 period: month
@@ -1685,7 +1452,7 @@ sections:
             stat_type: change
             name: Forced Battery Export
           - type: statistic
-            entity: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+            entity: sensor.zappi_charging
             period:
               calendar:
                 period: year
@@ -1772,9 +1539,9 @@ sections:
       - type: heading
         heading: Battery Capacity
         heading_style: title
-      - title: " Grid Stored/Theoretical Grid Stored = Battery SoH"
+      - title: " Grid Stored/Theoretical Grid Stored= Capacity SoH"
         type: history-graph
-        hours_to_show: 720
+        hours_to_show: 1500
         entities:
           - sensor.solax_local_battery_soh
           - sensor.solax_local_min_soc
