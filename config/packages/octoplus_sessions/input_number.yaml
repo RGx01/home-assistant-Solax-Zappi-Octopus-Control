@@ -1,4 +1,4 @@
-octopus_saving_sessions_input_number:
+octoplus_sessions_input_number:
   input_number:
     #########################################
     #Date of when theres free electric from Octopus
@@ -8,7 +8,7 @@ octopus_saving_sessions_input_number:
     #Octopus Free Electric Session Target Prep Battery SoC
     octopus_free_session_battery_prep_soc:
       name: Target Battery SoC
-      min: 15
+      min: 11
       max: 90
       step: 1
       mode: box

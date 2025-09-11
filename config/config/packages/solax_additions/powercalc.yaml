@@ -1,7 +1,7 @@
-# Local SOLAX #
-# Note: power_sensor_id is specified to avoid duplicating the power sensor
-# v3.0.0 Added battery in from grid (stored from grid)
-solax_powercalc:
+########################################
+# v1.0 solax_additions_powercalc
+########################################
+solax_additions_powercalc:
   powercalc:
     force_update_frequency: 00:01:00
     sensors:

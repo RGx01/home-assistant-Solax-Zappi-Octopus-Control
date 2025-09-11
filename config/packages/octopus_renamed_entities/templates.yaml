@@ -1,0 +1,90 @@
+###############################################
+# Replace octopus account number z_ZZZZZZZZ
+# V5.0. Refactor
+###############################################
+octopus_renamed_entities_templates:
+  template:
+    ######################################################
+    # Octopus target time normalised to remove account number in automations
+    ######################################################
+    - select:
+        - name: "Octopus Intelligent Target Time"
+          unique_id: octopus_intelligent_target_time
+          icon: mdi:battery-clock
+          state: "{{ states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time') }}"
+          options: >
+            {{ state_attr('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time', 'options') }}
+          select_option:
+            - service: select.select_option
+              target:
+                entity_id: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
+              data:
+                option: "{{ option }}"
+
+    ######################################################
+    # Octopus charge target normalised to remove account number in automations
+    ######################################################
+
+    - number:
+        - name: "Octopus Intelligent Charge Target"
+          unique_id: octopus_intelligent_charge_target
+          state: "{{ states('number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target') | float }}"
+          icon: mdi:battery-charging
+          min: 10
+          max: 100
+          step: 1
+          set_value:
+            - service: number.set_value
+              target:
+                entity_id: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
+              data:
+                value: "{{ value }}"
+
+
+    ######################################################
+    # Octopus intelligent smart charge switch normalised to remove account number in automations
+    ######################################################
+    - switch:
+        - name: "Octopus Intelligent Smart Charge"
+          unique_id: octopus_intelligent_smart_charge
+          icon: mdi:ev-station
+          state: >
+            {{ is_state('switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge', 'on') }}
+          turn_on:
+            - service: switch.turn_on
+              target:
+                entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+          turn_off:
+            - service: switch.turn_off
+              target:
+                entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+
+
+    ######################################################
+    # Octopus Dispatch avoiding unknown when cloud response is not available
+    # Also automations don't need customising
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+          not_to:
+            - unavailable
+            - unknown
+      binary_sensor:
+        - name: Octopus Intelligent Dispatching
+          unique_id: Octopus_intelligent_dispatching
+          state: "{{states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching')}}"
+          icon: mdi:power-plug-battery
+          attributes:
+            changes: >
+              {% set current = this.attributes.get('changes', {}) %}
+              {% set new =
+                { trigger.entity_id:
+                  {
+                    'datetime': trigger.to_state.last_changed.isoformat(),
+                    'from': trigger.from_state.state,
+                    'to': trigger.to_state.state
+                  }
+                }
+              %}
+              {{ dict(current, **new) }}

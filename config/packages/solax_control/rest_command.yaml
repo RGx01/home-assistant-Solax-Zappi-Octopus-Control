@@ -1,51 +1,24 @@
-solax_rest_command:
+solax_control_rest_command:
   #####################################################
   ### Commands for controlling the Solax Local inverter
   #####################################################
-  # Feed in commands added so some older commands from previous versions of this yaml may have changed names
-  # recommend you replace your original ones with these if you plan to use the solax_zappi_octopus package automations
-  # Battery warming commands added
+  # WARNING: NAMES ARE DIFFERENT TO OTHER IMPLEMENTATIONS
   #####################################################
   rest_command:
-    solax_local_set_charge_battery_from_grid:
-      url: !secret solax_local_ip
-      method: post
-      payload: !secret solax_local_set_selfuse_battery_grid_charge_level_payload
-
     solax_local_set_selfuse_battery_min_soc:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_selfuse_battery_min_soc_payload
 
-    solax_local_set_feedin_charge_battery_from_grid:
+    solax_local_set_selfuse_charge_battery_from_grid:
       url: !secret solax_local_ip
       method: post
-      payload: !secret solax_local_set_feedin_battery_grid_charge_level_payload
-
-    solax_local_set_feedin_battery_min_soc:
-      url: !secret solax_local_ip
-      method: post
-      payload: !secret solax_local_set_feedin_battery_min_soc_payload
-
-    solax_local_set_period2_enable:
-      url: !secret solax_local_ip
-      method: post
-      payload: !secret solax_local_set_period2_enable_payload
+      payload: !secret solax_local_set_selfuse_battery_grid_charge_level_payload
 
     solax_local_set_selfuse_charge_from_grid_enable:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_selfuse_charge_from_grid_enable_payload
-
-    solax_local_set_allowed_discharge_start:
-      url: !secret solax_local_ip
-      method: post
-      payload: !secret solax_local_set_allowed_discharge_start
-
-    solax_local_set_allowed_discharge_end:
-      url: !secret solax_local_ip
-      method: post
-      payload: !secret solax_local_set_allowed_discharge_end
 
     solax_local_set_forced_charge_start:
       url: !secret solax_local_ip
@@ -57,6 +30,21 @@ solax_rest_command:
       method: post
       payload: !secret solax_local_set_battery_forced_charge_stop
 
+    solax_local_set_allowed_discharge_start:
+      url: !secret solax_local_ip
+      method: post
+      payload: !secret solax_local_set_allowed_discharge_start
+
+    solax_local_set_allowed_discharge_end:
+      url: !secret solax_local_ip
+      method: post
+      payload: !secret solax_local_set_allowed_discharge_end
+
+    solax_local_set_period2_enable:
+      url: !secret solax_local_ip
+      method: post
+      payload: !secret solax_local_set_period2_enable_payload
+
     solax_local_set_forced_charge_start2:
       url: !secret solax_local_ip
       method: post
@@ -67,15 +55,15 @@ solax_rest_command:
       method: post
       payload: !secret solax_local_set_battery_forced_charge_stop2
 
-    solax_local_set_inverter_mode:
+    solax_local_set_feedin_battery_min_soc:
       url: !secret solax_local_ip
       method: post
-      payload: !secret solax_local_set_inverter_mode
+      payload: !secret solax_local_set_feedin_battery_min_soc_payload
 
-    solax_local_set_manual_mode_behaviour:
+    solax_local_set_feedin_charge_battery_from_grid:
       url: !secret solax_local_ip
       method: post
-      payload: !secret solax_local_set_manual_mode_behaviour
+      payload: !secret solax_local_set_feedin_battery_grid_charge_level_payload
 
     solax_local_heat_enable:
       url: !secret solax_local_ip
@@ -111,3 +99,17 @@ solax_rest_command:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_battery_heat_level_payload
+
+    solax_local_set_inverter_mode:
+      url: !secret solax_local_ip
+      method: post
+      payload: !secret solax_local_set_inverter_mode
+
+    solax_local_set_manual_mode_behaviour:
+      url: !secret solax_local_ip
+      method: post
+      payload: !secret solax_local_set_manual_mode_behaviour
+
+
+
+

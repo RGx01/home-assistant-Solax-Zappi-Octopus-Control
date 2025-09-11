@@ -1,4 +1,7 @@
-octopus_saving_sessions_input_boolean:
+#############################################
+# v1.0 octoplus_sessions_input_boolean
+#############################################
+octoplus_sessions_input_boolean:
   input_boolean:
     #Saving Session Override
     octopus_saving_session_manual:

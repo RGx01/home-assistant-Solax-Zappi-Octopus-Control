@@ -1,0 +1,205 @@
+solax_set_mode_and_settings:
+  trace:
+    stored_traces: 20
+  alias: "Solax Set Mode and Settings"
+  description: >
+    Sets Solax inverter mode, optional manual mode behavior, and/or multiple Solax settings.
+    Retries until successful or max loops reached with timeout protection.
+  fields:
+    mode:
+      description: "Optional inverter mode to set (integer, 0,1,3)"
+      example: "3"
+      required: false
+    manual_mode:
+      description: "Optional manual mode behavior (integer, 0-2)"
+      example: "2"
+      required: false
+    settings:
+      description: "Optional dictionary of Solax settings to set (key: value)"
+      example: "{'selfuse_min_soc': 30, 'feedin_min_soc': 20}"
+      required: false
+
+  sequence:
+    - variables:
+        max_loops: 5
+        refresh_delay: 5
+        settings_delay: 5
+        mode_delays:
+          0: 20
+          1: 20
+          3: 25
+        mode_delay: "{{ mode_delays[mode | int] if mode is defined else 0 }}"
+        start_time: "{{ now() }}"
+        timeout_seconds: 300
+        outer_loop: 0
+        success: false
+        mode_names:
+          0: "Self Use"
+          1: "Feed In Priority"
+          3: "Manual"
+        manual_mode_names:
+          0: "Do Nothing"
+          1: "Force Charge"
+          2: "Force Discharge"
+        mode_text: "{{ mode_names[mode | int] if mode is defined else 'N/A' }}"
+        manual_mode_text: >-
+          {% if manual_mode is defined %}
+            {{ manual_mode_names[manual_mode | int] }}
+          {% else %}
+            N/A
+          {% endif %}
+        current_mode: "{{ state_attr('sensor.solax_local_settings', 'Data')[10] | int }}"
+        current_manual_mode: "{{ state_attr('sensor.solax_local_settings', 'Data')[11] | int }}"
+        idx_map: >
+          {% set m = {
+            'selfuse_battery_min_soc': {'index':0,'service':'solax_local_set_selfuse_battery_min_soc','field':'level'},
+            'selfuse_charge_from_grid_enable': {'index':1,'service':'solax_local_set_selfuse_charge_from_grid_enable','field':'enabled'},
+            'selfuse_charge_battery_from_grid': {'index':2,'service':'solax_local_set_selfuse_charge_battery_from_grid','field':'level'},
+            'forced_charge_start': {'index':3,'service':'solax_local_set_forced_charge_start','field':'value'},
+            'forced_charge_end': {'index':4,'service':'solax_local_set_forced_charge_stop','field':'value'},
+            'allowed_discharge_start': {'index':5,'service':'solax_local_set_allowed_discharge_start','field':'value'},
+            'allowed_discharge_end': {'index':6,'service':'solax_local_set_allowed_discharge_end','field':'value'},
+            'period2_enabled': {'index':7,'service':'solax_local_set_period2_enable','field':'enabled'},
+            'forced_charge_start2': {'index':8,'service':'solax_local_set_forced_charge_start2','field':'value'},
+            'forced_charge_end2': {'index':9,'service':'solax_local_set_forced_charge_stop2','field':'value'},
+            'feedin_battery_min_soc': {'index':12,'service':'solax_local_set_feedin_battery_min_soc','field':'level'},
+            'feedin_charge_battery_from_grid': {'index':13,'service':'solax_local_set_feedin_charge_battery_from_grid','field':'level'},
+            'battery_heat_enable': {'index':14,'service':'solax_local_set_heat_enable','field':'enabled'},
+            'heat_start': {'index':15,'service':'solax_local_set_heat_start','field':'value'},
+            'heat_end': {'index':16,'service':'solax_local_set_heat_stop','field':'value'},
+            'heat_start2': {'index':17,'service':'solax_local_set_heat_start2','field':'value'},
+            'heat_end2': {'index':18,'service':'solax_local_set_heat_stop2','field':'value'},
+            'system_state': {'index':19,'service':'solax_local_set_system_state','field':'enabled'},
+            'battery_heat_level': {'index':20,'service':'solax_local_set_battery_heat_level','field':'level'}
+          } %}{{ m }}
+
+    # Update entity before we begin
+    - action: homeassistant.update_entity
+      data:
+        entity_id:
+          - sensor.solax_rest_local_settings
+    - delay: { seconds: "{{ refresh_delay }}" }
+
+    # Determine if any changes are needed
+    - variables:
+        needs_update: >
+          {# Check settings if provided #}
+          {% set mismatches = namespace(found=false) %}
+
+          {% if settings is defined %}
+            {% for key, val in settings.items() %}
+              {% if (state_attr('sensor.solax_local_settings','Data')[idx_map[key].index] | int) != (val | int) %}
+                {% set mismatches.found = true %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+          {# Check mode if provided #}
+          {% set settings_ok = not mismatches.found %}
+          {% set mode_ok = (mode is not defined) 
+                          or (mode | int != 3 and current_mode == mode | int and current_manual_mode == 0) 
+                          or (mode | int == 3 and current_mode == 3 and (manual_mode is not defined or current_manual_mode == manual_mode | int)) %}
+
+          {{ not (settings_ok and mode_ok) }}
+
+
+    - choose:
+        - conditions: "{{ needs_update }}"
+          sequence:
+            - repeat:
+                until:
+                  - condition: template
+                    value_template: >
+                      {{ success or outer_loop >= max_loops or (now() - start_time).total_seconds() > timeout_seconds }}
+                sequence:
+                  - variables:
+                      outer_loop: "{{ outer_loop + 1 }}"
+
+                  # Set mode and manual_mode
+                  - choose:
+                      - conditions: "{{ mode is defined }}"
+                        sequence:
+                          - choose:
+                              - conditions: "{{ mode | int != 3 }}"
+                                sequence:
+                                  - data:
+                                      value: 0
+                                    action: rest_command.solax_local_set_manual_mode_behaviour
+                                  - delay: { seconds: "{{ mode_delay }}" }
+                          - data:
+                              value: "{{ mode | int }}"
+                            action: rest_command.solax_local_set_inverter_mode
+                          - delay: { seconds: "{{ mode_delay }}" }
+                          - choose:
+                              - conditions: "{{ mode | int == 3 and manual_mode is defined }}"
+                                sequence:
+                                  - data:
+                                      value: "{{ manual_mode | int }}"
+                                    action: rest_command.solax_local_set_manual_mode_behaviour
+                                  - delay: { seconds: "{{ mode_delay }}" }
+
+                  # Set all provided settings
+                  - choose:
+                      - conditions: "{{ settings is defined }}"
+                        sequence:
+                          - repeat:
+                              for_each: "{{ settings.items() | list }}"
+                              sequence:
+                                - data:
+                                    "{{ idx_map[repeat.item.0].field }}": "{{ repeat.item.1 }}"
+                                  action: "rest_command.{{ idx_map[repeat.item.0].service }}"
+                                - delay: { seconds: "{{ settings_delay }}" }
+
+                  # Update entity
+                  - action: homeassistant.update_entity
+                    data:
+                      entity_id:
+                        - sensor.solax_rest_local_settings
+                  - delay: { seconds: "{{ refresh_delay }}" }
+
+                  # Evaluate success after actions
+                  - variables:
+                      success: >
+                        {% set cm = state_attr('sensor.solax_local_settings', 'Data')[10] | int %}
+                        {% set cm_manual = state_attr('sensor.solax_local_settings', 'Data')[11] | int %}
+                        {% set all_settings_ok = true %}
+                        {% if settings is defined %}
+                          {% for key, val in settings.items() %}
+                            {% if state_attr('sensor.solax_local_settings','Data')[idx_map[key].index] | int != val | int %}
+                              {% set all_settings_ok = false %}
+                            {% endif %}
+                          {% endfor %}
+                        {% endif %}
+                        {% if mode is defined %}
+                          {% if mode | int != 3 %}
+                            {{ cm == mode | int and cm_manual == 0 and all_settings_ok }}
+                          {% else %}
+                            {% if manual_mode is defined %}
+                              {{ cm == 3 and cm_manual == manual_mode | int and all_settings_ok }}
+                            {% else %}
+                              {{ cm == 3 and all_settings_ok }}
+                            {% endif %}
+                          {% endif %}
+                        {% else %}
+                          {{ all_settings_ok }}
+                        {% endif %}
+
+            # Fire failure event if still not successful
+            - choose:
+                - conditions: "{{ not success }}"
+                  sequence:
+                    - event: Solax Zappi Octopus Control
+                      event_data:
+                        message: >-
+                          Mode/settings not fully set after {{ outer_loop }} retries or timeout.
+                          Mode="{{ mode_text }}", Manual="{{ manual_mode_text }}", Settings="{{ settings.keys() if settings is defined else 'None' }}"
+                        title: Solax Set Failure - Action required!
+                        class: high
+
+      default:
+        - action: logbook.log
+          data:
+            name: "Solax Set Mode and Settings"
+            message: >-
+              No changes required.
+              Mode="{{ mode_text }}", Manual="{{ manual_mode_text }}", Settings="{% if settings is defined %}{{ settings.keys() }}{% else %}None{% endif %}"
+            entity_id: sensor.solax_local_settings

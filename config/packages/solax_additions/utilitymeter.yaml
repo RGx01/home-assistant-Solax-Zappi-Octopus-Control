@@ -15,7 +15,7 @@
 # v3.0.0 utility meter for battery in from grid (grid stored renamed to AC stored)
 ##############################################################
 
-solax_utilitymeter:
+solax_additions_utilitymeter:
   utility_meter:
     ##########################################################
     # PV Generation

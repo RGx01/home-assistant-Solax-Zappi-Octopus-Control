@@ -1,15 +1,7 @@
-solax_templates:
-  template:
+solax_additions_templates:
+  template: 
     ######################################################
-    # Instructions for use
-    ######################################################
-    # Solax Local Sensor Readings and Settings
-    #
-    # User must set the battery size in solax_local_battery_capacity
-    # User must set the inverter size in solax_local_inverter_capacity (typical max power seen during forced discharge)
-    # User must set solax_can_see_zappi_load = 1 or 0 in - name: "Solax Local House Load Power"   
-    ######################################################
-    # Change log
+    # Change log - this may only work for X1 hybrid g4
     ######################################################
     # v4.    Fixed (bodge) in from solar and in from grid when battery is charged from both in forced charge
     # v3.6   Calculate remaining usable energy based off default min SoC
@@ -72,6 +64,8 @@ solax_templates:
                 {{ (state_attr('sensor.solax_local', 'Information')) }}
               {% endif %}
 
+
+
         - name: "Solax Local Type"
           unique_id: solax_local_type
           state: >
@@ -102,31 +96,6 @@ solax_templates:
             {% elif attr == 101 %}X3 big
             {% elif attr == 102 %}X1-Hybrid-LV
             {% else %}unknown{% endif %}
-
-        # - name: "SolaX local Date & Time (48. 49. 50.)"
-        #   unique_id: solax_local_48
-        #   icon: mdi:calendar
-        #   state: >
-        #     {% set year = (state_attr('sensor.solax_local', 'Data')[48] /256) |round(0) %}
-        #     {% set month = (state_attr('sensor.solax_local', 'Data')[48] %256) |round(0) %}
-        #     {% set day = (state_attr('sensor.solax_local', 'Data')[49] /256) |round(0) %}
-        #     {% set hour = (state_attr('sensor.solax_local', 'Data')[49] %256) |round(0) %}
-        #     {% set min = (state_attr('sensor.solax_local', 'Data')[50] /256) |round(0) %}
-        #     {% set sec = (state_attr('sensor.solax_local', 'Data')[50] %256) |round(0) %}
-        #     {% set today = '20' ~ year ~ '-' ~ month ~ '-' ~ day ~ ' ' ~ hour ~ ':' ~ min ~ ':' ~ sec %}
-        #     {{ as_timestamp(today)|timestamp_custom('%Y-%m-%d %H:%M:%S') }}
-
-        ### Make the settings look like sensor data by embedding the info in the Data attribute
-        - name: solax_local_settings
-          state: >
-            {{ now().strftime("%H:%M:%S") }}
-          attributes:
-            Data: >-
-              {%if is_number(states('sensor.solax_rest_local_settings')|length) or states('sensor.solax_rest_local_settings')|length > 30 %}
-              {{ (states('sensor.solax_rest_local_settings')) }}
-              {%else%}
-              {{ state_attr('sensor.solax_local_settings','Data') }}
-              {%endif%}
 
         ######################################################
         # Solax Local Settings
@@ -488,14 +457,35 @@ solax_templates:
         - name: "Solax Local Battery Use Out"
           unique_id: solax_local_battery_use_out
           state: >
-            {% set batAdj = states('sensor.solax_local_battery_power_adjusted')|int(default=0) %}
-            {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,states('input_number.solax_inverter_capacity')|float*1000)|int (default=0) %}
-            {% set load = states('sensor.solax_local_inverter_power')| float(default=0.0) - states('sensor.solax_local_feedin_power')|float %}
-            {%if states('sensor.solax_local_inverter_mode') != 'Manual' and states('sensor.solax_local_manual_mode_behaviour') != 'Force Discharge'%}
-              {{(0 - batAdj) if is_number(batAdj) and (batAdj|int < 0) else 0 }}
-            {%elif states('sensor.solax_local_inverter_mode') == 'Manual' and states('sensor.solax_local_manual_mode_behaviour') == 'Force Discharge'%}
-              {{(load - pvPwr) if load > pvPwr else 0 }}
-            {%endif%}
+            {# ---- Safe sensor values ---- #}
+            {% set batAdj_raw = states('sensor.solax_local_battery_power_adjusted') %}
+            {% set batAdj = batAdj_raw if batAdj_raw not in ['unavailable', 'unknown', 'None', none, ''] else 0 %}
+            {% set batAdj = batAdj | int %}
+
+            {% set pvPwr_raw = states('sensor.solax_local_pv_output') %}
+            {% set inverter_cap_raw = states('input_number.solax_inverter_capacity') %}
+            {% set pvPwr = 0 %}
+            {% if pvPwr_raw not in ['unavailable', 'unknown', 'None', none, ''] and inverter_cap_raw not in ['unavailable', 'unknown', 'None', none, ''] %}
+                {% set pvPwr = [pvPwr_raw | float * 0.95, inverter_cap_raw | float * 1000] | min | int %}
+            {% endif %}
+
+            {% set inv_power_raw = states('sensor.solax_local_inverter_power') %}
+            {% set feedin_raw = states('sensor.solax_local_feedin_power') %}
+            {% set load = 0 %}
+            {% if inv_power_raw not in ['unavailable', 'unknown', 'None', none, ''] and feedin_raw not in ['unavailable', 'unknown', 'None', none, ''] %}
+                {% set load = (inv_power_raw | float) - (feedin_raw | float) %}
+            {% endif %}
+
+            {# ---- Main logic ---- #}
+            {% if states('sensor.solax_local_inverter_mode') != 'Manual' 
+                  and states('sensor.solax_local_manual_mode_behaviour') != 'Force Discharge' %}
+                {{ (0 - batAdj) if batAdj < 0 else 0 }}
+            {% elif states('sensor.solax_local_inverter_mode') == 'Manual' 
+                    and states('sensor.solax_local_manual_mode_behaviour') == 'Force Discharge' %}
+                {{ (load - pvPwr) if load > pvPwr else 0 }}
+            {% else %}
+                0
+            {% endif %}
           unit_of_measurement: "W"
           state_class: measurement
           device_class: power
@@ -515,9 +505,28 @@ solax_templates:
         - name: "Solax Local Battery Dump Power"
           unique_id: solax_local_battery_dump_power
           state: >
-            {% set batAdj = max(states('sensor.solax_local_battery_power_adjusted')|int,states('input_number.solax_inverter_capacity')|float*-1000)|int (default=0) %}
-            {% set load = states('sensor.solax_local_inverter_power')| float(default=0.0) - states('sensor.solax_local_feedin_power')|float %}
-            {{ (0 - batAdj) if is_number(batAdj) and (batAdj|int < 0) and states('sensor.solax_local_inverter_mode') == 'Manual' and states('sensor.solax_local_manual_mode_behaviour') == 'Force Discharge' else 0 }}
+            {# ---- Safe sensor values ---- #}
+            {% set batAdj_raw = states('sensor.solax_local_battery_power_adjusted') %}
+            {% set inverter_cap_raw = states('input_number.solax_inverter_capacity') %}
+            {% set batAdj = 0 %}
+            {% if batAdj_raw not in ['unavailable', 'unknown', 'None', none, ''] and inverter_cap_raw not in ['unavailable', 'unknown', 'None', none, ''] %}
+                {% set batAdj = [batAdj_raw | int, inverter_cap_raw | float * -1000] | max | int %}
+            {% endif %}
+
+            {% set inv_power_raw = states('sensor.solax_local_inverter_power') %}
+            {% set feedin_raw = states('sensor.solax_local_feedin_power') %}
+            {% set load = 0 %}
+            {% if inv_power_raw not in ['unavailable', 'unknown', 'None', none, ''] and feedin_raw not in ['unavailable', 'unknown', 'None', none, ''] %}
+                {% set load = (inv_power_raw | float) - (feedin_raw | float) %}
+            {% endif %}
+
+            {# ---- Main logic ---- #}
+            {% if states('sensor.solax_local_inverter_mode') == 'Manual' and 
+                  states('sensor.solax_local_manual_mode_behaviour') == 'Force Discharge' %}
+                {{ (0 - batAdj) if batAdj < 0 else 0 }}
+            {% else %}
+                0
+            {% endif %}
           unit_of_measurement: "W"
           state_class: measurement
           device_class: "power"
@@ -604,12 +613,27 @@ solax_templates:
           # if your solax system can see load from zappi then set solax_can_see_zappi_load =1 elso set it to 0
           state: >
             {% set solax_can_see_zappi_load = states('input_boolean.solax_can_see_zappi_loads') %}
-            {% set zappi_load_fiddle = states('sensor.zappi_power_ct_internal_load')|float - (states('sensor.myenergi_zappi_XXXXXXXX_grid_ct2')|float + states('sensor.solax_local_feedin_power')|float) if states('sensor.zappi_power_ct_internal_load')|int != 0 else 0 %}
-            {%if solax_can_see_zappi_load == 'on'%}
-              {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) - zappi_load_fiddle | float(default=0) }}
-            {%else%}
-              {{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) }}
-            {%endif%}
+            {% set zappi_raw = states('sensor.zappi_power_ct_internal_load') %}
+            {% set grid_raw = states('sensor.zappi_power_ct_grid_load') %}
+            {% set feedin_raw = states('sensor.solax_local_feedin_power') %}
+            {% set inv_raw = states('sensor.solax_local_inverter_power') %}
+
+            {# ---- Safely convert to numbers ---- #}
+            {% set zappi = zappi_raw if zappi_raw not in ['unavailable','unknown','None', none, ''] else 0 %}
+            {% set grid = grid_raw if grid_raw not in ['unavailable','unknown','None', none, ''] else 0 %}
+            {% set feedin = feedin_raw if feedin_raw not in ['unavailable','unknown','None', none, ''] else 0 %}
+            {% set inv = inv_raw if inv_raw not in ['unavailable','unknown','None', none, ''] else 0 %}
+
+            {% set zappi_load_fiddle = 0 %}
+            {% if zappi | int != 0 %}
+                {% set zappi_load_fiddle = (zappi | float) - ((grid | float) + (feedin | float)) %}
+            {% endif %}
+
+            {% if solax_can_see_zappi_load == 'on' %}
+                {{ (inv | float) - (feedin | float) - (zappi_load_fiddle | float) }}
+            {% else %}
+                {{ (inv | float) - (feedin | float) }}
+            {% endif %}
           unit_of_measurement: "W"
           device_class: "power"
           state_class: measurement

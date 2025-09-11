@@ -1,4 +1,7 @@
-octopus_saving_sessions_input_select:
+#############################################
+# v1.0 octoplus_sessions_input_select
+#############################################
+octoplus_sessions_input_select:
   input_select:
     # Octopus saving sessions
     saving_session_today:

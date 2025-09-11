@@ -1,0 +1,18 @@
+####################################
+# v1.0
+####################################
+
+solax_control_templates:
+  template: 
+    - sensor:
+        ### Make the settings look like sensor data by embedding the info in the Data attribute
+        - name: solax_local_settings
+          state: >
+            {{ now().strftime("%H:%M:%S") }}
+          attributes:
+            Data: >-
+              {%if is_number(states('sensor.solax_rest_local_settings')|length) or states('sensor.solax_rest_local_settings')|length > 30 %}
+              {{ (states('sensor.solax_rest_local_settings')) }}
+              {%else%}
+              {{ state_attr('sensor.solax_local_settings','Data') }}
+              {%endif%}
