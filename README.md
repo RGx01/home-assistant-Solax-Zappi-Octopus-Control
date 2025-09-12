@@ -10,6 +10,7 @@
 * [Equipment Used During Development](#equipment-used-during-development)
 * [Credits and Acknowledgments](#credits-and-acknowledgments)
 * [Revision Log](#revision-log)
+* [Known Issues](#known-issues)
  
 # INSTALL INSTRUCTIONS
 
@@ -135,3 +136,5 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 |:-----|:--------:|:------|:------|
 | v5.0 | **12/09/25**| All | Major refactor |
 
+# Known Issues
+- in Automation 5001 Option 3, there is a known issue which I plan to fix soon where if the EV is connected after the predicted EV start time and the option is set to discharge the house battery you may not get the full EV charge.
