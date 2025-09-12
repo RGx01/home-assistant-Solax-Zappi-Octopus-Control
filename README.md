@@ -18,6 +18,7 @@ Under Construction after refactor
     - must be configured
 * Octopus Energy (by bottlecapdave) https://bottlecapdave.github.io/HomeAssistant-OctopusEnergy/
     - must be configured
+    - must have the free electric entity enabled (not done by default, manual process)
 * Myenergi https://github.com/CJNE/ha-myenergi
     - must be configured
 * Uptime https://www.home-assistant.io/integrations/uptime/
@@ -85,8 +86,18 @@ automation: !include automations.yaml
     - Replace the contents with your prepared yaml
     - Click Save
     - Click Done
-20. Select battery size, inverter size and selct your options on the dashboard.
-21. Done.
+20. On the dashboard select/set:
+    - solax battery size,
+    - solax inverter size,
+    - default inverter mode.
+    - default charge to level
+    - default min_soc
+    - forced discharge limit for both prior to ev charging and nightly discharge.
+    - select Octopus schedule type
+    - EV registered battery size
+    - EV ready time
+    - EV charge %
+22. Done.
 
 # Notification Management
 
