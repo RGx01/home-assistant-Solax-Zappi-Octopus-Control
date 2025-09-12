@@ -94,6 +94,10 @@ sections:
               {{dispatch}}
             {% endfor %}
           {%endif%}
+        visibility:
+          - condition: numeric_state
+            entity: sensor.octopus_total_planned_dispatch
+            above: 0
       - type: entities
         entities:
           - entity: input_boolean.octopus_schedule_anytime
@@ -1599,4 +1603,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-
