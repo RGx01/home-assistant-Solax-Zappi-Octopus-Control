@@ -1,6 +1,7 @@
 # Solax-Zappi-Octopus-Control
 
-Under Construction after refactor
+![delme](https://github.com/user-attachments/assets/c494773c-0ce3-457e-a5fa-350720f7db94)
+
 
 * [INSTALL INSTRUCTIONS](#install-instructions)
 	* [Prerequisite Integrations](#prerequisite-integrations)
