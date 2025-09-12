@@ -1,6 +1,6 @@
 # Solax-Zappi-Octopus-Control
 
-![delme](https://github.com/user-attachments/assets/c494773c-0ce3-457e-a5fa-350720f7db94)
+![delme](https://github.com/user-attachments/assets/c2eb91f9-8c83-4f31-8a76-75df950f1d05)
 
 
 * [INSTALL INSTRUCTIONS](#install-instructions)
