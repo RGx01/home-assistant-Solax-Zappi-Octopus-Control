@@ -75,9 +75,9 @@ homeassistant:
 script: !include_dir_merge_named scripts  
 automation: !include automations.yaml
 ```
-17. Check all the steps above have been done.
-18. Restart Home Assistant.
-19. Adding the dashboad.
+12. Check all the steps above have been done.
+13. Restart Home Assistant.
+14. Adding the dashboad.
     - Copy the contents of Solax & Octopus Settings.yaml in the repo
     - Open Home Assistant
     - Open Overview dashboard
@@ -88,7 +88,7 @@ automation: !include automations.yaml
     - Replace the contents with your prepared yaml
     - Click Save
     - Click Done
-20. On the dashboard select/set:
+15. On the dashboard select/set:
     - solax battery size,
     - solax inverter size,
     - default inverter mode.
@@ -99,7 +99,7 @@ automation: !include automations.yaml
     - EV registered battery size
     - EV ready time
     - EV charge %
-22. Done.
+16. Done.
 
 # Notification Management
 
