@@ -1016,6 +1016,16 @@ sections:
         grid_options:
           columns: 36
           rows: auto
+      - title: " Grid Stored/Theoretical Grid Stored= Capacity SoH"
+        type: history-graph
+        hours_to_show: 1500
+        entities:
+          - sensor.solax_local_battery_soh
+          - sensor.solax_local_min_soc
+          - sensor.solax_local_max_soc
+        grid_options:
+          columns: full
+          rows: 8
     column_span: 3
     visibility:
       - condition: state
@@ -1535,21 +1545,6 @@ sections:
       - condition: state
         entity: input_boolean.solax_octopus_hide_stats
         state: "on"
-  - cards:
-      - type: heading
-        heading: Battery Capacity
-        heading_style: title
-      - title: " Grid Stored/Theoretical Grid Stored= Capacity SoH"
-        type: history-graph
-        hours_to_show: 1500
-        entities:
-          - sensor.solax_local_battery_soh
-          - sensor.solax_local_min_soc
-          - sensor.solax_local_max_soc
-        grid_options:
-          columns: full
-          rows: 8
-    column_span: 3
 cards: []
 badges:
   - type: entity
