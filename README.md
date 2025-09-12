@@ -32,7 +32,7 @@
 ## Steps
 First back up your Home Assistant. Make sure you are familar with Developer Tools and the Check Configuration button. There shouldn't be any issues but backup's are handy.
 
-### configuration yaml and Packages
+### Configuration yaml and Packages
 
 1. Navigate to the home assistant config directory where configuration.yaml resides, create a two new directories
    - packages
@@ -42,19 +42,19 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
 4. .\config\packages\solax_control\secrets.yaml
      - Find and replace YYYYYYYYYY with your registration number (found on the devices page on the solax cloud)
      - Find http://192.168.xxx.xxx and replace with http://192.168.1.fixed_ip
-6. .\config\packages\solax_zappi_octopus\template.yaml
+5. .\config\packages\solax_zappi_octopus\template.yaml
      - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
-8. .\config\packages\octopus_renamed_entities\template.yaml
+6. .\config\packages\octopus_renamed_entities\template.yaml
      - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
-9. .\config\packages\octoplus_sessions\template.yaml
+7. .\config\packages\octoplus_sessions\template.yaml
     - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
-11. .\config\packages\zappi_renamed_entities\template.yaml
+8. .\config\packages\zappi_renamed_entities\template.yaml
     - Find and replace all zappi serial numbers zappi_XXXXXXXX with your own i.e. zappi_12345678
-14. .\config\packages\solax_additions\utility_meters.yaml
+9. .\config\packages\solax_additions\utility_meters.yaml
     - Find ev_charging_daily_vehicle and replace the vehicle names and set them as you wish
     - Find ev_charging_monthly_vehicle and replace the vehicle names and set them as you wish
-15. Copy the contents of automations_5001-6001.yaml to the bottom of .\config automations.yaml
-16. Edit your configuration.yaml to pick up the new packages.
+10. Copy the contents of automations_5001-6001.yaml to the bottom of .\config automations.yaml
+11. Edit your configuration.yaml to pick up the new packages.
 
 Rather than putting all the config in the single '\config\configuration.yaml file, to keep things clean and tidy and more manageable, the package files can referenced like this in the configuration.yaml:
 In the example below see the use of the homeassistant: tag. The directory referenced under homeassistant: tag is the packages directory where we've already stored all the new config. You must also add the script directory. if you already have a scripts.yaml that should be moved to the scripts directory.
