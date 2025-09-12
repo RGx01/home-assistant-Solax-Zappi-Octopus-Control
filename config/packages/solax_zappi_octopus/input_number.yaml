@@ -1,4 +1,7 @@
 ###############################
+# V5.0.1    Added Battery Export Margin Delta (minutes)
+#           This is to account for sometimes Battery SoC is not quite linear
+#           and also not always accurate
 # V3.0.0 Added Units
 ###############################
 solax_zappi_octopus_input_number:
@@ -107,4 +110,10 @@ solax_zappi_octopus_input_number:
       step: 1
       mode: box
       icon: mdi:car-clock
-
+    battery_export_margin_delta:
+      name: Export Margin Delta (minutes)
+      min: 0
+      max: 15
+      step: 1
+      mode: box
+      icon: mdi:timer-plus-outline

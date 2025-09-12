@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v5.0.1 Minor update to include Export Margin Delta (min)
 # v5.0   Refactored
 # v4.0.  Predicted production using Solcast
 #        Added a Battery SoH sensor to help discharge pridictions
@@ -586,6 +587,15 @@ sections:
           - entity: binary_sensor.solax_battery_export_allowed
           - entity: input_boolean.pre_emptive_export_battery
             state_color: true
+          - type: conditional
+            conditions:
+              - entity: input_boolean.pre_emptive_export_battery
+                state_not: "off"
+              - entity: sensor.zappi_plug_status
+                state: EV Disconnected
+            row:
+              entity: input_number.battery_export_margin_delta
+              format: time
           - type: conditional
             conditions:
               - entity: input_boolean.export_battery_prior
@@ -1589,3 +1599,4 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
+

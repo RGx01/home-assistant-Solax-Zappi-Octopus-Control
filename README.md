@@ -133,8 +133,9 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 
 # Revision Log
 | Version | Date | Files updated |Description |
-|:-----|:--------:|:------|:------|
-| v5.0 | **12/09/25**| All | Major refactor |
+|:------|:--------:|:------|:------|
+| v5.0.1| **12/09/25**| solax_zappi_octopus\input_number.yaml <br>solax_zappi_octopus\templates.yaml <br> Solax & Octopus Settings.yaml (the dashboard)|  Added a configurable export margin delta for when preemptive discharges under estimate<br> Fixed an issue where an EV may not get fully charged if it's plugged in after the pre export battery time |
+| v5.0  | **12/09/25**| All | Major refactor |
 
 # Known Issues
-- in Automation 5001 Option 3, there is a known issue which I plan to fix soon where if the EV is connected after the predicted EV start time and the option is set to discharge the house battery you may not get the full EV charge.
+- fixed ~~in Automation 5001 Option 3, there is a known issue which I plan to fix soon where if the EV is connected after the predicted EV start time and the option is set to discharge the house battery you may not get the full EV charge.~~

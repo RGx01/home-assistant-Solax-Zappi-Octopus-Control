@@ -2,6 +2,8 @@
 # Replace octopus account number z_ZZZZZZZZ with your own
 #
 # Change log
+# V5.0.1 Minor update to prevent a potential under charge of EV if plugged in later than the export time
+#        Added a user configurable Export Margin for when pre emptive discharges under estimate
 # V5.0.  Refactor
 # v4.0.  Predicted production using Solcast
 #        Added a Battery SoH sensor to help discharge pridictions
@@ -746,7 +748,7 @@ solax_zappi_octopus_templates:
           daily: >
             {% set capacity_left = state_attr('sensor.solax_discharge_capacity','daily')|float (default = 0.0)%}
             {% set seconds_to_discharge = (capacity_left )|float/states('input_number.solax_inverter_capacity')|float (default=5.5)*60*60 %}
-            {{(seconds_to_discharge-500)|int (default=0)}}
+            {{(seconds_to_discharge-(60*states('input_number.battery_export_margin_delta')|int (default=0)))|int (default=0)}}
         icon: mdi:timer-marker
 
     ######################################################
@@ -873,7 +875,7 @@ solax_zappi_octopus_templates:
                         {% set total_to_discharge = capacity_left + additional_production %}
                         {% set seconds_to_discharge = (total_to_discharge / inverter_kw) * 3600 %}
                         {% set computed_start_ts = threshold_ts - seconds_to_discharge %}
-                        {% set starttime_dt = (computed_start_ts + 500) | as_datetime | as_local %}
+                        {% set starttime_dt = (computed_start_ts + (60*states('input_number.battery_export_margin_delta')|int (default=0))) | as_datetime | as_local %}
                     {% endif %}
                 {% else %}
                     {% set starttime_dt = states('sensor.ev_start_time') | as_datetime | default(none) | as_local %}
@@ -1056,11 +1058,35 @@ solax_zappi_octopus_templates:
     - binary_sensor:
       - name: Battery Export Before EV Charge Allowed
         unique_id: solax_battery_export_allowed
+        icon: mdi:transmission-tower-import
         state: >
-          {% if states('input_boolean.octopus_schedule_anytime') == 'on' or states('input_boolean.export_battery_prior') == 'off' or states('sensor.zappi_plug_status') == 'EV Disconnected'%}
-            {{false}} 
-          {%else%}
-            {{true}}
-          {%endif%}
+          {% set anytime = is_state('input_boolean.octopus_schedule_anytime', 'on') %}
+          {% set export_off = is_state('input_boolean.export_battery_prior', 'off') %}
+          {% set solar_priority = is_state('input_boolean.solar_export_priority', 'on') %}
+          {% set ev_disconnected = is_state('sensor.zappi_plug_status', 'EV Disconnected') %}
+          {% set now_ts = now() | as_timestamp %}
+          {% set ev_start = states('sensor.ev_start_time') | as_timestamp %}
+          
+          {# minimum lead time before EV charging starts (seconds) #}
+          {% set min_lead_time = 15 * 60 %}
+          
+          {# if anytime or export_off or solar_priority or ev_disconnected #}
+          {% if anytime or export_off or ev_disconnected %}}
+            false
+          {% elif now_ts >= ev_start - min_lead_time %}
+            false
+          {% else %}
+            true
+          {% endif %}
         device_class: "window"
+
+    # - binary_sensor:
+    #   - name: Battery Export Before EV Charge Allowed
+    #     unique_id: solax_battery_export_allowed
+    #     state: >
+    #       {% if states('input_boolean.octopus_schedule_anytime') == 'on' or states('input_boolean.export_battery_prior') == 'off' or states('sensor.zappi_plug_status') == 'EV Disconnected'%}
+    #         {{false}} 
+    #       {%else%}
+    #         {{true}}
+    #       {%endif%}
 
