@@ -13,28 +13,6 @@
     ###################################
 solax_control_sensor:
   sensor:
-    ### Solax Local REST sensor ###
-    - platform: rest
-      scan_interval: 60
-      resource: !secret solax_local_ip
-      payload: !secret solax_local_realtime_payload
-      method: POST
-      name: "solax_rest_local"
-      json_attributes:
-        - sn
-        - ver
-        - type
-        - Data
-        - Information
-#      value_template: "OK" # dummy value, not used; avoids the "State max length is 255 characters" error
-      value_template: >
-        {% if value_json is defined %}
-          {{ "OK" }}
-        {%- else -%}
-          {{ "None" }}
-        {%- endif -%}
-
-
     #    ### Solax Local REST settings Self Use###
     - platform: rest
       scan_interval: 3601

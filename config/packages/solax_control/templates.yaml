@@ -11,8 +11,166 @@ solax_control_templates:
             {{ now().strftime("%H:%M:%S") }}
           attributes:
             Data: >-
-              {%if is_number(states('sensor.solax_rest_local_settings')|length) or states('sensor.solax_rest_local_settings')|length > 30 %}
+              {%if is_number(states('sensor.solax_rest_local_settings')|length) and states('sensor.solax_rest_local_settings')|length > 30 %}
               {{ (states('sensor.solax_rest_local_settings')) }}
               {%else%}
               {{ state_attr('sensor.solax_local_settings','Data') }}
               {%endif%}
+
+        ######################################################
+        # Solax Local Settings
+        ######################################################
+        
+        ### System on/off 
+        - name: "Solax Local System State"
+          unique_id: solax_local_system_state
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[19] == 1 | bool(default=false)}}"
+          icon: mdi:home-switch
+
+        ### Battery discharge min (%) (Self Use Mode)
+        - name: "Solax Local SelfUse Battery Min SoC"
+          unique_id: solax_local_selfuse_battery_min_soc
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[0] | int(default=0) }}"
+          unit_of_measurement: "%"
+          state_class: measurement
+          icon: mdi:battery-20
+
+        ### Battery charge from grid switch (Self Use Mode)
+        - name: "Solax Local Self Use Battery Charge From Grid"
+          unique_id: solax_local_selfuse_battery_grid_enabled
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[1] | int(default=1) }}"
+          state_class: measurement
+          icon: mdi:battery-arrow-up
+
+        ### Battery charge level to (%) from grid (Self Use Mode)
+        - name: "Solax Local SelfUse Battery Chrg Frm Grd To"
+          #     #unique_id: solax_local_self_use_battery_charge_from_grid_to
+          unique_id: solax_local_selfuse_battery_chrg_frm_grd_to
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[2] | int(default=94) }}"
+          unit_of_measurement: "%"
+          state_class: measurement
+          icon: mdi:battery-charging-90
+
+        ### Battery discharge min (%) (Feed In  Mode)
+        - name: "Solax Local Feed In Battery Min SoC"
+          unique_id: solax_local_feed_in_battery_min_soc
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[12] | int(default=0) }}"
+          unit_of_measurement: "%"
+          state_class: measurement
+          icon: mdi:battery-20
+
+        ### Battery charge level to (%) from grid (feed In Mode)
+        - name: "Solax Local Feed In Battery Charge From Grid To"
+          unique_id: solax_local_feed_in_battery_charge_from_grid_to
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[13] | int(default=0) }}"
+          unit_of_measurement: "%"
+          state_class: measurement
+          icon: mdi:battery-charging-90
+
+        ### Battery settings charge/discharge (period 1) ###
+        - name: "Solax Local Battery Setting Start Charge"
+          unique_id: solax_local_battery_setting_start_charge
+          state: "{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[3])%256 | int(default=0)) }}:{{'%02d' %((state_attr('sensor.solax_local_settings', 'Data')[3])/256) | int(default=0)}} "
+          icon: mdi:clock-start
+
+        - name: "Solax Local Battery Setting Stop Charge"
+          unique_id: solax_local_battery_setting_stop_charge
+          state: "{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[4])%256 | int(default=0)) }}:{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[4])/256) | int(default=0)}} "
+          icon: mdi:clock-end
+
+        - name: "Solax Local Battery Setting Start Discharge"
+          unique_id: solax_local_battery_setting_start_discharge
+          state: "{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[5])%256 | int(default=0)) }}:{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[5])/256) | int(default=0)}} "
+          icon: mdi:clock-start
+
+        - name: "Solax Local Battery Setting Stop Discharge"
+          unique_id: solax_local_battery_setting_stop_discharge
+          state: "{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[6])%256 | int(default=0)) }}:{{ '%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[6])/256) | int(default=0)}} "
+          icon: mdi:clock-end
+
+        ### Battery settings charge/discharge (period 2) ###
+        - name: "Solax Local Battery Setting Start Charge 2"
+          unique_id: solax_local_battery_setting_start_charge2
+          state: "{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[8])%256 | int(default=0)) }}:{{'%02d' %((state_attr('sensor.solax_local_settings', 'Data')[8])/256) | int(default=0)}} "
+          icon: mdi:clock-start
+
+        - name: "Solax Local Battery Setting Stop Charge 2"
+          unique_id: solax_local_battery_setting_stop_charge2
+          state: "{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[9])%256 | int(default=0)) }}:{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[9])/256) | int(default=0)}} "
+          icon: mdi:clock-end
+        ### Battery charge/discharge period2 enabled
+        - name: "Solax Local Battery ChD2 Enabled"
+          unique_id: solax_local_battery_chd2_enabled
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[7] == 1 | bool(default=false) }}"
+          icon: mdi:battery-arrow-up
+
+        ### Inverter default working mode
+        - name: "Solax Default Operation Mode"
+          unique_id: solax_default_operation_mode
+          device_class: enum
+          state: >
+            {% set mapper =  {
+                'Self Use' : 0,
+                'Feed In Priority' : 1} %}
+            {% set state =  states('input_select.solax_default_mode')  %}
+            {{ mapper[state] if state in mapper else '0' }}
+          icon: mdi:cursor-default-outline
+
+        ### Inverter working mode
+        - name: "Solax Local Inverter Mode"
+          unique_id: solax_local_inverter_mode
+          device_class: enum
+          state: >
+            {% set mapper =  {
+                0 : 'Self Use',
+                1 : 'Feed In Priority',
+                2 : 'Back Up',
+                3 : 'Manual'} %}
+            {% set state =  state_attr('sensor.solax_local_settings', 'Data')[10] | int(default=0) %}
+            {{ mapper[state] if state in mapper else 'Unknown' }}
+          icon: mdi:sun-compass
+
+        ### Inverter manual mode
+        - name: "Solax Local Manual Mode Behaviour"
+          unique_id: solax_local_manual_mode_behaviour
+          device_class: enum
+          state: >
+            {% set mapper =  {
+                0 : 'Do Nothing',
+                1 : 'Force Charge',
+                2 : 'Force Discharge'} %}
+            {% set state =  state_attr('sensor.solax_local_settings', 'Data')[11] | int(default=0) %}
+            {{ mapper[state] if state in mapper else 'Unknown' }}
+
+        ### Battery heat enabled
+        - name: "Solax Local Battery Heat Enabled"
+          unique_id: solax_local_battery_heat_enabled
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[14] == 1 | bool(default=false) }}"
+          icon: mdi:radiator
+
+        ### Battery heat level
+        - name: "Solax Local Battery Heat Level"
+          unique_id: solax_local_battery_heat_level
+          state: "{{ state_attr('sensor.solax_local_settings', 'Data')[20] | int(default=0) }}"
+          icon: mdi:radiator
+
+        ### Battery settings Heat (period 1) ###
+        - name: "Solax Local Battery Heat Start"
+          unique_id: solax_local_battery_heat_start
+          state: "{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[15])%256 | int(default=0)) }}:{{'%02d' %((state_attr('sensor.solax_local_settings', 'Data')[15])/256) | int(default=0)}} "
+          icon: mdi:clock-start
+
+        - name: "Solax Local Battery Heat Stop"
+          unique_id: solax_local_battery_heat_stop
+          state: "{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[16])%256 | int(default=0)) }}:{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[16])/256) | int(default=0)}} "
+          icon: mdi:clock-end
+        ### Battery settings Heat (period 2) ###
+        - name: "Solax Local Battery Heat Start 2"
+          unique_id: solax_local_battery_heat_start_2
+          state: "{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[17])%256 | int(default=0)) }}:{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[17])/256) | int(default=0)}} "
+          icon: mdi:clock-start
+
+        - name: "Solax Local Battery Heat Stop 2"
+          unique_id: solax_local_battery_heat_stop_2
+          state: "{{'%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[18])%256 | int(default=0)) }}:{{ '%02d' % ((state_attr('sensor.solax_local_settings', 'Data')[18])/256) | int(default=0)}} "
+          icon: mdi:clock-end

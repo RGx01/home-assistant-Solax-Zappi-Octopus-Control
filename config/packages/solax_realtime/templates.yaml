@@ -1,0 +1,345 @@
+solax_realtime_templates:
+  template: 
+    ######################################################
+    # Change log - this may only work for X1 hybrid g4
+    ######################################################
+    # v5     Refactoring
+    ######################################################
+    - sensor:
+        - name: solax_local
+          state: >
+            {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10  %}
+              {{ now().strftime("%H:%M:%S") }}
+            {% else %}
+              {{ (states('sensor.solax_local')) }}
+            {% endif %}
+          attributes:
+            sn: >-
+              {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10 %}
+                {{ (state_attr('sensor.solax_rest_local', 'sn')) }}
+              {% else %}
+                {{ (state_attr('sensor.solax_local', 'sn')) }}
+              {% endif %}
+            ver: >-
+              {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10 %}
+                {{ (state_attr('sensor.solax_rest_local', 'ver')) }}
+              {% else %}
+                {{ (state_attr('sensor.solax_local', 'ver')) }}
+              {% endif %}
+            type: >-
+              {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10 %}
+                {{ (state_attr('sensor.solax_rest_local', 'type')) }}
+              {% else %}
+                {{ (state_attr('sensor.solax_local', 'type')) }}
+              {% endif %}
+            Data: >-
+              {% if state_attr('sensor.solax_rest_local', 'Data')|length > 30 or states('sensor.solax_rest_local') not in ['unknown', 'unavailable','None',''] %}
+                {{ (state_attr('sensor.solax_rest_local', 'Data')) }}
+              {% else %}
+                {{ (state_attr('sensor.solax_local', 'Data')) }}
+              {% endif %}
+            Information: >-
+              {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10 %}
+                {{ (state_attr('sensor.solax_rest_local', 'Information')) }}
+              {% else %}
+                {{ (state_attr('sensor.solax_local', 'Information')) }}
+              {% endif %}
+
+        - name: "Solax Local Type"
+          unique_id: solax_local_type
+          state: >
+            {% set attr = state_attr('sensor.solax_rest_local', 'type') %}
+            {% if attr == 3 %}X1 hybrid g3
+            {% elif attr == 4 %}X1 boost air mini
+            {% elif attr == 5 %}X3 hybrid g1
+            {% elif attr == 6 %}X3 20k 30k
+            {% elif attr == 7 %}X3 mic
+            {% elif attr == 8 %}X1 boost pro
+            {% elif attr == 9 %}X1 ac
+            {% elif attr == 10 %}A1 hybrid
+            {% elif attr == 11 %}A1 hybrid
+            {% elif attr == 12 %}A1 hybrid
+            {% elif attr == 13 %}J1 ess
+            {% elif attr == 14 %}X3 hybrid g4
+            {% elif attr == 15 %}X1 hybrid g4
+            {% elif attr == 16 %}X3 micpro g2
+            {% elif attr == 17 %}X1 hybridsplit g4
+            {% elif attr == 18 %}X1 boostmini g4
+            {% elif attr == 22 %}X1 boostmini g4
+            {% elif attr == 19 %}A1 hybrid g2
+            {% elif attr == 20 %}A1 hybrid g2
+            {% elif attr == 21 %}A1 hybrid g2
+            {% elif attr == 23 %}X1 hybrid g5
+            {% elif attr == 24 %}X3 hybrid g5
+            {% elif attr == 100 %}X3 big
+            {% elif attr == 101 %}X3 big
+            {% elif attr == 102 %}X1-Hybrid-LV
+            {% else %}unknown{% endif %}
+
+        ######################################################
+        # Solax Sensor Values
+        ######################################################
+        ### Grid Voltage
+        - name: "Solax Local Grid Voltage"
+          unique_id: solax_local_grid_voltage
+          state: "{{state_attr('sensor.solax_local', 'Data')[0] | float / 10}}"
+          unit_of_measurement: "V"
+          state_class: measurement
+          device_class: "voltage"
+
+        #### Combined Solar PV output ####
+        - name: "Solax Local PV Output"
+          unique_id: solax_local_pv_output
+          state: "{{ (state_attr('sensor.solax_local', 'Data')[8] + state_attr('sensor.solax_local', 'Data')[9]) | int(default=0) }}"
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+
+        #### String 1 Solar PV output ####
+        - name: "Solax Local PV Output String 1"
+          unique_id: solax_local_pv_output_1
+          state: "{{ (state_attr('sensor.solax_local', 'Data')[8]) | int(default=0) }}"
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+
+        #### String 2 Solar PV output ####
+        - name: "Solax Local PV Output String 2"
+          unique_id: solax_local_pv_output_2
+          state: "{{ (state_attr('sensor.solax_local', 'Data')[9]) | int(default=0) }}"
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+
+        #### Dev Sensor to detect string failure
+        - name: "Solax Local PV diff"
+          unique_id: solax_local_pv_diff
+          state: "{{ (((state_attr('sensor.solax_local', 'Data')[8] - state_attr('sensor.solax_local', 'Data')[9]))|abs)| int(default=0) }}"
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+
+        ### Inverter Power (negative for charging battery) ####
+        - name: "Solax Local Inverter Power"
+          unique_id: solax_local_inverter_power
+          state: >
+            {% if state_attr('sensor.solax_local', 'Data')[2] > 32767 %}{{ (state_attr('sensor.solax_local', 'Data')[2] - 65536) | int(default=0) }}
+            {% else %}{{ state_attr('sensor.solax_local', 'Data')[2] | int(default=0) }}{% endif %}
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+
+        # Inverter using the grid
+        - name: "Solax Local Inverter in Power"
+          unique_id: solax_local_inverter_in_power
+          state: >
+            {% set val = states('sensor.solax_local_inverter_power')|int(default=0) %}
+            {{ (0 - val) if is_number(val) and (val|int < 0) else 0 }}
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+          icon: mdi:battery
+
+        # Inverter feeding the grid & load
+        - name: "Solax Local Inverter Out Power"
+          unique_id: solax_local_inverter_out_power
+          state: >
+            {% set val = states('sensor.solax_local_inverter_power')|int(default=0) %}
+            {{ val if is_number(val) and (val|int > 0) else 0 }}
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+          icon: mdi:battery
+
+        # Self Consumption Power
+        # {% set val = states('sensor.solax_local_inverter_power')|int(default=0) + invloss - states('sensor.solax_local_battery_dump_power')|int(default=0) - states('sensor.solax_local_grid_export_power')|int(default=0)%}
+        - name: "Solax Local Self Consumption Power"
+          unique_id: solax_local_self_consumption_power
+          state: >
+            {% if states('sensor.solax_local_inverter_power')|int(default=0) < 1000 and states('sensor.solax_local_inverter_power')|int(default=0) >0%}
+              {% set invloss = 75 %}
+            {% else %}
+              {% set invloss =0 %}
+            {% endif%}
+              {% set val = states('sensor.solax_local_inverter_power')|int(default=0) + invloss - states('sensor.solax_local_grid_export_power')|int(default=0)%}
+            {{ val if is_number(val) and (val|int > 0) else 0 }}
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+          icon: mdi:battery
+
+        ### Battery current, voltage and temperature ###
+        - name: "Solax Local Battery Voltage"
+          unique_id: solax_local_battery_voltage
+          state: >
+            {% set val = state_attr('sensor.solax_local', 'Data')[14]|float(default=0.0) %}
+            {% if val > 0 %}
+              {{ val/100 if is_number(val) and (val|float > 0) else 0 }}
+            {% else%}
+              {{ states('sensor.solax_local_battery_voltage')}}
+            {% endif%}
+          unit_of_measurement: "V"
+          state_class: measurement
+          device_class: "voltage"
+
+        - name: "Solax Local Battery Current"
+          unique_id: solax_local_battery_current
+          state: >
+            {% if state_attr('sensor.solax_local', 'Data')[15] > 32767 %}{{ (state_attr('sensor.solax_local', 'Data')[15] - 65536) / 100 }}
+            {% else %}{{ state_attr('sensor.solax_local', 'Data')[15] / 100 }}{% endif %}
+          unit_of_measurement: "A"
+          state_class: measurement
+          device_class: "current"
+
+        - name: "Solax Local Battery Temperature"
+          unique_id: solax_local_battery_temp
+          state: "{{ state_attr('sensor.solax_local', 'Data')[17] | int(default=0) }}"
+          unit_of_measurement: "°C"
+          state_class: measurement
+          device_class: "temperature"
+
+        ### Battery charging/discharging power (positive for charging the battery) ###
+        - name: "Solax Local Battery Power"
+          unique_id: solax_local_battery_power
+          state: >
+            {% if state_attr('sensor.solax_local', 'Data')[16] > 32767 %}{{ state_attr('sensor.solax_local', 'Data')[16] - 65536 }}
+            {% else %}{{ state_attr('sensor.solax_local', 'Data')[16] }}{% endif %}
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+
+        # Assuming 75W for running inverter and battery plus 95% conversion efficiency; if above 1kW, trust the inverter
+        - name: "Solax Local Battery Power Adjusted"
+          unique_id: solax_local_battery_power_adjusted
+          state: >
+            {% set ac = states('sensor.solax_local_inverter_power')|int %}
+            {% set battery = states('sensor.solax_local_battery_power')|int %}
+            {% set pv = (states('sensor.solax_local_pv_output')|float * 0.95)| round(0) %}
+            {% set adjusted = (0 - ac + pv - 75) if (ac + pv != 0) else 0 %}
+            {{ adjusted if (adjusted < battery and adjusted < 1000) else battery }}
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+
+        # Battery in power (charging)
+        - name: "Solax Local Battery Use In"
+          unique_id: solax_local_battery_use_in
+          state: >
+            {% set bat = states('sensor.solax_local_battery_power')|int(default=0) %}
+            {{ bat if is_number(bat) and (bat|int > 0) else 0 }}
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+          icon: mdi:battery
+
+        ### Battery charge level (%)
+        - name: "Solax Local Battery SoC"
+          unique_id: solax_local_battery_soc
+          state: "{{ state_attr('sensor.solax_local', 'Data')[18] | int(default=0) }}"
+          unit_of_measurement: "%"
+          state_class: measurement
+          icon: >
+            {% set b_soc = state_attr('sensor.solax_local', 'Data')[68] / 10 %}
+            {% if b_soc > 95 %}mdi:battery
+            {% elif b_soc > 89 %}mdi:battery-90
+            {% elif b_soc > 79 %}mdi:battery-80
+            {% elif b_soc > 69 %}mdi:battery-70
+            {% elif b_soc > 59 %}mdi:battery-60
+            {% elif b_soc > 49 %}mdi:battery-50
+            {% elif b_soc > 39 %}mdi:battery-40
+            {% elif b_soc > 29 %}mdi:battery-30
+            {% elif b_soc > 19 %}mdi:battery-20
+            {% elif b_soc > 9 %}mdi:battery-10
+            {% else %}mdi:battery-0{% endif %}
+
+        ### Feed-in power (positive for feed-in, negative for consumption) ###
+        - name: "Solax Local Feedin Power"
+          unique_id: solax_local_feedin_power
+          state: >
+            {% if state_attr('sensor.solax_local', 'Data')[32] > 32767 %}{{ (state_attr('sensor.solax_local', 'Data')[32] - 65536) }}
+            {% else %}{{ state_attr('sensor.solax_local', 'Data')[32] }}{% endif %}
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: "power"
+
+        ### Grid power (positive for consumption negative for export) ###
+        - name: "Solax Local Grid Power"
+          unique_id: solax_local_grid_power
+          state: >
+            {% set val = states('sensor.solax_local_feedin_power')|int(default=0) %}
+            {{ (0 - val) }}
+          unit_of_measurement: "W"
+          device_class: "power"
+          state_class: measurement
+
+        # Grid used (consumption)
+        - name: "Solax Local Grid Used Power"
+          unique_id: solax_local_grid_used_power
+          state: >
+            {% set val = states('sensor.solax_local_grid_power')|int(default=0) %}
+            {{ val if is_number(val) and (val|int > 0) else 0 }}
+          unit_of_measurement: "W"
+          device_class: "power"
+          state_class: measurement
+
+        # Grid feed-in (export)
+        - name: "Solax Local Grid Export Power"
+          unique_id: solax_local_grid_export_power
+          state: >
+            {% set val = states('sensor.solax_local_grid_power')|int(default=0) %}
+            {{ (0 - val) if is_number(val) and (val|int < 0) else 0 }}
+          unit_of_measurement: "W"
+          device_class: "power"
+          state_class: measurement
+
+        ### Expected household load (negative not expected as it only consumes energy) ###
+        - name: "Solax Local Load Power"
+          unique_id: solax_local_load_power
+          state: "{{ states('sensor.solax_local_inverter_power')| float(default=0) - states('sensor.solax_local_feedin_power') | int(default=0) }}"
+          unit_of_measurement: "W"
+          device_class: "power"
+          state_class: measurement
+        
+        ### Grid status
+        - name: "AC_12. Solax - grid status"
+          unique_id: solax_local_12
+          state: >
+            {% set attr = state_attr('sensor.solax_local', 'Data')[12] %}
+            {% if attr == 2 %}on
+            {% elif attr == 7 %}off
+            {% else %}
+              "{{ attr }}"
+            {% endif %}
+          icon: >
+            {% if attr == 2 %}
+              mdi:transmission-tower
+            {% elif attr == 7 %}
+              mdi:transmission-tower-off
+            {% else %}
+              mdi:power-off
+            {% endif %}
+        ### run mode
+        - name: "Solax - RunMode"
+          unique_id: solax_local_run_mode
+          icon: mdi:list-status
+          state: >
+            {% set attr = state_attr('sensor.solax_local', 'Data')[12] %}
+            {% if attr == 0 %}Waiting
+            {% elif attr == 1 %}Checking
+            {% elif attr == 2 %}Normal
+            {% elif attr == 3 %}Fault
+            {% elif attr == 4 %}Permanent Fault
+            {% elif attr == 5 %}Upgrading
+            {% elif attr == 6 %}Eps Check Mode
+            {% elif attr == 7 %}Eps Mode
+            {% elif attr == 8 %}Self-test   ?
+            {% elif attr == 9 %}Idle        ?
+            {% elif attr == 10 %}Standby    ?
+            {% elif attr == 11 %}Pv Wake Up Bat ?
+            {% elif attr == 12 %}Gen Check  ?
+            {% elif attr == 13 %}Gen Run    ?
+            {% else %}
+              "{{ attr }}"
+            {% endif %}
+
+

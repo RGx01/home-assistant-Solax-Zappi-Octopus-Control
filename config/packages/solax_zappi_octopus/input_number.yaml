@@ -117,3 +117,19 @@ solax_zappi_octopus_input_number:
       step: 1
       mode: box
       icon: mdi:timer-plus-outline
+    solax_battery_capacity:
+      name: Solax Battery Size
+      unit_of_measurement: "kWh"
+      min: 3.1
+      max: 12.3
+      step: .1
+      mode: box
+      icon: mdi:home-battery
+    solax_inverter_capacity:
+      name: Solax Inverter Size
+      unit_of_measurement: "kWh"
+      min: 1
+      max: 10
+      step: .1
+      mode: box
+      icon: mdi:home-lightning-bolt-outline

@@ -39,22 +39,25 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
    - scripts
 2. Copy repo 'package' directory contents to your package directory (6 new directories each with yaml files)
 3. Copy repo 'script' contents to your script directory (single yaml file)
-4. .\config\packages\solax_control\secrets.yaml
+4. .\config\packages\solax_realtime\secrets.yaml
      - Find and replace YYYYYYYYYY with your registration number (found on the devices page on the solax cloud)
      - Find http://192.168.xxx.xxx and replace with http://192.168.1.fixed_ip
-5. .\config\packages\solax_zappi_octopus\template.yaml
+5. .\config\packages\solax_control\secrets.yaml
+     - Find and replace YYYYYYYYYY with your registration number (found on the devices page on the solax cloud)
+     - Find http://192.168.xxx.xxx and replace with http://192.168.1.fixed_ip
+6. .\config\packages\solax_zappi_octopus\template.yaml
      - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
-6. .\config\packages\octopus_renamed_entities\template.yaml
+7. .\config\packages\octopus_renamed_entities\template.yaml
      - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
-7. .\config\packages\octoplus_sessions\template.yaml
-    - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
-8. .\config\packages\zappi_renamed_entities\template.yaml
-    - Find and replace all zappi serial numbers zappi_XXXXXXXX with your own i.e. zappi_12345678
-9. .\config\packages\solax_additions\utility_meters.yaml
+8. .\config\packages\solax_zappi_octopus\utility_meters.yaml
     - Find ev_charging_daily_vehicle and replace the vehicle names and set them as you wish
     - Find ev_charging_monthly_vehicle and replace the vehicle names and set them as you wish
-10. Copy the contents of automations_5001-6001.yaml to the bottom of .\config automations.yaml
-11. Edit your configuration.yaml to pick up the new packages.
+9. .\config\packages\octoplus_sessions\template.yaml
+    - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
+10. .\config\packages\zappi_renamed_entities\template.yaml
+    - Find and replace all zappi serial numbers zappi_XXXXXXXX with your own i.e. zappi_12345678
+11. Copy the contents of automations_5001-6001.yaml to the bottom of .\config automations.yaml
+12. Edit your configuration.yaml to pick up the new packages.
 
 Rather than putting all the config in the single '\config\configuration.yaml file, to keep things clean and tidy and more manageable, the package files can referenced like this in the configuration.yaml:
 In the example below see the use of the homeassistant: tag. The directory referenced under homeassistant: tag is the packages directory where we've already stored all the new config. You must also add the script directory. if you already have a scripts.yaml that should be moved to the scripts directory.
@@ -75,9 +78,9 @@ homeassistant:
 script: !include_dir_merge_named scripts  
 automation: !include automations.yaml
 ```
-12. Check all the steps above have been done.
-13. Restart Home Assistant.
-14. Adding the dashboad.
+13. Check all the steps above have been done.
+14. Restart Home Assistant.
+15. Adding the dashboad.
     - Copy the contents of Solax & Octopus Settings.yaml in the repo
     - Open Home Assistant
     - Open Overview dashboard
@@ -88,7 +91,7 @@ automation: !include automations.yaml
     - Replace the contents with your prepared yaml
     - Click Save
     - Click Done
-15. On the dashboard select/set:
+16. On the dashboard select/set:
     - solax battery size,
     - solax inverter size,
     - default inverter mode.
@@ -99,7 +102,7 @@ automation: !include automations.yaml
     - EV registered battery size
     - EV ready time
     - EV charge %
-16. Done.
+17. Done.
 
 # Notification Management
 
@@ -134,6 +137,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v5.1.0| **13/09/25**| solax_additions deleted <br> solax_realtime added <br> solax_zappi_octopus has new files | solax_additions deleted and replaced with solax_realtime <br> anything that was in solax additions that wasn't to do with realtime data is moved to solax_zappi_octopus|
 | v5.0.1| **12/09/25**| solax_zappi_octopus\input_number.yaml <br>solax_zappi_octopus\templates.yaml <br> Solax & Octopus Settings.yaml (the dashboard)|  Added a configurable export margin delta for when preemptive discharges under estimate<br> Fixed an issue where an EV may not get fully charged if it's plugged in after the pre export battery time |
 | v5.0  | **12/09/25**| All | Major refactor |
 

@@ -1,0 +1,36 @@
+    ###################################
+    # Solax X1 Hybrid G4 Rest Sensors #
+    # Added:
+    # 12 - Feed In Min SOC %
+    # 13 - Feed In Charge from grid to %
+    # 14 - battery heating enable - read only unless the dongle is unlocked
+    # 15 - heat start - read only unless the dongle is unlocked
+    # 16 - heat end - read only unless the dongle is unlocked
+    # 17 - heat start 2 - read only unless the dongle is unlocked
+    # 18 - heat end 2 - read only unless the dongle is unlocked
+    # 19 - System state
+    # 20 - battery heat level - read only unless the dongle is unlocked
+    ###################################
+solax_realtime_sensor:
+  sensor:
+    ### Solax Local REST sensor ###
+    - platform: rest
+      scan_interval: 60
+      resource: !secret solax_local_ip
+      payload: !secret solax_local_realtime_payload
+      method: POST
+      name: "solax_rest_local"
+      json_attributes:
+        - sn
+        - ver
+        - type
+        - Data
+        - Information
+#      value_template: "OK" # dummy value, not used; avoids the "State max length is 255 characters" error
+      value_template: >
+        {% if value_json is defined %}
+          {{ "OK" }}
+        {%- else -%}
+          {{ "None" }}
+        {%- endif -%}
+
