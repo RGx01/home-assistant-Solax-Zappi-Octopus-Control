@@ -1,10 +1,11 @@
-solax_realtime_templates:
-  template: 
     ######################################################
     # Change log - this may only work for X1 hybrid g4
     ######################################################
-    # v5     Refactoring
+    # v1.1.0     Further Refactoring/tidy
+    # v1.0.0     Refactored into package
     ######################################################
+solax_realtime_templates:
+  template: 
     - sensor:
         - name: solax_local
           state: >
@@ -341,5 +342,3 @@ solax_realtime_templates:
             {% else %}
               "{{ attr }}"
             {% endif %}
-
-

@@ -1966,7 +1966,7 @@
     for:
       hours: 0
       minutes: 0
-      seconds: 10
+      seconds: 13
   - entity_id:
     - input_button.refresh
     trigger: state

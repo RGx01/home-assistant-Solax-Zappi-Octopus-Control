@@ -2,6 +2,7 @@
 # Replace octopus account number z_ZZZZZZZZ with your own
 #
 # Change log
+# v5.1.0 Moved some sensors from solax_realtime and solax_cotrol to here as they didn't belong where they were
 # V5.0.1 Minor update to prevent a potential under charge of EV if plugged in later than the export time
 #        Added a user configurable Export Margin for when pre emptive discharges under estimate
 # V5.0.  Refactor
@@ -174,54 +175,6 @@ solax_zappi_octopus_templates:
             {% set local_sunset_time2 = sunset_hour|string +':'+ sunset_minute|string  -%}
             {{ local_sunset_time.isoformat() if local_sunset_time else (now() + timedelta(days=10)) | as_local | isoformat }}
             
- #         attribute_templates:
- #           sunset: "{{ state_attr('sun.sun','next_setting') }}"
- #           sunrise: "{{ state_attr('sun.sun','next_rising') }}"
- #           solar_noon: >
- #             {% set solar_noon_utc = Solar_Noon_LST * 24 %}
- #             {% set noon_hour = solar_noon_utc | int %}
- #             {% set noon_minute = ((solar_noon_utc * 60) % 60) | int %}
- #             {{ now().replace(hour=noon_hour, minute=noon_minute, second=0, microsecond=0)|as_datetime|as_local|isoformat }}
- #           elevation_used: "{{ states('input_number.sun_degrees_above_horizon') }}"
-
-    ######################################################
-    # EV start time
-    # Calculates the actual time to start EV based on various input_bool options
-    ######################################################
-    # - sensor:
-    #     - name: Octopus Will Provide Next Schedule At
-    #       unique_id: ev_start_time
-    #       device_class: "timestamp"
-    #       state: >
-    #         {% set td = timedelta(days=10) %}
-
-    #         {% set solar = states('sensor.solar_export_threshold') %}
-    #         {% set wobble = states('sensor.don_t_charge_ev_before_time_wobble') %}
-    #         {% set clever = states('sensor.calculated_ev_charge_start_time') %}
-
-    #         {% macro safe_dt(value) -%}
-    #           {% if value not in ['unknown','unavailable',''] %}
-    #             {{ value | as_datetime | as_local }}
-    #           {% else %}
-    #             {{ (now() + td) | as_local }}
-    #           {% endif %}
-    #         {%- endmacro %}
-
-    #         {% if states('input_boolean.octopus_schedule_anytime') == 'off'
-    #           and states('input_boolean.solar_export_priority') == 'on'
-    #           and states('input_boolean.use_clever_time') == 'off' %}
-    #           {{ safe_dt(solar) }}
-    #         {% elif states('input_boolean.octopus_schedule_anytime') == 'off'
-    #           and states('input_boolean.solar_export_priority') == 'off'
-    #           and states('input_boolean.use_clever_time') == 'off' %}
-    #           {{ safe_dt(wobble) }}
-    #         {% elif states('input_boolean.octopus_schedule_anytime') == 'off'
-    #           and states('input_boolean.solar_export_priority') == 'off'
-    #           and states('input_boolean.use_clever_time') == 'on' %}
-    #           {{ safe_dt(clever) }}
-    #         {% else %}
-    #           {{ (now() + td) | as_local }}
-    #         {% endif %}
     - sensor:
         - name: "EV Start Time"
           unique_id: ev_start_time
@@ -968,9 +921,6 @@ solax_zappi_octopus_templates:
               {{None}}
             {%endif%}
 
-
-
-
     ######################################################
     # Min SoC
     ######################################################  
@@ -1110,47 +1060,6 @@ solax_zappi_octopus_templates:
           {% endif %}
         device_class: "window"
 
-    # - binary_sensor:
-    #   - name: Battery Export Before EV Charge Allowed
-    #     unique_id: solax_battery_export_allowed
-    #     state: >
-    #       {% if states('input_boolean.octopus_schedule_anytime') == 'on' or states('input_boolean.export_battery_prior') == 'off' or states('sensor.zappi_plug_status') == 'EV Disconnected'%}
-    #         {{false}} 
-    #       {%else%}
-    #         {{true}}
-    #       {%endif%}
-
-    - trigger:
-        - trigger: time_pattern
-          hours: /1
-      sensor:
-        - name: Solax Local Production snap shot
-          unique_id: solax_local_production_snap_shot
-          unit_of_measurement: "kWh"
-          device_class: "energy"
-          state_class: total
-          state: >
-            {{states('sensor.export_daily')|float}}
-      
-    - trigger:
-        - trigger: state
-          entity_id: sensor.solax_local_production_snap_shot
-      sensor:
-        - name: Solax Local Production Rate
-          unique_id: solax_local_production_rate
-          unit_of_measurement: "kWh"
-          device_class: "energy"
-          state_class: total
-          state: >
-            {{(trigger.to_state.state|float - trigger.from_state.state|float)*60/60}}
-          attributes: 
-            current_val: >
-              {{trigger.to_state.state}}
-            previous_val: >
-              {{trigger.from_state.state}}
-            last_changed: >
-              {{now()}}
-
     # new experimental sensors have been added:
     # - name: "Solax Local Self Consumption Power"
     # - name: "Solax Local Battery In From Solar"
@@ -1273,3 +1182,15 @@ solax_zappi_octopus_templates:
           state_class: measurement
           device_class: power
           icon: mdi:battery
+
+        ### Inverter default working mode
+        - name: "Solax Default Operation Mode"
+          unique_id: solax_default_operation_mode
+          device_class: enum
+          state: >
+            {% set mapper =  {
+                'Self Use' : 0,
+                'Feed In Priority' : 1} %}
+            {% set state =  states('input_select.solax_default_mode')  %}
+            {{ mapper[state] if state in mapper else '0' }}
+          icon: mdi:cursor-default-outline
