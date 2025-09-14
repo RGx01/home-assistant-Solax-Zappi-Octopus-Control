@@ -1,5 +1,5 @@
 # Solax-Zappi-Octopus-Control
-
+Written specifically for IOG Zappi and Solax X1-G4 Inverter
 ![delme](https://github.com/user-attachments/assets/c2eb91f9-8c83-4f31-8a76-75df950f1d05)
 
 
