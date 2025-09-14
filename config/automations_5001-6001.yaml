@@ -2329,20 +2329,21 @@
   description: "# 6001 - Automation to get the most from Octopus Free Electric Sessions\n\n#
     Initial config instructions\n1. Find and replace:\nzappi_XXXXXXXX with your zappi
     number, \nz_ZZZZZZZZ with Octopus account\n2. Paste into your automations.yaml\n\n#
-    Change log\nv2.1.4 Renamed automation\nv2.1 - Removed legacy dev work and fix
-    bug with charge period 2\nv2.0 - Productionise\nv1.1 - Initial\n\n\n# Overview\nOctopus
-    offer free electric sessions in the summer.\nThis automation allows you to automatically
-    charge the solax battery and also sets the zappi to fast mode. \nTo prepare for
-    the free electricity, options are provided to export the house battery to benefit
-    from export rates and to give headroom to charge from the grid for free in the
-    session. You can set a time and export threshold. However beware that on a sunny
-    day you may already be at the inverters limit so won't be able to discharge the
-    battery so you have to balance the time at which you discharge and the battery
-    SoC level for which you need to last the day before the free session. To prevent
-    the battery filling the inverter mode is set to feed in priority and will return
-    to your default mode after the free electric session. If export rates become unfavourable
-    you can use the target battery SoC as the charge to if you allow charging from
-    grid overnight."
+    Change log\nv5.1.1 Fixed bug in Free Electric notification where end time was
+    announced as start time\nv2.1.4 Renamed automation\nv2.1 - Removed legacy dev
+    work and fix bug with charge period 2\nv2.0 - Productionise\nv1.1 - Initial\n\n\n#
+    Overview\nOctopus offer free electric sessions in the summer.\nThis automation
+    allows you to automatically charge the solax battery and also sets the zappi to
+    fast mode. \nTo prepare for the free electricity, options are provided to export
+    the house battery to benefit from export rates and to give headroom to charge
+    from the grid for free in the session. You can set a time and export threshold.
+    However beware that on a sunny day you may already be at the inverters limit so
+    won't be able to discharge the battery so you have to balance the time at which
+    you discharge and the battery SoC level for which you need to last the day before
+    the free session. To prevent the battery filling the inverter mode is set to feed
+    in priority and will return to your default mode after the free electric session.
+    If export rates become unfavourable you can use the target battery SoC as the
+    charge to if you allow charging from grid overnight."
   triggers:
   - at: sensor.octopus_free_electricity_start
     id: start
@@ -2574,7 +2575,7 @@
         then:
         - event: Solax Zappi Octopus Control
           event_data:
-            message: '{% set event_start = state_attr(''binary_sensor.upcoming_free_electricity'',''next_session_end'')|as_datetime
+            message: '{% set event_start = state_attr(''binary_sensor.upcoming_free_electricity'',''next_session_start'')|as_datetime
               %}It starts at {{event_start.strftime(''%H:%M'') }} on {{ event_start.day
               }}/{{event_start.month }} for {{ state_attr(''binary_sensor.upcoming_free_electricity'',''next_session_duration'')  }}
               minutes.

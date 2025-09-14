@@ -1060,11 +1060,14 @@ solax_zappi_octopus_templates:
           {% endif %}
         device_class: "window"
 
+    ######################################################
+    # Extended Solax realtime data that    
     # new experimental sensors have been added:
     # - name: "Solax Local Self Consumption Power"
     # - name: "Solax Local Battery In From Solar"
     # - name: "Solax Local Battery Dump Power"
     # - name: "Solax Local House Load Power"
+    ######################################################
     - sensor:
         - name: "Solax Local Battery Cell Voltage"
           unique_id: solax_local_battery_cell_voltage
