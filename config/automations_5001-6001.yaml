@@ -2350,12 +2350,12 @@
     trigger: time
     enabled: true
   - at:
-      entity_id: sensor.octopus_free_electric_stop
+      entity_id: sensor.octopus_free_electricity_stop
       offset: '-120'
     id: stop EV
     trigger: time
     enabled: true
-  - at: sensor.octopus_free_electric_stop
+  - at: sensor.octopus_free_electricity_stop
     id: stop
     trigger: time
     enabled: true
