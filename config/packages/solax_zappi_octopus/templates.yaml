@@ -956,34 +956,47 @@ solax_zappi_octopus_templates:
         - trigger: time
           at: input_datetime.solax_battery_stop_charge_time      
       sensor:
-        - name: Solax Local Battery SoH calc
-          unique_id: solax_local_battery_soh_calc
-          unit_of_measurement: "%"
-          state_class: measurement
-          icon: mdi:battery
-          state: >
-            {% set theoretical_stored = ((states('sensor.solax_local_max_soc')|int-states('sensor.solax_local_min_soc')|int)/100)*states('input_number.solax_battery_capacity')|float %}
-            {% set grid_stored = states('sensor.daily_grid_stored')|float %}
-            {{min(100*(grid_stored/theoretical_stored),100) if (grid_stored|float > 0) else None}}
-            
-    ######################################################
-    # Battery SoH
-    ######################################################
-    - trigger:
-        - trigger: state
-          entity_id: sensor.solax_local_battery_soh_calc
-          not_to:
-            - unavailable
-      sensor:
         - name: Solax Local Battery SoH
           unique_id: solax_local_battery_soh
           unit_of_measurement: "%"
           state_class: measurement
+          icon: mdi:battery
           state: >
-            {{ trigger.to_state.state }}
-          attributes:
-            last_triggered: >-
-              {{ trigger.to_state.last_changed }}
+            {# Read the min and max SoC snapshots #}
+            {% set min_soc = states('sensor.solax_local_min_soc') | int(0) %}
+            {% set max_soc = states('sensor.solax_local_max_soc') | int(0) %}
+            {% set delta_soc = max_soc - min_soc %}
+
+            {# Read battery capacity and actual energy stored from grid #}
+            {% set capacity = states('input_number.solax_battery_capacity') | float(0) %}
+            {% set grid_stored = states('sensor.daily_grid_stored') | float(0) %}
+
+            {# Only calculate SoH if charge window is meaningful and data valid #}
+            {% if delta_soc > 85 and capacity > 0 and grid_stored > 0 %}
+              {# Compute SoH % and cap at 100 #}
+              {{ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1) | min(100) }}
+            {% else %}
+              {# Otherwise, keep previous SoH value #}
+              {{ states('sensor.solax_local_battery_soh') }}
+            {% endif %}            
+    ######################################################
+    # Battery SoH
+    ######################################################
+    # - trigger:
+    #     - trigger: state
+    #       entity_id: sensor.solax_local_battery_soh_calc
+    #       not_to:
+    #         - unavailable
+    #   sensor:
+    #     - name: Solax Local Battery SoH
+    #       unique_id: solax_local_battery_soh
+    #       unit_of_measurement: "%"
+    #       state_class: measurement
+    #       state: >
+    #         {{ trigger.to_state.state }}
+    #       attributes:
+    #         last_triggered: >-
+    #           {{ trigger.to_state.last_changed }}
 
 
     ######################################################
