@@ -137,6 +137,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v5.2.0| **15/09/25** | automations_5001-6001.yaml <br> octoplus_sessions\templates.yaml| Corrected Typo in octoplus sessions that may effect end time not being used correctly <br> Ajusted 6001 to end 2 min charging early to make sure dispatch qits on time|
 | v5.1.1| **14/09/25** | automations_5001-6001.yaml|Fixed bug in Free Electric notification where end time was announced as start time|
 | v5.1.0| **13/09/25**| solax_additions deleted <br> solax_realtime added <br> solax_zappi_octopus has new files | solax_additions deleted and replaced with solax_realtime <br> anything that was in solax additions that wasn't to do with realtime data is moved to solax_zappi_octopus|
 | v5.0.1| **12/09/25**| solax_zappi_octopus\input_number.yaml <br>solax_zappi_octopus\templates.yaml <br> Solax & Octopus Settings.yaml (the dashboard)|  Added a configurable export margin delta for when preemptive discharges under estimate<br> Fixed an issue where an EV may not get fully charged if it's plugged in after the pre export battery time |

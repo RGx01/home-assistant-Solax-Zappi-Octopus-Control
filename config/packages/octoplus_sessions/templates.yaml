@@ -5,6 +5,7 @@ octoplus_sessions_templates:
   template:
     ######################################################
     # Octopus free/saving sensors
+    # V5.2.0 Corrected Typo in octoplus sessions that may effect end time not being used correctly
     # V5.0   Refactor
     # v4.    Plannning to removed saving sessions because they are pointless
     #.       Refined free sessions to new IOG tariff as of 4/8/2025
@@ -81,8 +82,8 @@ octoplus_sessions_templates:
     #Octopus free electric stop
     ######################################################
     - sensor:
-        - name: Octopus Free Electric Stop
-          unique_id: octopus_free_electric_stop
+        - name: Octopus Free Electricity Stop
+          unique_id: octopus_free_electricity_stop
           device_class: "timestamp"
           state: >
             {{as_datetime(state_attr('input_datetime.octopus_free_electricity_stop','timestamp'))|as_local}}

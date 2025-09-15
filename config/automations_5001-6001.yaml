@@ -2349,6 +2349,12 @@
     id: start
     trigger: time
     enabled: true
+  - at:
+      entity_id: sensor.octopus_free_electric_stop
+      offset: '-120'
+    id: stop EV
+    trigger: time
+    enabled: true
   - at: sensor.octopus_free_electric_stop
     id: stop
     trigger: time
@@ -2368,10 +2374,6 @@
     trigger: time
   - trigger: time_pattern
     minutes: /17
-  - event_type: octopus_energy_all_octoplus_free_electricity_sessions
-    trigger: event
-    id: Octopus New Free Electric
-    enabled: false
   - trigger: state
     entity_id:
     - binary_sensor.upcoming_free_electricity
@@ -2510,6 +2512,19 @@
           title: Free Electric Finished
           class: high
         enabled: true
+      - action: automation.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: automation.solax_zappi_octopus_control
+    - conditions:
+      - condition: trigger
+        id:
+        - stop EV
+      - condition: state
+        entity_id: binary_sensor.free_electricity_today
+        state: 'on'
+      sequence:
       - metadata: {}
         data: {}
         target:
@@ -2524,11 +2539,6 @@
           entity_id: select.myenergi_zappi_XXXXXXXX_charge_mode
         action: select.select_option
         enabled: true
-      - action: automation.turn_on
-        metadata: {}
-        data: {}
-        target:
-          entity_id: automation.solax_zappi_octopus_control
     - conditions:
       - condition: trigger
         id:
