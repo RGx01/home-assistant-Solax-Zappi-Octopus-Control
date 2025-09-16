@@ -38,7 +38,7 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
    - packages
    - scripts
 2. Copy repo 'package' directory contents to your package directory (6 new directories each with yaml files)
-3. Copy repo 'script' contents to your script directory (single yaml file)
+3. Copy repo 'script' contents to your script directory (two yaml files)
 4. .\config\packages\solax_realtime\secrets.yaml
      - Find and replace YYYYYYYYYY with your registration number (found on the devices page on the solax cloud)
      - Find http://192.168.xxx.xxx and replace with http://192.168.1.fixed_ip
@@ -97,7 +97,9 @@ automation: !include automations.yaml
     - default inverter mode.
     - default charge to level
     - default min_soc
-    - forced discharge limit for both prior to ev charging and nightly discharge.
+    - under 'Pre-emptive Battery Exports' set: 
+        - Solax Battery SoH Stored initial value to 100 (it will recalucate each time a full charge cycle)
+    - forced discharge limit for both 'prior to ev charging' and 'nightly discharge'.
     - select Octopus schedule type
     - EV registered battery size
     - EV ready time
@@ -137,6 +139,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v5.3.0| **17/09/25** | automations_5001-6001.yaml <br> solax_zappi_octopus\templates.yaml <br> solax_zappi_octopus\input_numbers.yaml <br> Solax & Octopus Settings.yaml (the dashboard) | Introducing safe switching of octopus_intelligent_smart_charge. Sometimes the API fails when kraken endpoits are unreachable. This is an attempt to trap and notify if this happens. <br> Fixed bug with solax_local_battery_in_from_solar sensor <br> Added  Battery true capacity based on grid stored/theoretical stored = Capacity SoH. This refines predictions of time to discharge before charging EV and discharging battery before 23:30. To get the calculation to work you must charge from 10 -100% periodicallly <br> Dashboard tweak|
 | v5.2.0| **15/09/25** | automations_5001-6001.yaml <br> octoplus_sessions\templates.yaml| Corrected Typo in octoplus sessions that may effect end time not being used correctly <br> Ajusted 6001 to end 2 min charging early to make sure dispatch qits on time|
 | v5.1.1| **14/09/25** | automations_5001-6001.yaml|Fixed bug in Free Electric notification where end time was announced as start time|
 | v5.1.0| **13/09/25**| solax_additions deleted <br> solax_realtime added <br> solax_zappi_octopus has new files | solax_additions deleted and replaced with solax_realtime <br> anything that was in solax additions that wasn't to do with realtime data is moved to solax_zappi_octopus|

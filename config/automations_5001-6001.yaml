@@ -2,24 +2,23 @@
   alias: 5001 - Solax Zappi Octopus Control
   description: "# 5001 - Solax Zappi Octopus Control\nSee documentation in repo.\n\n#
     Initial installation instructions\n1. This is 5001. You also need 5002 5003 5004
-    and 5005 to make this work successfully. \n2. Find and replace, zappi_XXXXXXXX
-    with zappi number, z_ZZZZZZZZ with Octopus account\n3. Paste into your automations.yaml\n\n#
-    Change Log \nv5.0 Refactor out account names\nv3.8 Estimated time EV needs to
-    charge based on required % and registered EV size\nv3.7 Pre-emptive discharge
-    of solax before EV charging option (when EV is connected)\n         Pre-emptive
-    discharge before 23:30 when EV is disconnected\nv3.6 Min soc calculation updated
-    in variables\nv3.5 Variable for loops (to confirm solax commands have been applied
-    should be set to min of 3)\nv3.4 Added condition to check if saving session is
-    in progress\nv3.3 Changed the logic slightly for setting SoC limits. Sometimes
-    depending on which mode is being set (self use or feed in) the inverter seems
-    to randomly reject the second service call. so I now set the first soc limit to
-    match the default return to mode.\nv3.2 Added an input boolean switch to enable
-    possibility to check what kind of discharge is occurring when a manual discharge
-    is occurring.\nv3.0.4 Added a condition to prevent inverter reverting back to
-    default if vehicle was charging prior to a saving session starting.\nv3.0.3 Added
-    When Condition to ensure inverter mode is reset to default mode when it's time
-    to start charging the solax battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1 Fixed
-    issue that if user plugs in during a saving session a charge could be initiated\nv3.0.0
+    and 5005 to make this work successfully. \n\n# Change Log \nv5.3.0 Introducing
+    safe switching of octopus_intelligent_smart_charge\nv5.0 Refactor out account
+    names\nv3.8 Estimated time EV needs to charge based on required % and registered
+    EV size\nv3.7 Pre-emptive discharge of solax before EV charging option (when EV
+    is connected)\n         Pre-emptive discharge before 23:30 when EV is disconnected\nv3.6
+    Min soc calculation updated in variables\nv3.5 Variable for loops (to confirm
+    solax commands have been applied should be set to min of 3)\nv3.4 Added condition
+    to check if saving session is in progress\nv3.3 Changed the logic slightly for
+    setting SoC limits. Sometimes depending on which mode is being set (self use or
+    feed in) the inverter seems to randomly reject the second service call. so I now
+    set the first soc limit to match the default return to mode.\nv3.2 Added an input
+    boolean switch to enable possibility to check what kind of discharge is occurring
+    when a manual discharge is occurring.\nv3.0.4 Added a condition to prevent inverter
+    reverting back to default if vehicle was charging prior to a saving session starting.\nv3.0.3
+    Added When Condition to ensure inverter mode is reset to default mode when it's
+    time to start charging the solax battery.\nv3.0.2 further fixes to 3.0.1\nv3.0.1
+    Fixed issue that if user plugs in during a saving session a charge could be initiated\nv3.0.0
     Allow discharge battery before charging EV\nv2.1.4.1 Spotted a potential bug if
     user starts charge at 23:30 where it could clash with tail battery export\nv2.1.4
     Renamed automation\nv2.1.3.1 fixed missing scenario where min_SoC would not be
@@ -545,11 +544,16 @@
               target:
                 entity_id: select.zappi_charge_mode
               action: select.select_option
+            - action: script.safe_switch_toggle
+              metadata: {}
+              data:
+                target_switch: switch.octopus_intelligent_smart_charge
+                desired_state: 'on'
             - metadata: {}
               data: {}
               target:
                 entity_id: switch.octopus_intelligent_smart_charge
-              enabled: true
+              enabled: false
               action: switch.turn_on
             - action: script.solax_set_mode_and_settings
               data:
@@ -673,6 +677,12 @@
         target:
           entity_id: switch.octopus_intelligent_smart_charge
         action: switch.turn_off
+        enabled: false
+      - action: script.safe_switch_toggle
+        metadata: {}
+        data:
+          target_switch: switch.octopus_intelligent_smart_charge
+          desired_state: 'off'
       - action: script.solax_set_mode_and_settings
         data:
           mode: '{{default_mode}}'
@@ -712,6 +722,12 @@
         target:
           entity_id: switch.octopus_intelligent_smart_charge
         action: switch.turn_off
+        enabled: false
+      - action: script.safe_switch_toggle
+        metadata: {}
+        data:
+          target_switch: switch.octopus_intelligent_smart_charge
+          desired_state: 'off'
       - action: script.solax_set_mode_and_settings
         data:
           mode: '{{default_mode}}'
@@ -946,6 +962,12 @@
         data: {}
         target:
           entity_id: switch.octopus_intelligent_smart_charge
+        enabled: false
+      - action: script.safe_switch_toggle
+        metadata: {}
+        data:
+          target_switch: switch.octopus_intelligent_smart_charge
+          desired_state: 'off'
       - if:
         - condition: state
           entity_id: input_boolean.zappi_eco_always
@@ -1092,16 +1114,15 @@
     a free Electric discharge, feed in priority is used to prevent the battery filling
     if it's sunny. After free electric session is done default mode is returned. \n\n#
     Initial installation instructions\n1. This is 5002 only. You also need 5001 5003
-    5004 and 5005. \n2. replace z_ZZZZZZZZ with your Octopus Account Number\n3. Copy
-    and Paste into your automations.yaml\n\n# Change log \nv3.6 variable for loops\nv3.6
-    Stop discharge at time required for car to charge\nv3.3 Added condition to check
-    if saving session is in progress\nv3.3  Added a validity check on which SoC is
-    highest for the discharge before ev charge as it is critical that an event is
-    triggered in this option to initialise EV charging.\nv3.2  Add a condition to
-    check if export prior and manual export button press.\nv3.0.0 Set an event to
-    trigger EV charging if binary_sensor.\nSolax Discharge Before EV Charge is on
-    to off\nv2.1.4 Renamed automation\nv2.1.0 - Changes to limits to catch the battery
-    closer to the required threshold set by user\nv2.0.0 -productionisation\n"
+    5004 and 5005. \n2. Copy and Paste into your automations.yaml\n\n# Change log
+    \nv3.6 variable for loops\nv3.6 Stop discharge at time required for car to charge\nv3.3
+    Added condition to check if saving session is in progress\nv3.3  Added a validity
+    check on which SoC is highest for the discharge before ev charge as it is critical
+    that an event is triggered in this option to initialise EV charging.\nv3.2  Add
+    a condition to check if export prior and manual export button press.\nv3.0.0 Set
+    an event to trigger EV charging if binary_sensor.\nSolax Discharge Before EV Charge
+    is on to off\nv2.1.4 Renamed automation\nv2.1.0 - Changes to limits to catch the
+    battery closer to the required threshold set by user\nv2.0.0 -productionisation\n"
   triggers:
   - trigger: template
     value_template: "{%set highestSoC = states('sensor.solax_local_feed_in_battery_min_soc')|int
@@ -2327,23 +2348,23 @@
 - id: '6001'
   alias: 6001 - Octopus - Free Electric Automation
   description: "# 6001 - Automation to get the most from Octopus Free Electric Sessions\n\n#
-    Initial config instructions\n1. Find and replace:\nzappi_XXXXXXXX with your zappi
-    number, \nz_ZZZZZZZZ with Octopus account\n2. Paste into your automations.yaml\n\n#
-    Change log\nv5.1.1 Fixed bug in Free Electric notification where end time was
-    announced as start time\nv2.1.4 Renamed automation\nv2.1 - Removed legacy dev
-    work and fix bug with charge period 2\nv2.0 - Productionise\nv1.1 - Initial\n\n\n#
-    Overview\nOctopus offer free electric sessions in the summer.\nThis automation
-    allows you to automatically charge the solax battery and also sets the zappi to
-    fast mode. \nTo prepare for the free electricity, options are provided to export
-    the house battery to benefit from export rates and to give headroom to charge
-    from the grid for free in the session. You can set a time and export threshold.
-    However beware that on a sunny day you may already be at the inverters limit so
-    won't be able to discharge the battery so you have to balance the time at which
-    you discharge and the battery SoC level for which you need to last the day before
-    the free session. To prevent the battery filling the inverter mode is set to feed
-    in priority and will return to your default mode after the free electric session.
-    If export rates become unfavourable you can use the target battery SoC as the
-    charge to if you allow charging from grid overnight."
+    Initial config instructions\n1. Paste into your automations.yaml\n\n# Change log\nv5.3.0
+    Introducing safe switching of octopus_intelligent_smart_charge\nv5.1.1 Fixed bug
+    in Free Electric notification where end time was announced as start time\nv2.1.4
+    Renamed automation\nv2.1 - Removed legacy dev work and fix bug with charge period
+    2\nv2.0 - Productionise\nv1.1 - Initial\n\n\n# Overview\nOctopus offer free electric
+    sessions in the summer.\nThis automation allows you to automatically charge the
+    solax battery and also sets the zappi to fast mode. \nTo prepare for the free
+    electricity, options are provided to export the house battery to benefit from
+    export rates and to give headroom to charge from the grid for free in the session.
+    You can set a time and export threshold. However beware that on a sunny day you
+    may already be at the inverters limit so won't be able to discharge the battery
+    so you have to balance the time at which you discharge and the battery SoC level
+    for which you need to last the day before the free session. To prevent the battery
+    filling the inverter mode is set to feed in priority and will return to your default
+    mode after the free electric session. If export rates become unfavourable you
+    can use the target battery SoC as the charge to if you allow charging from grid
+    overnight."
   triggers:
   - at: sensor.octopus_free_electricity_start
     id: start
@@ -2475,7 +2496,12 @@
           entity_id:
           - switch.octopus_intelligent_smart_charge
         action: switch.turn_on
-        enabled: true
+        enabled: false
+      - action: script.safe_switch_toggle
+        metadata: {}
+        data:
+          target_switch: switch.octopus_intelligent_smart_charge
+          desired_state: 'on'
       - metadata: {}
         data:
           option: Eco+
@@ -2531,7 +2557,12 @@
           entity_id:
           - switch.octopus_intelligent_smart_charge
         action: switch.turn_off
-        enabled: true
+        enabled: false
+      - action: script.safe_switch_toggle
+        metadata: {}
+        data:
+          target_switch: switch.octopus_intelligent_smart_charge
+          desired_state: 'off'
       - metadata: {}
         data:
           option: Stopped

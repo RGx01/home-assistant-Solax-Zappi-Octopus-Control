@@ -111,11 +111,12 @@ solax_zappi_octopus_input_number:
       mode: box
       icon: mdi:car-clock
     battery_export_margin_delta:
-      name: Export Margin Delta (minutes)
+      name: Export Margin Delta
       min: 0
       max: 15
       step: 1
       mode: box
+      unit_of_measurement: "minutes"
       icon: mdi:timer-plus-outline
     solax_battery_capacity:
       name: Solax Battery Size
@@ -133,3 +134,11 @@ solax_zappi_octopus_input_number:
       step: .1
       mode: box
       icon: mdi:home-lightning-bolt-outline
+    solax_battery_soh_stored:
+      name: Solax Battery SoH Stored
+      min: 0
+      max: 100
+      step: 0.1
+      mode: box
+      icon: mdi:skull-crossbones
+      unit_of_measurement: "%"

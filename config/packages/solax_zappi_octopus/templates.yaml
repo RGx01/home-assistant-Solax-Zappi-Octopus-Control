@@ -2,6 +2,8 @@
 # Replace octopus account number z_ZZZZZZZZ with your own
 #
 # Change log
+# v5.3.0 Renamed Solax Local Battery Remaining Energy
+#        Fixed bug with solax_local_battery_in_from_solar sensor
 # v5.1.0 Moved some sensors from solax_realtime and solax_cotrol to here as they didn't belong where they were
 # V5.0.1 Minor update to prevent a potential under charge of EV if plugged in later than the export time
 #        Added a user configurable Export Margin for when pre emptive discharges under estimate
@@ -953,8 +955,8 @@ solax_zappi_octopus_templates:
     # Battery SoH
     ######################################################
     - trigger:
-        - trigger: time
-          at: input_datetime.solax_battery_stop_charge_time      
+        - platform: time
+          at: input_datetime.solax_battery_stop_charge_time
       sensor:
         - name: Solax Local Battery SoH
           unique_id: solax_local_battery_soh
@@ -962,23 +964,42 @@ solax_zappi_octopus_templates:
           state_class: measurement
           icon: mdi:battery
           state: >
-            {# Read the min and max SoC snapshots #}
+            {# Read min/max SoC snapshots #}
             {% set min_soc = states('sensor.solax_local_min_soc') | int(0) %}
             {% set max_soc = states('sensor.solax_local_max_soc') | int(0) %}
             {% set delta_soc = max_soc - min_soc %}
 
-            {# Read battery capacity and actual energy stored from grid #}
+            {# Read battery capacity and grid-stored energy #}
             {% set capacity = states('input_number.solax_battery_capacity') | float(0) %}
             {% set grid_stored = states('sensor.daily_grid_stored') | float(0) %}
+            {% set stored = states('input_number.solax_battery_soh_stored') | float(0) %}
 
-            {# Only calculate SoH if charge window is meaningful and data valid #}
+            {# Calculate SoH if charge window is meaningful, else use persisted value #}
             {% if delta_soc > 85 and capacity > 0 and grid_stored > 0 %}
-              {# Compute SoH % and cap at 100 #}
-              {{ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1) | min(100) }}
+              {{ [ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1), 100 ] | min }}
             {% else %}
-              {# Otherwise, keep previous SoH value #}
-              {{ states('sensor.solax_local_battery_soh') }}
-            {% endif %}            
+              {{ stored }}
+            {% endif %}
+      action:
+        - variables:
+            new_soh: >
+              {% set min_soc = states('sensor.solax_local_min_soc') | int(0) %}
+              {% set max_soc = states('sensor.solax_local_max_soc') | int(0) %}
+              {% set delta_soc = max_soc - min_soc %}
+              {% set capacity = states('input_number.solax_battery_capacity') | float(0) %}
+              {% set grid_stored = states('sensor.daily_grid_stored') | float(0) %}
+              {% set stored = states('input_number.solax_battery_soh_stored') | float(0) %}
+              {% if delta_soc > 85 and capacity > 0 and grid_stored > 0 %}
+                {{ [ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1), 100 ] | min }}
+              {% else %}
+                {{ stored }}
+              {% endif %}
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.solax_battery_soh_stored
+          data:
+            value: "{{ new_soh }}"
+
     ######################################################
     # Battery SoH
     ######################################################
@@ -1097,7 +1118,7 @@ solax_zappi_octopus_templates:
           device_class: "voltage"
 
     # Estimated remaining energy       
-        - name: "Solax Local Battery Remain Energy"
+        - name: "Solax Local Battery Remaining Energy"
           unique_id: solax_local_battery_kwh
           state: "{{ (states('sensor.solax_local_battery_soc')|int - states('input_number.solax_default_discharge_limit_soc')|int) /100 * states('input_number.solax_battery_capacity')|float }}"
           unit_of_measurement: "kWh"
@@ -1123,9 +1144,8 @@ solax_zappi_octopus_templates:
           state: >
             {% set grid = states('sensor.solax_local_battery_use_in_from_grid')|int (default = 0) %}
             {% set bat = states('sensor.solax_local_battery_use_in')|int(default=0) - grid|int%}
-            {% set invPwr = states('sensor.solax_local_inverter_power')|int(default=0) %} 
             {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,states('input_number.solax_inverter_capacity')|float*1000)|int (default=0) %}
-            {{ (bat) if  (pvPwr > 0 and invPwr >0) else 0 }}
+            {{ (bat-grid) if  (pvPwr >0) else 0 }}
           unit_of_measurement: "W"
           state_class: measurement
           device_class: power

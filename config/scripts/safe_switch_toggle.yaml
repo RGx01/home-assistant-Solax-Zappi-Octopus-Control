@@ -1,0 +1,40 @@
+safe_switch_toggle:
+  description: "Toggle a switch safely with retry if it fails"
+  fields:
+    target_switch:
+      description: "The switch to toggle"
+      example: "switch.octopus_intelligent"
+    desired_state:
+      description: "The state to set (on/off)"
+      example: "on"
+  sequence:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {{ states(target_switch) == desired_state }}
+          sequence: []   # do nothing if already correct state
+        - conditions: []
+          sequence:
+            - action: "switch.turn_{{ desired_state }}"
+              target:
+                entity_id: "{{ target_switch }}"
+              continue_on_error: true
+
+            - delay: "00:00:05"
+
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >
+                        {{ states(target_switch) != desired_state }}
+                  sequence:
+                    - event: Solax Zappi Octopus Control
+                      event_data:
+                        message: >
+                          ⚠️ Failed to turn {{ desired_state }} {{ target_switch }}, retrying...
+                        title: ⚠️ Failed to turn {{ desired_state }} {{ target_switch }} 
+                        class: high
+                    - action: "switch.turn_{{ desired_state }}"
+                      target:
+                        entity_id: "{{ target_switch }}"
