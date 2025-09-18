@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v5.4.1 Tweaks to go with release
 # v5.3.0 Minor update to show hide charge period 2 when the switch is enabled
 # v5.0.1 Minor update to include Export Margin Delta (min)
 # v5.0   Refactored
@@ -714,6 +715,12 @@ sections:
               entity: binary_sensor.solax_discharge_nightly
           - type: conditional
             conditions:
+              - entity: binary_sensor.solax_discharge_manual
+                state: "on"
+            row:
+              entity: binary_sensor.solax_discharge_manual
+          - type: conditional
+            conditions:
               - entity: binary_sensor.solax_discharge_free_electric_prep
                 state: "on"
             row:
@@ -736,6 +743,9 @@ sections:
                 state: "on"
               - condition: state
                 entity: binary_sensor.solax_discharge_daily
+                state: "on"
+              - condition: state
+                entity: binary_sensor.solax_discharge_manual
                 state: "on"
       - type: entities
         entities:
