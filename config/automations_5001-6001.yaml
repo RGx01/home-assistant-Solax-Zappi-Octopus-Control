@@ -2,7 +2,7 @@
   alias: 5001 - Solax Zappi Octopus Control
   description: "# 5001 - Solax Zappi Octopus Control\nSee documentation in repo.\n\n#
     Initial installation instructions\n1. This is 5001. You also need 5002 5003 5004
-    and 5005 to make this work successfully. \n\n# Change Log \nv5.4.0 Added new daily
+    and 5005 to make this work successfully. \n\n# Change Log \nv5.4.1 Added new daily
     export which works with pre-emptive\nv5.3.0 Introducing safe switching of octopus_intelligent_smart_charge\nv5.0
     Refactor out account names\nv3.8 Estimated time EV needs to charge based on required
     % and registered EV size\nv3.7 Pre-emptive discharge of solax before EV charging
@@ -904,7 +904,7 @@
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
           value_template: '{{ state.state | float(0)  - 9 }}'
-          above: input_number.solax_manual_forced_discharge_limit_soc
+          above: input_number.solax_nightly_discharge_limit_soc
         - condition: template
           value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
             != 3)}}'
