@@ -2,8 +2,10 @@
 # Replace octopus account number z_ZZZZZZZZ with your own
 #
 # Change log
+# v5.4.0 Added Daily Discharge
+#        Added supporting event triggers to support battery exports
 # v5.3.0 Renamed Solax Local Battery Remaining Energy
-#        Fixed bug with solax_local_battery_in_from_solar sensor
+#        Fixed bug with solax_local_battery_in_from_solar sensor 
 # v5.1.0 Moved some sensors from solax_realtime and solax_cotrol to here as they didn't belong where they were
 # V5.0.1 Minor update to prevent a potential under charge of EV if plugged in later than the export time
 #        Added a user configurable Export Margin for when pre emptive discharges under estimate
@@ -130,7 +132,7 @@ solax_zappi_octopus_templates:
     # elevation - is degrees the sun is above the horizon
     ######################################################
     - sensor:
-        - name: Solar Threshold
+        - name: Solar Export Threshold
           unique_id: solar_export_threshold
           device_class: "timestamp"
           icon: mdi:weather-sunset-down
@@ -668,7 +670,29 @@ solax_zappi_octopus_templates:
           unique_id: solax_discharge_before_ev_charge
           state: >
             {{true if trigger.event.data.battery_discharge == "discharge before EV charge" else false}}
-    
+
+    ######################################################
+    # Binary Sensor triggered by events to allow Solax discharge
+    # to occur daily
+    # 5001 triggers
+    # 5002 catches the min SoC, it also confirms if this binary_sensor is on,
+    # if it is then it sets it to off.
+    ######################################################
+    - trigger:
+        - trigger: event
+          event_type: solax_discharge
+          event_data:
+            battery_discharge: "discharge daily"
+        - trigger: event
+          event_type: solax_discharge
+          event_data:
+            battery_discharge: "do nothing"
+      binary_sensor:
+        - name: Solax Discharge Daily
+          unique_id: solax_discharge_daily
+          state: >
+            {{true if trigger.event.data.battery_discharge == "discharge daily" else false}}
+
     ######################################################
     # Binary Sensor triggered by events to allow Solax discharge
     # to occur prior to 23:30
@@ -694,6 +718,43 @@ solax_zappi_octopus_templates:
           unique_id: solax_discharge_before_2330
           state: >
             {{true if trigger.event.data.battery_discharge == "discharge before 2330" else false}}
+
+    - trigger:
+        - trigger: event
+          event_type: solax_discharge
+          event_data:
+            battery_discharge: "discharge nightly"
+        - trigger: event
+          event_type: solax_discharge
+          event_data:
+            battery_discharge: "do nothing"
+      binary_sensor:
+        - name: Solax Discharge Nightly
+          unique_id: solax_discharge_nightly
+          state: >
+            {{true if trigger.event.data.battery_discharge == "discharge nightly" else false}}
+
+    ######################################################
+    # Binary Sensor triggered by events to allow Solax discharge
+    # to occur when free electric happens
+    # 5001 triggers
+    # 5002 catches the min SoC, it also confirms if this binary_sensor is on,
+    # if it is then it sets it to off.
+    ######################################################
+    - trigger:
+        - trigger: event
+          event_type: solax_discharge
+          event_data:
+            battery_discharge: "Free Electric Prep"
+        - trigger: event
+          event_type: solax_discharge
+          event_data:
+            battery_discharge: "do nothing"
+      binary_sensor:
+        - name: Solax Discharge Free Electric Prep
+          unique_id: solax_discharge_free_electric_prep
+          state: >
+            {{true if trigger.event.data.battery_discharge == "Free Electric Prep" else false}}
 
     ######################################################
     # Currently a 20 min window to protect the system from trying to enter a force discharge
@@ -733,7 +794,11 @@ solax_zappi_octopus_templates:
           daily: >
             {% set capacity_left = state_attr('sensor.solax_discharge_capacity','daily')|float (default = 0.0)%}
             {% set seconds_to_discharge = (capacity_left )|float/states('input_number.solax_inverter_capacity')|float (default=5.5)*60*60 %}
-            {{(seconds_to_discharge-(60*states('input_number.battery_export_margin_delta')|int (default=0)))|int (default=0)}}
+            {{[(seconds_to_discharge-(60*states('input_number.battery_export_margin_delta')|int (default=0)))|int (default=0),0|int]|max}}
+          nightly: >
+            {% set capacity_left = state_attr('sensor.solax_discharge_capacity','nightly')|float (default = 0.0)%}
+            {% set seconds_to_discharge = (capacity_left )|float/states('input_number.solax_inverter_capacity')|float (default=5.5)*60*60 %}
+            {{[(seconds_to_discharge-(60*states('input_number.battery_export_margin_delta')|int (default=0)))|int (default=0),0|int]|max}}
         icon: mdi:timer-marker
 
     ######################################################
@@ -746,22 +811,28 @@ solax_zappi_octopus_templates:
         device_class: "energy"
         state: >
           {% set battery_soh = (states('sensor.solax_local_battery_soh')|float (default=100)/100)|float%} 
-          {% set capacity_left = (states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_default_discharge_limit_soc')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2) * battery_soh%}
+          {% set capacity_left = [(states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_default_discharge_limit_soc')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2) * battery_soh,0|float]|max%}
           {{capacity_left|float (default=0.0)}}
         attributes:
           prior: >
             {% set battery_soh = (states('sensor.solax_local_battery_soh')|float (default=100)/100)|float%} 
-            {% set capacity_left = (states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_discharge_limit_soc_before_ev')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2) * battery_soh%}
+            {% set capacity_left = [(states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_discharge_limit_soc_before_ev')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2) * battery_soh,0|float]|max%}
             {{capacity_left|float (default=0.0)}}
 
           daily: >
             {% set battery_soh = (states('sensor.solax_local_battery_soh')|float (default=100)/100)|float%} 
-            {% set capacity_left = (states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_manual_forced_discharge_limit_soc')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2) * battery_soh%}
+            {% set capacity_left = [(states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_daily_discharge_limit_soc')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2) * battery_soh,0|float]|max%}
             {{capacity_left|float (default=0.0)}}
+
+          nightly: >
+            {% set battery_soh = (states('sensor.solax_local_battery_soh')|float (default=100)/100)|float%} 
+            {% set capacity_left = [(states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_nightly_discharge_limit_soc')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2) * battery_soh,0|float]|max%}
+            {{capacity_left|float (default=0.0)}}
+
         icon: mdi:battery
 
     ######################################################
-    # Pre emptive discharge time
+    # Pre emptive EV discharge time
     ######################################################
     - trigger:
         - trigger: state
@@ -878,7 +949,112 @@ solax_zappi_octopus_templates:
                 {% endif %}
             {% else %}
                 {{ none }}
-            {% endif %}            
+            {% endif %}
+            
+    ######################################################
+    # DAILY discharge time
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: sensor.pre_daily_battery_export_time_calc
+      action:
+        - if: "{{ trigger.to_state.state not in ['unknown','unavailable','None','none'] }}"
+          then:
+            - service: input_datetime.set_datetime
+              target:
+                entity_id: input_datetime.pre_daily_battery_export_time
+              data:
+                datetime: >
+                  {{ as_local(trigger.to_state.state | as_datetime) }}
+
+      sensor:
+        - name: Daily Battery Export Time (EV Disconnected)
+          unique_id: daily_battery_export_time_ev_disconnected
+          device_class: "timestamp"
+          state: >
+            {% set calc = trigger.to_state.state %}
+            {% if calc not in ['unknown','unavailable','None','none'] %}
+              {{ as_local(calc | as_datetime) }}
+            {% else %}
+              {{ as_local((states('input_datetime.pre_daily_battery_export_time') )| as_datetime) }}
+            {% endif %}
+          attributes:
+            last_triggered: >-
+              {{ trigger.to_state.last_changed }}
+
+    - sensor:
+        - name: Pre Daily Battery Export Time Calc
+          unique_id: pre_daily_battery_export_time_calc
+          device_class: "timestamp"
+          state: >
+            {# ---- Constants ---- #}
+            {% set inverter_eta = 0.97 %}
+            {% set now_dt = now() %}
+            {% set now_ts = now_dt | as_timestamp %}
+
+            {# ---- Sunset ---- #}
+            {% set sunset_dt = states('sensor.sun_next_setting') | as_datetime | default(now_dt) | as_local %}
+            {% set sunset_ts = sunset_dt | as_timestamp | default(now_ts) %}
+
+            {# ---- PV production forecast ---- #}
+            {% set production_remaining = (states('sensor.solcast_pv_forecast_forecast_remaining_today') | float(0)) * inverter_eta %}
+            {% set production_last_change = states.sensor.solcast_pv_forecast_forecast_remaining_today.last_changed | default(now_dt) %}
+            {% set production_last_change_ts = production_last_change | as_timestamp | default(now_ts) %}
+            {% set production_seconds_until_sunset = sunset_ts - production_last_change_ts %}
+            {% set production_per_hour = production_remaining / (production_seconds_until_sunset / 3600) if production_seconds_until_sunset > 0 else 0 %}
+
+            {# ---- Battery status ---- #}
+            {% set seconds_to_discharge_prior = state_attr('sensor.solax_seconds_to_discharge','daily') | default(0) | int %}
+            {% set capacity_left = state_attr('sensor.solax_discharge_capacity','daily') | default(0) | float %}
+            {% set inverter_kw = states('input_number.solax_inverter_capacity') | float(1) %}
+
+            {% set threshold_raw = today_at(states('input_datetime.daily_battery_export_time')) | default('') %}
+            {% if threshold_raw not in ['', 'unknown', 'None', none] %}
+                {% set threshold_dt = threshold_raw | as_datetime | as_local %}
+                {% set threshold_ts = threshold_dt | as_timestamp %}
+            {% else %}
+                {% set threshold_dt = none %}
+                {% set threshold_ts = none %}
+            {% endif %}
+
+            {# ---- Default starttime ---- #}
+            {% set starttime_dt = none %}
+
+            {# ---- Main logic ---- #}
+            {% if is_state('input_boolean.octopus_schedule_anytime','off') 
+                  and is_state('input_boolean.export_battery_daily','on') 
+                  and threshold_ts is not none %}
+
+                {% if is_state('input_boolean.export_battery_daily','on') %}
+                    {% if seconds_to_discharge_prior == 0 %}
+                        {% set starttime_dt = today_at(states('input_datetime.daily_battery_export_time'))  | as_datetime | default(none) | as_local %}
+                    {% else %}
+                        {# --- Compute overlap between PV production and battery discharge --- #}
+                        {% set raw_overlap = (sunset_ts - threshold_ts) if sunset_ts > threshold_ts else 0 %}
+                        {% set max_overlap = [seconds_to_discharge_prior, raw_overlap] | min %}
+                        {% set additional_production = (production_per_hour / 3600) * max_overlap %}
+                        {% set total_to_discharge = capacity_left + additional_production %}
+                        {% set seconds_to_discharge = (total_to_discharge / inverter_kw) * 3600 %}
+                        {% set computed_start_ts = threshold_ts - seconds_to_discharge %}
+                        {% set starttime_dt = (computed_start_ts + (60*states('input_number.battery_export_margin_delta')|int (default=0))) | as_datetime | as_local %}
+                    {% endif %}
+                {% else %}
+                    {% set starttime_dt = today_at(states('input_datetime.daily_battery_export_time')) | as_datetime | default(none) | as_local %}
+                {% endif %}
+            {% endif %}
+
+            {# ---- Output ---- #}
+            {% if starttime_dt is not none and starttime_dt > now_dt %}
+                {% if ((starttime_dt | as_timestamp) - now_ts) < 180 
+                      and is_state('input_boolean.octopus_schedule_anytime','off') 
+                      or states('sensor.solax_local_inverter_mode') == 'Manual' %}
+                    {{ states('sensor.daily_battery_export_time_ev_disconnected') | as_datetime | default(none) | as_local }}
+                {% else %}
+                    {{ starttime_dt }}
+                {% endif %}
+            {% else %}
+                {{ none }}
+            {% endif %}  
             
     ######################################################
     # Octopus Night Tariff Start Time
@@ -906,7 +1082,7 @@ solax_zappi_octopus_templates:
           state: >
             {%set starttime =(today_at("23:30")|as_timestamp +86400)|as_datetime|as_local%}
             {% if states('input_boolean.pre_emptive_export_battery') == 'on' and states('input_boolean.export_battery') == 'on' %}
-              {% set starttime = (today_at("23:30")|as_timestamp - state_attr('sensor.solax_seconds_to_discharge','daily')|int)|as_datetime|as_local %}
+              {% set starttime = (today_at("23:30")|as_timestamp - state_attr('sensor.solax_seconds_to_discharge','nightly')|int)|as_datetime|as_local %}
             {%elif states('input_boolean.pre_emptive_export_battery') == 'off' and states('input_boolean.export_battery') == 'on'%}
               {% set starttime = (today_at("23:30")|as_timestamp)|as_datetime|as_local %}
             {%elif states('input_boolean.export_battery') == 'off'%}
@@ -1001,26 +1177,6 @@ solax_zappi_octopus_templates:
             value: "{{ new_soh }}"
 
     ######################################################
-    # Battery SoH
-    ######################################################
-    # - trigger:
-    #     - trigger: state
-    #       entity_id: sensor.solax_local_battery_soh_calc
-    #       not_to:
-    #         - unavailable
-    #   sensor:
-    #     - name: Solax Local Battery SoH
-    #       unique_id: solax_local_battery_soh
-    #       unit_of_measurement: "%"
-    #       state_class: measurement
-    #       state: >
-    #         {{ trigger.to_state.state }}
-    #       attributes:
-    #         last_triggered: >-
-    #           {{ trigger.to_state.last_changed }}
-
-
-    ######################################################
     # Binary sensor for when house battery is supposed to be charging
     ######################################################
     - binary_sensor:
@@ -1070,8 +1226,8 @@ solax_zappi_octopus_templates:
     # Binary sensor for battery exports 
     ######################################################
     - binary_sensor:
-      - name: Battery Export Before EV Charge Allowed
-        unique_id: solax_battery_export_allowed
+      - name: Solax Battery Export Before EV Charge Allowed
+        unique_id: solax_battery_export_before_ev_charge_allowed
         icon: mdi:transmission-tower-import
         state: >
           {% set anytime = is_state('input_boolean.octopus_schedule_anytime', 'on') %}
@@ -1145,7 +1301,8 @@ solax_zappi_octopus_templates:
             {% set grid = states('sensor.solax_local_battery_use_in_from_grid')|int (default = 0) %}
             {% set bat = states('sensor.solax_local_battery_use_in')|int(default=0) - grid|int%}
             {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,states('input_number.solax_inverter_capacity')|float*1000)|int (default=0) %}
-            {{ (bat-grid) if  (pvPwr >0) else 0 }}
+            {{ (grid-bat) if  (pvPwr >0) else 0 }}
+            {# (bat-grid) #}
           unit_of_measurement: "W"
           state_class: measurement
           device_class: power

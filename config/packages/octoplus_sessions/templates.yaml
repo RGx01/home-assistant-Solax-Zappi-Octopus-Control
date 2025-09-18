@@ -5,6 +5,7 @@ octoplus_sessions_templates:
   template:
     ######################################################
     # Octopus free/saving sensors
+    # V5.4.0 Tidy
     # V5.2.0 Corrected Typo in octoplus sessions that may effect end time not being used correctly
     # V5.0   Refactor
     # v4.    Plannning to removed saving sessions because they are pointless
@@ -91,59 +92,12 @@ octoplus_sessions_templates:
     ######################################################
     # binary_sensor.free_electricity_today
     ######################################################
-    # - binary_sensor:
-    #     - name: Free Electricity Today
-    #       unique_id: free_electricity_today
-    #       state: >
-    #         {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
-    #         {% if events %}
-    #           {% set today = now().date().isoformat() %}
-    #           {% set event = events | selectattr('start','search', today) | first %}
-    #           {% if event is defined %}
-    #             {# sensor is ON if current time < event end #}
-    #             {{ now() < (event['end'] | as_datetime | as_local) }}
-    #           {% else %}
-    #             false
-    #           {% endif %}
-    #         {% else %}
-    #           false
-    #         {% endif %}
-    #       attributes:
-    #         session_start: >
-    #           {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
-    #           {% if events %}
-    #             {% set today = now().date().isoformat() %}
-    #             {% set event = events | selectattr('start','search', today) | first %}
-    #             {{ event['start'] | as_datetime | as_local if event is defined else none }}
-    #           {% else %}
-    #             {{ none }}
-    #           {% endif %}
-
-    #         session_end: >
-    #           {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
-    #           {% if events %}
-    #             {% set today = now().date().isoformat() %}
-    #             {% set event = events | selectattr('start','search', today) | first %}
-    #             {{ event['end'] | as_datetime | as_local if event is defined else none }}
-    #           {% else %}
-    #             {{ none }}
-    #           {% endif %}
-
-    #         duration: >
-    #           {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
-    #           {% if events %}
-    #             {% set today = now().date().isoformat() %}
-    #             {% set event = events | selectattr('start','search', today) | first %}
-    #             {{ event['duration_in_minutes'] | int if event is defined else 0 }}
-    #           {% else %}
-    #             0
-    #           {% endif %}
 
     - binary_sensor:
         - name: Free Electricity Today
           unique_id: free_electricity_today
           # This binary sensor shows ON if today has a free electricity session
-          # that is currently still running.
+          # and is currently still running.
           # Otherwise, it is OFF.
           state: >
             {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}

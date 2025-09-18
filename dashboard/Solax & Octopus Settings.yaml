@@ -126,6 +126,24 @@ sections:
           entities:
             - type: conditional
               conditions:
+                - entity: binary_sensor.free_electricity_today
+                  state_not: "off"
+                - entity: input_boolean.octopus_free_electric_soc_use
+                  state_not: "on"
+              row:
+                entity: input_datetime.octopus_free_electricity_prep
+                format: time
+            - type: conditional
+              conditions:
+                - entity: input_boolean.export_battery_daily
+                  state_not: "off"
+                - entity: sensor.zappi_plug_status
+                  state: EV Disconnected
+              row:
+                entity: sensor.daily_battery_export_time_ev_disconnected
+                format: time
+            - type: conditional
+              conditions:
                 - entity: sensor.zappi_plug_status
                   state: EV Connected
               row:
@@ -135,7 +153,7 @@ sections:
               conditions:
                 - entity: input_boolean.export_battery_prior
                   state_not: "off"
-                - entity: binary_sensor.solax_battery_export_allowed
+                - entity: binary_sensor.solax_battery_export_before_ev_charge_allowed
                   state: "on"
               row:
                 entity: sensor.pre_export_battery_before_charging_ev_time
@@ -149,6 +167,36 @@ sections:
               row:
                 entity: sensor.pre_nightly_battery_export_time
                 format: time
+            - type: conditional
+              conditions:
+                - entity: binary_sensor.solax_discharge_daily
+                  state: "on"
+              row:
+                entity: binary_sensor.solax_discharge_daily
+            - type: conditional
+              conditions:
+                - entity: binary_sensor.solax_discharge_before_ev_charge
+                  state: "on"
+              row:
+                entity: binary_sensor.solax_discharge_before_ev_charge
+            - type: conditional
+              conditions:
+                - entity: binary_sensor.solax_discharge_before_2330
+                  state: "on"
+              row:
+                entity: binary_sensor.solax_discharge_before_2330
+            - type: conditional
+              conditions:
+                - entity: binary_sensor.solax_discharge_nightly
+                  state: "on"
+              row:
+                entity: binary_sensor.solax_discharge_nightly
+            - type: conditional
+              conditions:
+                - entity: binary_sensor.solax_discharge_free_electric_prep
+                  state: "on"
+              row:
+                entity: binary_sensor.solax_discharge_free_electric_prep
       - type: conditional
         conditions:
           - condition: state
@@ -591,7 +639,7 @@ sections:
           action: none
       - type: entities
         entities:
-          - entity: binary_sensor.solax_battery_export_allowed
+          - entity: binary_sensor.solax_battery_export_before_ev_charge_allowed
           - entity: input_boolean.pre_emptive_export_battery
             state_color: true
           - type: conditional
@@ -607,6 +655,13 @@ sections:
                 state_not: "off"
             row:
               entity: input_number.solax_battery_soh_stored
+              format: time
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery_daily
+                state_not: "off"
+            row:
+              entity: sensor.daily_battery_export_time_ev_disconnected
               format: time
           - type: conditional
             conditions:
@@ -633,6 +688,57 @@ sections:
             state: "on"
       - type: entities
         entities:
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.solax_discharge_daily
+                state: "on"
+            row:
+              entity: binary_sensor.solax_discharge_daily
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.solax_discharge_before_ev_charge
+                state: "on"
+            row:
+              entity: binary_sensor.solax_discharge_before_ev_charge
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.solax_discharge_before_2330
+                state: "on"
+            row:
+              entity: binary_sensor.solax_discharge_before_2330
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.solax_discharge_nightly
+                state: "on"
+            row:
+              entity: binary_sensor.solax_discharge_nightly
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.solax_discharge_free_electric_prep
+                state: "on"
+            row:
+              entity: binary_sensor.solax_discharge_free_electric_prep
+        title: Exporting Status
+        visibility:
+          - condition: or
+            conditions:
+              - condition: state
+                entity: binary_sensor.solax_discharge_before_2330
+                state: "on"
+              - condition: state
+                entity: binary_sensor.solax_discharge_free_electric_prep
+                state: "on"
+              - condition: state
+                entity: binary_sensor.solax_discharge_nightly
+                state: "on"
+              - condition: state
+                entity: binary_sensor.solax_discharge_before_ev_charge
+                state: "on"
+              - condition: state
+                entity: binary_sensor.solax_discharge_daily
+                state: "on"
+      - type: entities
+        entities:
           - entity: input_boolean.export_battery_prior
           - type: conditional
             conditions:
@@ -647,6 +753,28 @@ sections:
             row:
               entity: input_boolean.priorise_export_over_ev
         title: Export Before Charging EV
+        show_header_toggle: false
+        state_color: true
+        visibility:
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
+      - type: entities
+        entities:
+          - entity: input_boolean.export_battery_daily
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery_daily
+                state_not: "off"
+            row:
+              entity: input_datetime.daily_battery_export_time
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery_daily
+                state_not: "off"
+            row:
+              entity: input_number.solax_daily_discharge_limit_soc
+        title: Daily Export
         show_header_toggle: false
         state_color: true
         visibility:

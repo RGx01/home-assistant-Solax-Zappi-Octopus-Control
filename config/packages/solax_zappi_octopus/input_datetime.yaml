@@ -3,7 +3,9 @@ solax_zappi_octopus_input_datetime:
     #########################################
     #Solax UI
     # change log
-    # v2.1 added battery warmer and renamed solar threshold
+    # v5.4.0  added daily_battery_export_time
+    #.        added pre_daily_battery_export_time
+    # v2.1    added battery warmer and renamed solar threshold
     #########################################
     solax_battery_start_discharge_time:
       name: Battery Start Discharge Time
@@ -73,5 +75,14 @@ solax_zappi_octopus_input_datetime:
 
     pre_export_battery_before_charging_ev_time:
       name: Pre Export Battery Before Charging EV Time
+      has_date: true
+      has_time: true
+
+    daily_battery_export_time:
+      name: Daily Battery Export Time
+      has_time: true
+
+    pre_daily_battery_export_time:
+      name: Pre Daily Battery Export Time
       has_date: true
       has_time: true

@@ -1,4 +1,8 @@
 ###############################
+# V5.4.0.   Added individual discharge limits
+#           solax_manual_forced_discharge_limit_soc
+#           solax_daily_discharge_limit_soc
+#           solax_nightly_discharge_limit_soc
 # V5.0.1    Added Battery Export Margin Delta (minutes)
 #           This is to account for sometimes Battery SoC is not quite linear
 #           and also not always accurate
@@ -53,7 +57,7 @@ solax_zappi_octopus_input_number:
       icon: mdi:battery-charging-20
     #Manual forced discharge limit
     solax_manual_forced_discharge_limit_soc:
-      name: Daily/Forced Discharge SoC
+      name: Manual Forced Discharge SoC
       unit_of_measurement: "%"
       #initial: 18
       min: 10
@@ -61,7 +65,27 @@ solax_zappi_octopus_input_number:
       step: 1
       mode: box
       icon: mdi:battery-20
-    #Manual forced discharge limit
+    #Daily forced discharge limit
+    solax_daily_discharge_limit_soc:
+      name: Daily Discharge SoC
+      unit_of_measurement: "%"
+      #initial: 18
+      min: 10
+      max: 80
+      step: 1
+      mode: box
+      icon: mdi:battery-20
+    #Nightly forced discharge limit
+    solax_nightly_discharge_limit_soc:
+      name: Nightly Discharge SoC
+      unit_of_measurement: "%"
+      #initial: 18
+      min: 10
+      max: 80
+      step: 1
+      mode: box
+      icon: mdi:battery-20
+    # Discharge limit when discharging to meet ev charge start time
     solax_discharge_limit_soc_before_ev:
       name: Discharge to SoC (Before charging EV)
       unit_of_measurement: "%"
