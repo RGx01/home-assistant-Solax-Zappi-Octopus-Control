@@ -1203,16 +1203,16 @@
     a free Electric discharge, feed in priority is used to prevent the battery filling
     if it's sunny. After free electric session is done default mode is returned. \n\n#
     Initial installation instructions\n1. This is 5002 only. You also need 5001 5003
-    5004 and 5005. \n2. Copy and Paste into your automations.yaml\n\n# Change log\nv5.4.0
-    Added daily discharge and consistent trigger behaviours\nv3.6 variable for loops\nv3.6
-    Stop discharge at time required for car to charge\nv3.3 Added condition to check
-    if saving session is in progress\nv3.3  Added a validity check on which SoC is
-    highest for the discharge before ev charge as it is critical that an event is
-    triggered in this option to initialise EV charging.\nv3.2  Add a condition to
-    check if export prior and manual export button press.\nv3.0.0 Set an event to
-    trigger EV charging if binary_sensor.\nSolax Discharge Before EV Charge is on
-    to off\nv2.1.4 Renamed automation\nv2.1.0 - Changes to limits to catch the battery
-    closer to the required threshold set by user\nv2.0.0 -productionisation\n"
+    5004 and 5005. \n2. Copy and Paste into your automations.yaml\n\n# Change log\nv5.4.1
+    Added missing catch for manual discharge\nv5.4.0 Added daily discharge and consistent
+    trigger behaviours\nv3.6 variable for loops\nv3.6 Stop discharge at time required
+    for car to charge\nv3.3 Added condition to check if saving session is in progress\nv3.3
+    \ Added a validity check on which SoC is highest for the discharge before ev charge
+    as it is critical that an event is triggered in this option to initialise EV charging.\nv3.2
+    \ Add a condition to check if export prior and manual export button press.\nv3.0.0
+    Set an event to trigger EV charging if binary_sensor.\nSolax Discharge Before
+    EV Charge is on to off\nv2.1.4 Renamed automation\nv2.1.0 - Changes to limits
+    to catch the battery closer to the required threshold set by user\nv2.0.0 -productionisation\n"
   triggers:
   - trigger: template
     value_template: "{%set highestSoC = states('sensor.solax_local_feed_in_battery_min_soc')|int
@@ -1259,7 +1259,8 @@
       (default=15),\n                   states('sensor.solax_local_selfuse_battery_min_soc')|int
       (default=15),\n                   states('input_number.solax_manual_forced_discharge_limit_soc')|int
       (default =20)\n%}\n{{ states('sensor.solax_local_battery_soc')|int (default=100)
-      < highestSoC|max|int+1 }}\n"
+      < highestSoC|max|int+1 and states('binary_sensor.solax_discharge_manual') ==
+      'on'}}\n"
     id: Manual Stop Discharge
   - trigger: template
     value_template: "{%set highestSoC = states('sensor.solax_local_feed_in_battery_min_soc')|int
