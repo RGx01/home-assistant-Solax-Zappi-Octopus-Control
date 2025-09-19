@@ -1325,7 +1325,7 @@ solax_zappi_octopus_templates:
             {% set grid = states('sensor.solax_local_battery_use_in_from_grid')|int (default = 0) %}
             {% set bat = states('sensor.solax_local_battery_use_in')|int(default=0) - grid|int%}
             {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,states('input_number.solax_inverter_capacity')|float*1000)|int (default=0) %}
-            {{ (grid-bat) if  (pvPwr >0) else 0 }}
+            {{ (bat) if  (pvPwr >0) else 0 }}
             {# (bat-grid) #}
           unit_of_measurement: "W"
           state_class: measurement
