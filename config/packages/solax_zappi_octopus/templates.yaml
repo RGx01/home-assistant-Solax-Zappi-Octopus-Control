@@ -933,37 +933,32 @@ solax_zappi_octopus_templates:
                   and is_state('input_boolean.export_battery_prior','on') 
                   and threshold_ts is not none %}
 
-                {% if is_state('input_boolean.pre_emptive_export_battery','on') %}
-                    {% if seconds_to_discharge_prior == 0 %}
-                        {% set starttime_dt = threshold_dt %}
+                {% if is_state('input_boolean.pre_emptive_export_battery','on') and seconds_to_discharge_prior > 0 %}
+                    {% set raw_overlap = max(sunset_ts - threshold_ts, 0) %}
+                    {% set additional_production = (production_per_hour / 3600) * raw_overlap %}
+                    {% set total_to_discharge = capacity_left + additional_production %}
+                    {% set seconds_to_discharge_raw = (total_to_discharge / inverter_kw) * 3600 %}
+
+                    {% if raw_overlap > 0 %}
+                        {% set seconds_to_discharge_clamped = [seconds_to_discharge_raw, raw_overlap] | min %}
+                        {% set raw_start_ts = threshold_ts - seconds_to_discharge_clamped %}
                     {% else %}
-                        {% set raw_overlap = max(sunset_ts - threshold_ts, 0) %}
-                        {% set additional_production = (production_per_hour / 3600) * raw_overlap %}
-                        {% set total_to_discharge = capacity_left + additional_production %}
-                        {% set seconds_to_discharge_raw = (total_to_discharge / inverter_kw) * 3600 %}
-
-                        {% if raw_overlap > 0 %}
-                            {% set seconds_to_discharge_clamped = [seconds_to_discharge_raw, raw_overlap] | min %}
-                            {% set seconds_to_discharge_clamped = [0, seconds_to_discharge_clamped] | max %}
-                            {% set raw_start_ts = threshold_ts - seconds_to_discharge_clamped %}
-                        {% else %}
-                            {% set raw_start_ts = max(now_ts, threshold_ts - seconds_to_discharge_raw) %}
-                        {% endif %}
-
-                        {% set margin = 60 * (states('input_number.battery_export_margin_delta') | int(0)) %}
-                        {% set computed_start_ts = raw_start_ts + margin %}
-
-                        {% set safety_margin = 150 %}
-                        {% set starttime_ts_with_margin = computed_start_ts + safety_margin %}
-                        {% set starttime_ts_final = [starttime_ts_with_margin, threshold_ts] | min %}
-                        {% set starttime_dt = starttime_ts_final | as_datetime | as_local %}
+                        {% set raw_start_ts = threshold_ts - seconds_to_discharge_raw %}
                     {% endif %}
+
+                    {% set margin = 60 * (states('input_number.battery_export_margin_delta') | int(0)) %}
+                    {% set safety_margin = 150 %}
+                    {% set computed_start_ts = raw_start_ts + margin + safety_margin %}
+
+                    {# --- Clamp to EV start time (Option B) --- #}
+                    {% set final_start_ts = [computed_start_ts, threshold_ts] | min %}
+                    {% set starttime_dt = final_start_ts | as_datetime | as_local %}
                 {% else %}
                     {% set starttime_dt = threshold_dt %}
                 {% endif %}
             {% endif %}
 
-            {# ---- Output ---- #}
+            {# ---- Output with deadband lock-in ---- #}
             {% set starttime_ts = starttime_dt | as_timestamp if starttime_dt is not none else none %}
             {% if starttime_ts is not none and starttime_ts > now_ts %}
                 {% set deadband_window = 180 %}
@@ -1051,40 +1046,35 @@ solax_zappi_octopus_templates:
                   and is_state('input_boolean.export_battery_daily','on') 
                   and threshold_ts is not none %}
 
-                {% if is_state('input_boolean.pre_emptive_export_battery','on') %}
-                    {% if seconds_to_discharge_prior == 0 %}
-                        {% set starttime_dt = threshold_dt %}
+                {% if is_state('input_boolean.pre_emptive_export_battery','on') and seconds_to_discharge_prior > 0 %}
+                    {# --- Compute overlap between PV production and battery discharge --- #}
+                    {% set raw_overlap = max(sunset_ts - threshold_ts, 0) %}
+                    {% set additional_production = (production_per_hour / 3600) * raw_overlap %}
+                    {% set total_to_discharge = capacity_left + additional_production %}
+                    {% set seconds_to_discharge_raw = (total_to_discharge / inverter_kw) * 3600 %}
+
+                    {% if raw_overlap > 0 %}
+                        {% set seconds_to_discharge_clamped = [seconds_to_discharge_raw, raw_overlap] | min %}
+                        {% set raw_start_ts = threshold_ts - seconds_to_discharge_clamped %}
                     {% else %}
-                        {# --- Compute overlap between PV production and battery discharge --- #}
-                        {% set raw_overlap = max(sunset_ts - threshold_ts, 0) %}
-                        {% set additional_production = (production_per_hour / 3600) * raw_overlap %}
-                        {% set total_to_discharge = capacity_left + additional_production %}
-                        {% set seconds_to_discharge_raw = (total_to_discharge / inverter_kw) * 3600 %}
-
-                        {% if raw_overlap > 0 %}
-                            {% set seconds_to_discharge_clamped = [seconds_to_discharge_raw, raw_overlap] | min %}
-                            {% set seconds_to_discharge_clamped = [0, seconds_to_discharge_clamped] | max %}
-                            {% set raw_start_ts = threshold_ts - seconds_to_discharge_clamped %}
-                        {% else %}
-                            {% set raw_start_ts = max(now_ts, threshold_ts - seconds_to_discharge_raw) %}
-                        {% endif %}
-
-                        {# --- Apply margin delta --- #}
-                        {% set margin = 60 * (states('input_number.battery_export_margin_delta') | int(0)) %}
-                        {% set computed_start_ts = raw_start_ts + margin %}
-
-                        {# --- Clamp to now+150s once and daily threshold --- #}
-                        {% set safety_margin = 150 %}
-                        {% set starttime_ts_with_margin = computed_start_ts + safety_margin %}
-                        {% set starttime_ts_final = [starttime_ts_with_margin, threshold_ts] | min %}
-                        {% set starttime_dt = starttime_ts_final | as_datetime | as_local %}
+                        {% set raw_start_ts = threshold_ts - seconds_to_discharge_raw %}
                     {% endif %}
+
+                    {# --- Apply margin delta and 150s safety margin --- #}
+                    {% set margin = 60 * (states('input_number.battery_export_margin_delta') | int(0)) %}
+                    {% set safety_margin = 150 %}
+                    {% set computed_start_ts = raw_start_ts + margin + safety_margin %}
+
+                    {# --- Clamp to daily threshold (Option B) --- #}
+                    {% set final_start_ts = [computed_start_ts, threshold_ts] | min %}
+                    {% set starttime_dt = final_start_ts | as_datetime | as_local %}
                 {% else %}
+                    {# --- Pre-emptive export off or seconds_to_discharge=0 --- #}
                     {% set starttime_dt = threshold_dt %}
                 {% endif %}
             {% endif %}
 
-            {# ---- Output ---- #}
+            {# ---- Output with deadband lock-in ---- #}
             {% set starttime_ts = starttime_dt | as_timestamp if starttime_dt is not none else none %}
             {% if starttime_ts is not none and starttime_ts > now_ts %}
                 {% set deadband_window = 180 %}

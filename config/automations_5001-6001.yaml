@@ -121,6 +121,17 @@
     from: 'on'
     to: 'off'
     id: Solax Discharge Prior to 2330 END
+    enabled: false
+  - trigger: state
+    entity_id:
+    - binary_sensor.solax_discharge_before_2330
+    to: 'off'
+    from: 'on'
+    id: finish discharge
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
   - entity_id:
     - binary_sensor.octopus_intelligent_dispatching
     to: 'off'
@@ -274,16 +285,6 @@
   - trigger: state
     entity_id:
     - binary_sensor.solax_discharge_nightly
-    to: 'off'
-    from: 'on'
-    id: finish discharge
-    for:
-      hours: 0
-      minutes: 2
-      seconds: 0
-  - trigger: state
-    entity_id:
-    - binary_sensor.solax_discharge_before_2330
     to: 'off'
     from: 'on'
     id: finish discharge
