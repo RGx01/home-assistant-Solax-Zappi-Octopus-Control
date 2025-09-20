@@ -818,7 +818,7 @@ solax_zappi_octopus_templates:
           daily: >
             {% set capacity_left = state_attr('sensor.solax_discharge_capacity','daily')|float (default = 0.0)%}
             {% set seconds_to_discharge = (capacity_left )|float/states('input_number.solax_inverter_capacity')|float (default=5.5)*60*60 %}
-            {{[(seconds_to_discharge-(60*states('input_number.battery_export_margin_delta')|int (default=0)))|int (default=0),0|int]|max}}
+            {{[seconds_to_discharge|int (default=0),0|int]|max}}
           nightly: >
             {% set capacity_left = state_attr('sensor.solax_discharge_capacity','nightly')|float (default = 0.0)%}
             {% set seconds_to_discharge = (capacity_left )|float/states('input_number.solax_inverter_capacity')|float (default=5.5)*60*60 %}
@@ -901,7 +901,7 @@ solax_zappi_octopus_templates:
             {% set sunset_ts = sunset_dt | as_timestamp | default(now_ts) %}
 
             {# ---- PV production forecast ---- #}
-            {% set production_remaining = (states('sensor.solcast_pv_forecast_forecast_remaining_today') | float(0)) * inverter_eta %}
+            {% set production_remaining = (states('sensor.solcast_pv_forecast_forecast_remaining_today') | float(0) / 1000) * inverter_eta %}
             {% set production_last_change = states.sensor.solcast_pv_forecast_forecast_remaining_today.last_changed | default(now_dt) %}
             {% set production_last_change_ts = production_last_change | as_timestamp | default(now_ts) %}
             {% set production_seconds_until_sunset = sunset_ts - production_last_change_ts %}
@@ -949,15 +949,33 @@ solax_zappi_octopus_templates:
                         {% set starttime_dt = states('sensor.ev_start_time') | as_datetime | default(none) | as_local %}
                     {% else %}
                         {# --- Compute overlap between PV production and battery discharge --- #}
-                        {% set raw_overlap = (sunset_ts - threshold_ts) if sunset_ts > threshold_ts else 0 %}
-                        {% set max_overlap = [seconds_to_discharge_prior, raw_overlap] | min %}
-                        {% set additional_production = (production_per_hour / 3600) * max_overlap %}
+                        {% set raw_overlap = max(sunset_ts - threshold_ts, 0) %}
+                        {% set additional_production = (production_per_hour / 3600) * raw_overlap %}
                         {% set total_to_discharge = capacity_left + additional_production %}
-                        {% set seconds_to_discharge = (total_to_discharge / inverter_kw) * 3600 %}
-                        {% set computed_start_ts = threshold_ts - seconds_to_discharge %}
-                        {% set starttime_dt = (computed_start_ts + (60*states('input_number.battery_export_margin_delta')|int (default=0))) | as_datetime | as_local %}
+                        {% set seconds_to_discharge_raw = (total_to_discharge / inverter_kw) * 3600 %}
+
+                        {% if raw_overlap > 0 %}
+                            {# --- Case 1: Some PV/battery overlap --- #}
+                            {% set seconds_to_discharge_clamped = [seconds_to_discharge_raw, raw_overlap] | min %}
+                            {% set seconds_to_discharge_clamped = [0, seconds_to_discharge_clamped] | max %}
+                            {% set raw_start_ts = threshold_ts - seconds_to_discharge_clamped %}
+                        {% else %}
+                            {# --- Case 2: Post-sunset or no overlap --- #}
+                            {% set raw_start_ts = max(now_ts, threshold_ts - seconds_to_discharge_raw) %}
+                        {% endif %}
+
+                        {# --- Apply margin delta --- #}
+                        {% set margin = 60 * (states('input_number.battery_export_margin_delta') | int(0)) %}
+                        {% set computed_start_ts = raw_start_ts + margin %}
+
+                        {# --- Clamp to minimum now+150s and maximum ev_start_time --- #}
+                        {% set ev_start_ts = states('sensor.ev_start_time') | as_datetime | as_timestamp %}
+                        {% set starttime_ts_clamped = [computed_start_ts, now_ts + 150] | max %}
+                        {% set starttime_ts_final = [starttime_ts_clamped, ev_start_ts] | min %}
+                        {% set starttime_dt = starttime_ts_final | as_datetime | as_local %}
                     {% endif %}
                 {% else %}
+                    {# --- Original fallback behaviour --- #}
                     {% set starttime_dt = states('sensor.ev_start_time') | as_datetime | default(none) | as_local %}
                 {% endif %}
             {% endif %}
@@ -1021,7 +1039,7 @@ solax_zappi_octopus_templates:
             {% set sunset_ts = sunset_dt | as_timestamp | default(now_ts) %}
 
             {# ---- PV production forecast ---- #}
-            {% set production_remaining = (states('sensor.solcast_pv_forecast_forecast_remaining_today') | float(0)) * inverter_eta %}
+            {% set production_remaining = (states('sensor.solcast_pv_forecast_forecast_remaining_today') | float(0) / 1000) * inverter_eta %}
             {% set production_last_change = states.sensor.solcast_pv_forecast_forecast_remaining_today.last_changed | default(now_dt) %}
             {% set production_last_change_ts = production_last_change | as_timestamp | default(now_ts) %}
             {% set production_seconds_until_sunset = sunset_ts - production_last_change_ts %}
@@ -1032,6 +1050,7 @@ solax_zappi_octopus_templates:
             {% set capacity_left = state_attr('sensor.solax_discharge_capacity','daily') | default(0) | float %}
             {% set inverter_kw = states('input_number.solax_inverter_capacity') | float(1) %}
 
+            {# ---- Threshold / export time ---- #}
             {% set threshold_raw = today_at(states('input_datetime.daily_battery_export_time')) | default('') %}
             {% if threshold_raw not in ['', 'unknown', 'None', none] %}
                 {% set threshold_dt = threshold_raw | as_datetime | as_local %}
@@ -1049,21 +1068,38 @@ solax_zappi_octopus_templates:
                   and is_state('input_boolean.export_battery_daily','on') 
                   and threshold_ts is not none %}
 
-                {% if is_state('input_boolean.export_battery_daily','on') %}
+                {% if is_state('input_boolean.pre_emptive_export_battery','on') %}
                     {% if seconds_to_discharge_prior == 0 %}
-                        {% set starttime_dt = today_at(states('input_datetime.daily_battery_export_time'))  | as_datetime | default(none) | as_local %}
+                        {% set starttime_dt = threshold_dt %}
                     {% else %}
                         {# --- Compute overlap between PV production and battery discharge --- #}
-                        {% set raw_overlap = (sunset_ts - threshold_ts) if sunset_ts > threshold_ts else 0 %}
-                        {% set max_overlap = [seconds_to_discharge_prior, raw_overlap] | min %}
-                        {% set additional_production = (production_per_hour / 3600) * max_overlap %}
+                        {% set raw_overlap = max(sunset_ts - threshold_ts, 0) %}
+                        {% set additional_production = (production_per_hour / 3600) * raw_overlap %}
                         {% set total_to_discharge = capacity_left + additional_production %}
-                        {% set seconds_to_discharge = (total_to_discharge / inverter_kw) * 3600 %}
-                        {% set computed_start_ts = threshold_ts - seconds_to_discharge %}
-                        {% set starttime_dt = (computed_start_ts + (60*states('input_number.battery_export_margin_delta')|int (default=0))) | as_datetime | as_local %}
+                        {% set seconds_to_discharge_raw = (total_to_discharge / inverter_kw) * 3600 %}
+
+                        {% if raw_overlap > 0 %}
+                            {# --- Case 1: Positive PV overlap --- #}
+                            {% set seconds_to_discharge_clamped = [seconds_to_discharge_raw, raw_overlap] | min %}
+                            {% set seconds_to_discharge_clamped = [0, seconds_to_discharge_clamped] | max %}
+                            {% set raw_start_ts = threshold_ts - seconds_to_discharge_clamped %}
+                        {% else %}
+                            {# --- Case 2: Post-sunset or no overlap --- #}
+                            {% set raw_start_ts = max(now_ts, threshold_ts - seconds_to_discharge_raw) %}
+                        {% endif %}
+
+                        {# --- Apply margin delta --- #}
+                        {% set margin = 60 * (states('input_number.battery_export_margin_delta') | int(0)) %}
+                        {% set computed_start_ts = raw_start_ts + margin %}
+
+                        {# --- Clamp to now+150s minimum and daily threshold maximum --- #}
+                        {% set starttime_ts_clamped = [computed_start_ts, now_ts + 150] | max %}
+                        {% set starttime_ts_final = [starttime_ts_clamped, threshold_ts] | min %}
+                        {% set starttime_dt = starttime_ts_final | as_datetime | as_local %}
                     {% endif %}
                 {% else %}
-                    {% set starttime_dt = today_at(states('input_datetime.daily_battery_export_time')) | as_datetime | default(none) | as_local %}
+                    {# --- Fallback: pre_emptive_export_battery off --- #}
+                    {% set starttime_dt = threshold_dt %}
                 {% endif %}
             {% endif %}
 
@@ -1078,7 +1114,8 @@ solax_zappi_octopus_templates:
                 {% endif %}
             {% else %}
                 {{ none }}
-            {% endif %}  
+            {% endif %}
+
             
     ######################################################
     # Octopus Night Tariff Start Time
