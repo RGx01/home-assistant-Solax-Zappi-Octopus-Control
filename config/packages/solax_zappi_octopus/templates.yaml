@@ -2,6 +2,7 @@
 # Replace octopus account number z_ZZZZZZZZ with your own
 #
 # Change log
+# v5.5.0 Improved predictions on pre emptive discharges
 # v5.4.1 Fixed Dump Power to include house load
 #        Added Manual discharge missing binary_sensor used in 5002
 # v5.4.0 Added Daily Discharge
