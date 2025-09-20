@@ -1,6 +1,7 @@
 ###############################################
 #
 # Change log
+# v5.6.1 Fixed clamping issue that pushed the pre emptive time out until the limit.
 # v5.5.0 Improved predictions on pre emptive discharges
 # v5.4.1 Fixed Dump Power to include house load
 #        Added Manual discharge missing binary_sensor used in 5002
@@ -125,7 +126,7 @@ solax_zappi_octopus_templates:
           device_class: "timestamp"
           state: >
             {%set target_time = states('sensor.octopus_intelligent_target_time')|as_timestamp (default=today_at("05:30")|as_timestamp)%}
-            {%set target_percentage = states('number.octopus_intelligent_charge_target')%}
+            {%set target_percentage = states('number.octopus_intelligent_charge_target')|int (default=100) %}
             {%set ev_size = states('input_number.ev_battery_size')|int(default=10) %}
             {%set delta_time = ((ev_size|int/6.8)*(target_percentage|int/100))*60*60%}
             {{(target_time-delta_time)|as_datetime (default=(now()|as_timestamp-delta_time)|as_datetime)}}
@@ -240,30 +241,32 @@ solax_zappi_octopus_templates:
           device_class: "energy"
           state_class: total
           state: >
-            {%- set ns2 = namespace( total_dispatch = 0 ) -%}
-            {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}               
-              {%- for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') -%}
-                  {%- set ns2.total_dispatch = ns2.total_dispatch|float + ((dispatch.end|as_timestamp - dispatch.start|as_timestamp)|int/60/60*7.0) %}
-              {%- endfor -%}
-            {%- endif  -%}
-            {{ns2.total_dispatch|float (default=0.0)}}
+            {%- set planned = state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') or [] -%}
+            {%- set ns2 = namespace(total_dispatch=0.0) -%}
+            {%- for dispatch in planned -%}
+              {%- if dispatch.start is not none and dispatch.end is not none -%}
+                {%- set ns2.total_dispatch = ns2.total_dispatch + ((dispatch.end|as_timestamp - dispatch.start|as_timestamp)/3600*7.0) -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {{ ns2.total_dispatch }}
+
           attributes:
             total_dispatches: >
-              {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
-                {{state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches')|list|count}}
-              {%- else -%}
-                {{0}}
-              {%- endif  %}
+              {{ (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') or []) | count }}
+
             dispatches: >
-              {% set ns3= namespace(members=[]) %}
-              {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
-                {% for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') -%}
-                  {% set ns3.members = ns3.members + [{ "dispatch":(dispatch.start|as_datetime|as_local).strftime('%H:%M') + " to " + (dispatch.end | as_datetime | as_local).strftime('%H:%M') }] %}
-                {%- endfor -%}
-                {{ns3.members}}
-              {%- else -%}
-                {{None}}
-              {%- endif  %}
+              {% set planned = state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') or [] %}
+              {% set ns3 = namespace(members=[]) %}
+              {% for dispatch in planned %}
+                {% if dispatch.start is not none and dispatch.end is not none %}
+                  {% set ns3.members = ns3.members + [{
+                    "dispatch": (dispatch.start|as_datetime|as_local).strftime('%H:%M') 
+                              + " to " 
+                              + (dispatch.end|as_datetime|as_local).strftime('%H:%M')
+                  }] %}
+                {% endif %}
+              {% endfor %}
+              {{ ns3.members }}
 
     ######################################################
     # Octopus dispatch kWh
@@ -312,26 +315,26 @@ solax_zappi_octopus_templates:
           device_class: "energy"
           state_class: total
           state: >
-            {% set ns = namespace(total_dispatch=0) %}
+            {% set ns = namespace(total_dispatch=0.0) %}
 
             {# Safely get timestamps, default to 0 if unavailable #}
             {% set zappi_disconnected_ts = states('sensor.zappi_last_disconnected') | as_timestamp(default=0) %}
             {% set zappi_connected_ts = states('sensor.zappi_last_connected') | as_timestamp(default=0) %}
 
             {# Calculate adjusted times safely #}
-            {% set disconnected = (zappi_disconnected_ts - (zappi_disconnected_ts % 1800)) + (30 * 60) %}
+            {% set disconnected = (zappi_disconnected_ts - (zappi_disconnected_ts % 1800)) + 1800 %}
             {% set connected = zappi_connected_ts - (zappi_connected_ts % 1800) %}
 
-            {# Sum the charge from completed dispatches if any #}
-            {% set completed_dispatches = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') %}
-            {% if completed_dispatches is not none and completed_dispatches | length > 0 %}
-              {% for dispatch in completed_dispatches %}
-                {% set dispatch_start = dispatch.start | as_timestamp(default=0) %}
-                {% if dispatch_start >= disconnected %}
-                  {% set ns.total_dispatch = ns.total_dispatch + (dispatch.charge_in_kwh | float(0.0)) %}
-                {% endif %}
-              {% endfor %}
-            {% endif %}
+            {# Safely get completed_dispatches list, default to empty list #}
+            {% set completed_dispatches = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
+
+            {% for dispatch in completed_dispatches %}
+              {% set dispatch_start = dispatch.start | default(0) | as_timestamp %}
+              {% set charge = dispatch.charge_in_kwh | float(0.0) %}
+              {% if dispatch_start >= disconnected %}
+                {% set ns.total_dispatch = ns.total_dispatch + charge %}
+              {% endif %}
+            {% endfor %}
 
             {{ ns.total_dispatch | float(0.0) }}
 
@@ -912,22 +915,8 @@ solax_zappi_octopus_templates:
             {% set capacity_left = state_attr('sensor.solax_discharge_capacity','prior') | default(0) | float %}
             {% set inverter_kw = states('input_number.solax_inverter_capacity') | float(1) %}
 
-            {# ---- Threshold sensor selection ---- #}
-            {% set thresholds = {
-                'solar_export_priority_on': 'sensor.solar_export_threshold',
-                'solar_export_priority_off': 'sensor.don_t_charge_ev_before_time_wobble',
-                'clever_time': 'sensor.calculated_ev_charge_start_time'
-            } %}
-
-            {% if is_state('input_boolean.solar_export_priority','on') %}
-                {% set threshold_sensor = thresholds['solar_export_priority_on'] %}
-            {% elif is_state('input_boolean.use_clever_time','on') %}
-                {% set threshold_sensor = thresholds['clever_time'] %}
-            {% else %}
-                {% set threshold_sensor = thresholds['solar_export_priority_off'] %}
-            {% endif %}
-
-            {% set threshold_raw = states(threshold_sensor) | default('') %}
+            {# ---- Threshold / EV start time ---- #}
+            {% set threshold_raw = states('sensor.ev_start_time') | default('') %}
             {% if threshold_raw not in ['', 'unknown', 'None', none] %}
                 {% set threshold_dt = threshold_raw | as_datetime | as_local %}
                 {% set threshold_ts = threshold_dt | as_timestamp %}
@@ -946,45 +935,39 @@ solax_zappi_octopus_templates:
 
                 {% if is_state('input_boolean.pre_emptive_export_battery','on') %}
                     {% if seconds_to_discharge_prior == 0 %}
-                        {% set starttime_dt = states('sensor.ev_start_time') | as_datetime | default(none) | as_local %}
+                        {% set starttime_dt = threshold_dt %}
                     {% else %}
-                        {# --- Compute overlap between PV production and battery discharge --- #}
                         {% set raw_overlap = max(sunset_ts - threshold_ts, 0) %}
                         {% set additional_production = (production_per_hour / 3600) * raw_overlap %}
                         {% set total_to_discharge = capacity_left + additional_production %}
                         {% set seconds_to_discharge_raw = (total_to_discharge / inverter_kw) * 3600 %}
 
                         {% if raw_overlap > 0 %}
-                            {# --- Case 1: Some PV/battery overlap --- #}
                             {% set seconds_to_discharge_clamped = [seconds_to_discharge_raw, raw_overlap] | min %}
                             {% set seconds_to_discharge_clamped = [0, seconds_to_discharge_clamped] | max %}
                             {% set raw_start_ts = threshold_ts - seconds_to_discharge_clamped %}
                         {% else %}
-                            {# --- Case 2: Post-sunset or no overlap --- #}
                             {% set raw_start_ts = max(now_ts, threshold_ts - seconds_to_discharge_raw) %}
                         {% endif %}
 
-                        {# --- Apply margin delta --- #}
                         {% set margin = 60 * (states('input_number.battery_export_margin_delta') | int(0)) %}
                         {% set computed_start_ts = raw_start_ts + margin %}
 
-                        {# --- Clamp to minimum now+150s and maximum ev_start_time --- #}
-                        {% set ev_start_ts = states('sensor.ev_start_time') | as_datetime | as_timestamp %}
-                        {% set starttime_ts_clamped = [computed_start_ts, now_ts + 150] | max %}
-                        {% set starttime_ts_final = [starttime_ts_clamped, ev_start_ts] | min %}
+                        {% set safety_margin = 150 %}
+                        {% set starttime_ts_with_margin = computed_start_ts + safety_margin %}
+                        {% set starttime_ts_final = [starttime_ts_with_margin, threshold_ts] | min %}
                         {% set starttime_dt = starttime_ts_final | as_datetime | as_local %}
                     {% endif %}
                 {% else %}
-                    {# --- Original fallback behaviour --- #}
-                    {% set starttime_dt = states('sensor.ev_start_time') | as_datetime | default(none) | as_local %}
+                    {% set starttime_dt = threshold_dt %}
                 {% endif %}
             {% endif %}
 
             {# ---- Output ---- #}
-            {% if starttime_dt is not none and starttime_dt > now_dt %}
-                {% if ((starttime_dt | as_timestamp) - now_ts) < 180 
-                      and is_state('input_boolean.octopus_schedule_anytime','off') 
-                      or states('sensor.solax_local_inverter_mode') == 'Manual' %}
+            {% set starttime_ts = starttime_dt | as_timestamp if starttime_dt is not none else none %}
+            {% if starttime_ts is not none and starttime_ts > now_ts %}
+                {% set deadband_window = 180 %}
+                {% if (starttime_ts - now_ts) < deadband_window %}
                     {{ states('sensor.pre_export_battery_before_charging_ev_time') | as_datetime | default(none) | as_local }}
                 {% else %}
                     {{ starttime_dt }}
@@ -1079,12 +1062,10 @@ solax_zappi_octopus_templates:
                         {% set seconds_to_discharge_raw = (total_to_discharge / inverter_kw) * 3600 %}
 
                         {% if raw_overlap > 0 %}
-                            {# --- Case 1: Positive PV overlap --- #}
                             {% set seconds_to_discharge_clamped = [seconds_to_discharge_raw, raw_overlap] | min %}
                             {% set seconds_to_discharge_clamped = [0, seconds_to_discharge_clamped] | max %}
                             {% set raw_start_ts = threshold_ts - seconds_to_discharge_clamped %}
                         {% else %}
-                            {# --- Case 2: Post-sunset or no overlap --- #}
                             {% set raw_start_ts = max(now_ts, threshold_ts - seconds_to_discharge_raw) %}
                         {% endif %}
 
@@ -1092,22 +1073,22 @@ solax_zappi_octopus_templates:
                         {% set margin = 60 * (states('input_number.battery_export_margin_delta') | int(0)) %}
                         {% set computed_start_ts = raw_start_ts + margin %}
 
-                        {# --- Clamp to now+150s minimum and daily threshold maximum --- #}
-                        {% set starttime_ts_clamped = [computed_start_ts, now_ts + 150] | max %}
-                        {% set starttime_ts_final = [starttime_ts_clamped, threshold_ts] | min %}
+                        {# --- Clamp to now+150s once and daily threshold --- #}
+                        {% set safety_margin = 150 %}
+                        {% set starttime_ts_with_margin = computed_start_ts + safety_margin %}
+                        {% set starttime_ts_final = [starttime_ts_with_margin, threshold_ts] | min %}
                         {% set starttime_dt = starttime_ts_final | as_datetime | as_local %}
                     {% endif %}
                 {% else %}
-                    {# --- Fallback: pre_emptive_export_battery off --- #}
                     {% set starttime_dt = threshold_dt %}
                 {% endif %}
             {% endif %}
 
             {# ---- Output ---- #}
-            {% if starttime_dt is not none and starttime_dt > now_dt %}
-                {% if ((starttime_dt | as_timestamp) - now_ts) < 180 
-                      and is_state('input_boolean.octopus_schedule_anytime','off') 
-                      or states('sensor.solax_local_inverter_mode') == 'Manual' %}
+            {% set starttime_ts = starttime_dt | as_timestamp if starttime_dt is not none else none %}
+            {% if starttime_ts is not none and starttime_ts > now_ts %}
+                {% set deadband_window = 180 %}
+                {% if (starttime_ts - now_ts) < deadband_window %}
                     {{ states('sensor.daily_battery_export_time_ev_disconnected') | as_datetime | default(none) | as_local }}
                 {% else %}
                     {{ starttime_dt }}

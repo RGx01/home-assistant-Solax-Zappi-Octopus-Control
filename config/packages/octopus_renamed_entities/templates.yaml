@@ -1,5 +1,6 @@
 ###############################################
 # Replace octopus account number z_ZZZZZZZZ
+# V5.6.1 Fixed thrashing of dispatch mirror sensor
 # V5.0. Refactor
 ###############################################
 octopus_renamed_entities_templates:
@@ -66,74 +67,82 @@ octopus_renamed_entities_templates:
     ######################################################
 
     - binary_sensor:
-      - name: Octopus Intelligent Dispatching
-        unique_id: Octopus_intelligent_dispatching
-        state: >
-          {% set s = states('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching') %}
-          {% if s in ['unavailable', 'unknown'] %}
-            off
-          {% else %}
-            {{ s }}
-          {% endif %}
-        icon: mdi:power-plug-battery
-        attributes: 
-          planned_dispatches: >
-            {% set ns = namespace(out=[]) %}
-            {% for item in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') or ns.out %}
-              {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
-              {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
-              {% set new = dict(item) %}
-              {% set new = new | combine({'start': start, 'end': end}) %}
-              {% set ns.out = ns.out + [new] %}
-            {% endfor %}
-            {{ ns.out }}
+        - name: Octopus Intelligent Dispatching
+          unique_id: Octopus_intelligent_dispatching
+          state: >
+            {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+            {% set s = states(master) %}
+            {% if s in ['unavailable', 'unknown'] %}
+              off
+            {% else %}
+              {{ s }}
+            {% endif %}
+          icon: mdi:power-plug-battery
+          attributes:
+            planned_dispatches: >
+              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set ns = namespace(out=[]) %}
+              {% for item in state_attr(master,'planned_dispatches') or [] %}
+                {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
+                {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
+                {% set new = dict(item) | combine({'start': start, 'end': end}) %}
+                {% set ns.out = ns.out + [new] %}
+              {% endfor %}
+              {{ ns.out }}
 
-          completed_dispatches: >
-            {% set ns = namespace(out=[]) %}
-            {% for item in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') or ns.out %}
-              {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
-              {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
-              {% set new = dict(item) %}
-              {% set new = new | combine({'start': start, 'end': end}) %}
-              {% set ns.out = ns.out + [new] %}
-            {% endfor %}
-            {{ ns.out }}
+            completed_dispatches: >
+              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set ns = namespace(out=[]) %}
+              {% for item in state_attr(master,'completed_dispatches') or [] %}
+                {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
+                {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
+                {% set new = dict(item) | combine({'start': start, 'end': end}) %}
+                {% set ns.out = ns.out + [new] %}
+              {% endfor %}
+              {{ ns.out }}
 
-          started_dispatches: >
-            {% set ns = namespace(out=[]) %}
-            {% for item in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','started_dispatches') or ns.out %}
-              {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
-              {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
-              {% set new = dict(item) %}
-              {% set new = new | combine({'start': start, 'end': end}) %}
-              {% set ns.out = ns.out + [new] %}
-            {% endfor %}
-            {{ ns.out }}
+            started_dispatches: >
+              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set ns = namespace(out=[]) %}
+              {% for item in state_attr(master,'started_dispatches') or [] %}
+                {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
+                {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
+                {% set new = dict(item) | combine({'start': start, 'end': end}) %}
+                {% set ns.out = ns.out + [new] %}
+              {% endfor %}
+              {{ ns.out }}
 
-          provider: >
-            {% set val = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','provider') %}
-            {% if val is not none %}{{ val }}{% else %}{{ states('binary_sensor.octopus_intelligent_dispatching') | attr('provider') or 'MYENERGI_V2' }}{% endif %}
+            provider: >
+              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set val = state_attr(master,'provider') %}
+              {{ val if val is not none else none }}
 
-          vehicle_battery_size_in_kwh: >
-            {% set val = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','vehicle_battery_size_in_kwh') %}
-            {% if val is not none %}{{ val }}{% else %}{{ states('binary_sensor.octopus_intelligent_dispatching') | attr('vehicle_battery_size_in_kwh') }}{% endif %}
+            vehicle_battery_size_in_kwh: >
+              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set val = state_attr(master,'vehicle_battery_size_in_kwh') %}
+              {{ val if val is not none else none }}
 
-          charge_point_power_in_kw: >
-            {% set val = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','charge_point_power_in_kw') %}
-            {% if val is not none %}{{ val }}{% else %}{{ states('binary_sensor.octopus_intelligent_dispatching') | attr('charge_point_power_in_kw') }}{% endif %}
+            charge_point_power_in_kw: >
+              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set val = state_attr(master,'charge_point_power_in_kw') %}
+              {{ val if val is not none else none }}
 
-          current_start: >
-            {% set val = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','current_start') %}
-            {% if val is not none %}{{ val }}{% else %}{{ states('binary_sensor.octopus_intelligent_dispatching') | attr('current_start') }}{% endif %}
+            current_start: >
+              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set val = state_attr(master,'current_start') %}
+              {{ val if val is not none else none }}
 
-          current_end: >
-            {% set val = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','current_end') %}
-            {% if val is not none %}{{ val }}{% else %}{{ states('binary_sensor.octopus_intelligent_dispatching') | attr('current_end') }}{% endif %}
+            current_end: >
+              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set val = state_attr(master,'current_end') %}
+              {{ val if val is not none else none }}
 
-          next_start: >
-            {% set val = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','next_start') %}
-            {% if val is not none %}{{ val }}{% else %}{{ states('binary_sensor.octopus_intelligent_dispatching') | attr('next_start') }}{% endif %}
+            next_start: >
+              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set val = state_attr(master,'next_start') %}
+              {{ val if val is not none else none }}
 
-          next_end: >
-            {% set val = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','next_end') %}
-            {% if val is not none %}{{ val }}{% else %}{{ states('binary_sensor.octopus_intelligent_dispatching') | attr('next_end') }}{% endif %}
+            next_end: >
+              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set val = state_attr(master,'next_end') %}
+              {{ val if val is not none else none }}

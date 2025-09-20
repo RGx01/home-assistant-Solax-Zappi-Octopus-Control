@@ -137,6 +137,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v5.6.1|**20/09/25**|octopus_renamed_entities\templates <br>solax_zappi_octopus\templates.yaml | BUG Fix with clamping of pre emptive and sensor thrashing of octopus mirror sensors|
 | v5.6.0|**20/09/25**|octopus_renamed_entities\templates <br>solax_zappi_octopus\templates.yaml <br>solax_zappi_octopus\utilitymeter.yam| Duplicting attributes for octopus dispatch sensor so easier to install, also removed dependancy on zappi serial number in utility meter |
 | v5.5.0|**20/09/25**|automations_5001-6001.yaml <br>solax_zappi_octopus\templates.yaml| Improved pre emptive discharges|
 | v5.4.1|**18/09/25**|automations_5001-6001.yaml <br>solax_zappi_octopus\templates.yaml| bug fixes missing from previous release|
