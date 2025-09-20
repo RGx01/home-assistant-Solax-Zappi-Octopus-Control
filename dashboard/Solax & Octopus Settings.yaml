@@ -1,5 +1,6 @@
 # replace zappi_XXXXXXXX with your zappi regno
 # replace z_ZZZZZZZZ with your octopus account
+# v5.6.0 Tweaks to go with release
 # v5.4.1 Tweaks to go with release
 # v5.3.0 Minor update to show hide charge period 2 when the switch is enabled
 # v5.0.1 Minor update to include Export Margin Delta (min)
@@ -1119,6 +1120,8 @@ sections:
           - entity: input_number.solax_manual_forced_discharge_limit_soc
           - entity: input_number.solax_discharge_limit_soc_before_ev
           - entity: sensor.solax_local_battery_soc
+          - entity: input_number.solax_daily_discharge_limit_soc
+          - entity: input_number.solax_nightly_discharge_limit_soc
         grid_options:
           columns: 36
           rows: auto
