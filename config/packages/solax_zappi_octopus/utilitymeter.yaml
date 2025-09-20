@@ -1,5 +1,4 @@
 ##############################################################
-# zappi_XXXXXXXX must be replaced with your zappi number
 #
 # offset:
 #   days: 2 <---- update to your billing day (2 if your bills start on the 3rd)
@@ -274,7 +273,7 @@ solax_zappi_octopus_utilitymeter:
     ##########################################################
     ev_charging_daily_vehicle:
       unique_id: 2654432e-7161-4ce5-86e9-fe3919bd0df0
-      source: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+      source: sensor.zappi_charge_added_session
       name: Daily EV Charging Vehicle
       cycle: daily
       net_consumption: false
@@ -288,7 +287,7 @@ solax_zappi_octopus_utilitymeter:
 
     ev_charging_monthly_vehicle:
       unique_id: 1c511899-2af4-4953-b32f-acb6e06058d2
-      source: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+      source: sensor.zappi_charge_added_session
       name: Monthly EV Charging Vehicle
       cycle: monthly
       net_consumption: false
@@ -304,14 +303,14 @@ solax_zappi_octopus_utilitymeter:
 
     zappi_charging_daily:
       unique_id: 493a5661-71ee-4b57-ae79-ca8f91aa9005
-      source: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+      source: sensor.zappi_charge_added_session
       name: Daily Zappi Charging 
       periodically_resetting: true
       cycle: daily
 
     zappi_charging:
       unique_id: 57867e2b-e56c-4753-94f8-9d105a547b2f
-      source: sensor.myenergi_zappi_XXXXXXXX_charge_added_session
+      source: sensor.zappi_charge_added_session
       name: Monthly Zappi Charging
       periodically_resetting: true
       cycle: monthly

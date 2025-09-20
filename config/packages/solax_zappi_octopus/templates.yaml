@@ -1,5 +1,4 @@
 ###############################################
-# Replace octopus account number z_ZZZZZZZZ with your own
 #
 # Change log
 # v5.5.0 Improved predictions on pre emptive discharges
@@ -75,7 +74,7 @@ solax_zappi_octopus_templates:
           {% set td = timedelta(days=10) %}
           {% set target_time = states('sensor.octopus_intelligent_target_time') %}
           {% set battery_size = states('input_number.ev_battery_size')|float(0) %}
-          {% set charge_pct = states('number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target')|int(100) %}
+          {% set charge_pct = states('number.octopus_intelligent_charge_target')|int(100) %}
           {% set seconds = (charge_pct/100 * battery_size / 6.8 * 3600) | int %}
           {% set start = target_time | as_timestamp | int - seconds if target_time not in ['unknown','unavailable',''] else none %}
           {% set eleventhirty = (target_time | as_datetime if target_time not in ['unknown','unavailable',''] else now()).date() | as_timestamp - 1800 %}
@@ -126,7 +125,7 @@ solax_zappi_octopus_templates:
           device_class: "timestamp"
           state: >
             {%set target_time = states('sensor.octopus_intelligent_target_time')|as_timestamp (default=today_at("05:30")|as_timestamp)%}
-            {%set target_percentage = states('number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target')%}
+            {%set target_percentage = states('number.octopus_intelligent_charge_target')%}
             {%set ev_size = states('input_number.ev_battery_size')|int(default=10) %}
             {%set delta_time = ((ev_size|int/6.8)*(target_percentage|int/100))*60*60%}
             {{(target_time-delta_time)|as_datetime (default=(now()|as_timestamp-delta_time)|as_datetime)}}
@@ -219,8 +218,8 @@ solax_zappi_octopus_templates:
           unique_id: octopus_intelligent_target_time
           device_class: "timestamp"
           state: >
-            {% if states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time') != 'unknown'%}
-              {% set t = today_at(states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[0] + ":" + states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time').split(':')[1])|as_datetime|as_local %}
+            {% if states('select.octopus_intelligent_target_time') != 'unknown'%}
+              {% set t = today_at(states('select.octopus_intelligent_target_time').split(':')[0] + ":" + states('select.octopus_intelligent_target_time').split(':')[1])|as_datetime|as_local %}
             {%else%}
               {% set t = ((now()|as_timestamp|int-(now()|as_timestamp|int%86400)+18000)|as_datetime|as_local) %}
             {%endif%}
@@ -242,23 +241,23 @@ solax_zappi_octopus_templates:
           state_class: total
           state: >
             {%- set ns2 = namespace( total_dispatch = 0 ) -%}
-            {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') != None) -%}               
-              {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'planned_dispatches') -%}
+            {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}               
+              {%- for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') -%}
                   {%- set ns2.total_dispatch = ns2.total_dispatch|float + ((dispatch.end|as_timestamp - dispatch.start|as_timestamp)|int/60/60*7.0) %}
               {%- endfor -%}
             {%- endif  -%}
             {{ns2.total_dispatch|float (default=0.0)}}
           attributes:
             total_dispatches: >
-              {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') != None) -%}
-                {{state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches')|list|count}}
+              {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
+                {{state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches')|list|count}}
               {%- else -%}
                 {{0}}
               {%- endif  %}
             dispatches: >
               {% set ns3= namespace(members=[]) %}
-              {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') != None) -%}
-                {% for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'planned_dispatches') -%}
+              {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
+                {% for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') -%}
                   {% set ns3.members = ns3.members + [{ "dispatch":(dispatch.start|as_datetime|as_local).strftime('%H:%M') + " to " + (dispatch.end | as_datetime | as_local).strftime('%H:%M') }] %}
                 {%- endfor -%}
                 {{ns3.members}}
@@ -278,23 +277,23 @@ solax_zappi_octopus_templates:
     #       state_class: total
     #       state: >
     #         {%- set ns2 = namespace( total_dispatch = 0 ) -%}
-    #         {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') != None) -%}
-    #           {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'planned_dispatches') -%}
+    #         {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
+    #           {%- for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') -%}
     #             {%- set ns2.total_dispatch = ns2.total_dispatch|float + dispatch.charge_in_kwh|float%}
     #           {%- endfor -%}
     #         {%- endif  -%}
     #         {{ns2.total_dispatch|float (default=0.0)}}
     #       attributes:
     #         total_dispatches: >
-    #           {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') != None) -%}
-    #             {{state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches')|list|count}}
+    #           {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
+    #             {{state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches')|list|count}}
     #           {%- else -%}
     #             {{0}}
     #           {%- endif  %}
     #         dispatches: >
     #           {% set ns3= namespace(members=[]) %}
-    #           {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','planned_dispatches') != None) -%}
-    #             {% for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'planned_dispatches') -%}
+    #           {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
+    #             {% for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') -%}
     #               {% set ns3.members = ns3.members + [{ "dispatch":(dispatch.start|as_datetime|as_local).strftime('%H:%M') + " to " + (dispatch.end | as_datetime | as_local).strftime('%H:%M') }] %}
     #             {%- endfor -%}
     #             {{ns3.members}}
@@ -324,7 +323,7 @@ solax_zappi_octopus_templates:
             {% set connected = zappi_connected_ts - (zappi_connected_ts % 1800) %}
 
             {# Sum the charge from completed dispatches if any #}
-            {% set completed_dispatches = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') %}
+            {% set completed_dispatches = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') %}
             {% if completed_dispatches is not none and completed_dispatches | length > 0 %}
               {% for dispatch in completed_dispatches %}
                 {% set dispatch_start = dispatch.start | as_timestamp(default=0) %}
@@ -361,8 +360,8 @@ solax_zappi_octopus_templates:
               {% else %}
                 {% set disconnected = states('sensor.zappi_last_disconnected') %}
               {%- endif-%}
-              {%- if (state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching','completed_dispatches') | length > 0) -%}
-                {%- for dispatch in state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching', 'completed_dispatches') -%}
+              {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','completed_dispatches') | length > 0) -%}
+                {%- for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') -%}
                   {%- if dispatch.start|as_timestamp > disconnected|as_timestamp and dispatch.start|as_timestamp < states('sensor.zappi_last_connected')|as_timestamp-%}
                     {%- set ns.total_dispatch = ns.total_dispatch|float (default=0.0) + dispatch.charge_in_kwh|float (default=0.0)%}
                   {%- endif-%}
@@ -572,7 +571,7 @@ solax_zappi_octopus_templates:
 
     - trigger:
         - trigger: state
-          entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+          entity_id: binary_sensor.octopus_intelligent_dispatching
           from: "off"
           to: "on"
       action:
@@ -611,7 +610,7 @@ solax_zappi_octopus_templates:
 
     - trigger:
         - trigger: state
-          entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching
+          entity_id: binary_sensor.octopus_intelligent_dispatching
           from: "on"
           to: "off"
       action:
