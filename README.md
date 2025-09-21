@@ -6,6 +6,8 @@ Main features:
 3. Seamless battery discharge prior to EV charging 
 4. Handling of CT clamps in different positions on the Henley block
 5. User notifications to mobile devices
+6. Handles Free Electric Sessions from Octoplus
+7. ~~Handles Saving Sessions~~
 
 ![delme](https://github.com/user-attachments/assets/c2eb91f9-8c83-4f31-8a76-75df950f1d05)
 
