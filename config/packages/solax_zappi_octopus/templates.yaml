@@ -975,14 +975,14 @@ solax_zappi_octopus_templates:
             {# ---- Output with deadband lock-in ---- #}
             {% set starttime_ts = starttime_dt | as_timestamp if starttime_dt is not none else none %}
             {% if starttime_ts is not none and starttime_ts > now_ts %}
-              {% set deadband_window = 180 %}
-              {% if (starttime_ts - now_ts) < deadband_window %}
-                {{ states('sensor.pre_export_battery_before_charging_ev_time') | as_datetime | default(none) | as_local }}
-              {% else %}
-                {{ starttime_dt }}
-              {% endif %}
+                {% set deadband_window = 180 %}
+                {% if (starttime_ts - now_ts) < deadband_window %}
+                    {{ states('sensor.ev_start_time') | as_datetime | as_local }}
+                {% else %}
+                    {{ starttime_dt }}
+                {% endif %}
             {% else %}
-              {{ none }}
+                {{ none }}
             {% endif %}
             
     ######################################################
@@ -1098,15 +1098,16 @@ solax_zappi_octopus_templates:
             {# ---- Output with deadband lock-in ---- #}
             {% set starttime_ts = starttime_dt | as_timestamp if starttime_dt is not none else none %}
             {% if starttime_ts is not none and starttime_ts > now_ts %}
-              {% set deadband_window = 180 %}
-              {% if (starttime_ts - now_ts) < deadband_window %}
-                {{ states('sensor.daily_battery_export_time_ev_disconnected') | as_datetime | default(none) | as_local }}
-              {% else %}
-                {{ starttime_dt }}
-              {% endif %}
+                {% set deadband_window = 180 %}
+                {% if (starttime_ts - now_ts) < deadband_window %}
+                    {{ today_at(states('input_datetime.daily_battery_export_time')) | as_datetime | as_local }}
+                {% else %}
+                    {{ starttime_dt }}
+                {% endif %}
             {% else %}
-              {{ none }}
+                {{ none }}
             {% endif %}
+
 
             
     ######################################################
@@ -1169,13 +1170,13 @@ solax_zappi_octopus_templates:
             {% endif %}
 
             {# ---- Output with deadband lock-in ---- #}
-            {% set starttime_ts = starttime_dt | as_timestamp if starttime_dt is not none else none %}
-            {% if starttime_ts is not none and starttime_ts > now_ts %}
+            {% set starttime_ts = starttime | as_timestamp if starttime is not none else none %}
+            {% if starttime_ts is not none and starttime_ts > now() | as_timestamp %}
                 {% set deadband_window = 180 %}
-                {% if (starttime_ts - now_ts) < deadband_window or states('sensor.solax_local_inverter_mode') == 'Manual' %}
-                    {{ states('sensor.pre_nightly_battery_export_time') | as_datetime | as_local }}
+                {% if (starttime_ts - (now() | as_timestamp)) < deadband_window %}
+                    {{ (today_at("23:30") | as_timestamp + 86400) | as_datetime | as_local }}
                 {% else %}
-                    {{ starttime_dt }}
+                    {{ starttime | as_datetime | as_local }}
                 {% endif %}
             {% else %}
                 {{ none }}

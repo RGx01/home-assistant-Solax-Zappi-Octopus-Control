@@ -64,7 +64,7 @@ solax_set_mode_and_settings:
             'forced_charge_end2': {'index':9,'service':'solax_local_set_forced_charge_stop2','field':'value'},
             'feedin_battery_min_soc': {'index':12,'service':'solax_local_set_feedin_battery_min_soc','field':'level'},
             'feedin_charge_battery_from_grid': {'index':13,'service':'solax_local_set_feedin_charge_battery_from_grid','field':'level'},
-            'battery_heat_enable': {'index':14,'service':'solax_local_set_heat_enable','field':'enabled'},
+            'battery_heat_enable': {'index':14,'service':'solax_local_heat_enable','field':'enabled'},
             'heat_start': {'index':15,'service':'solax_local_set_heat_start','field':'value'},
             'heat_end': {'index':16,'service':'solax_local_set_heat_stop','field':'value'},
             'heat_start2': {'index':17,'service':'solax_local_set_heat_start2','field':'value'},
