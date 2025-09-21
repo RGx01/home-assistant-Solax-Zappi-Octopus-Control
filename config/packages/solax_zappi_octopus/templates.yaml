@@ -1,6 +1,9 @@
 ###############################################
 #
 # Change log
+# v5.7.0 Refined pre emptive discharcharges with use of 
+#        sensor.solcast_pv_forecast_forecast_next_hour and 
+#        sensor.solcast_pv_forecast_forecast_this_hour
 # v5.6.3 Rejigged the pre-emptive times so that margin_delta is applied consistently. 
 # v5.6.2 Minor bug fix to octopus_intelligent_target_time to prevent errors on reload of templates from developer tools
 # v5.6.1 Fixed clamping issue that pushed the pre emptive time out until the limit.
@@ -1144,7 +1147,7 @@ solax_zappi_octopus_templates:
 
             {# ---- Apply margin delta explicitly ---- #}
             {% set margin_seconds = 60 * states('input_number.battery_export_margin_delta') | int(0) %}
-            {% set seconds_to_discharge = raw_seconds_to_discharge + margin_seconds %}
+            {% set seconds_to_discharge = raw_seconds_to_discharge - margin_seconds %}
 
             {# ---- Default start time ---- #}
             {% set starttime_dt = none %}
