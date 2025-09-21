@@ -1,13 +1,14 @@
 # Solax-Zappi-Octopus-Control
 Written specifically for IOG Zappi and Solax X1-G4 Inverter
 Main features:
-1. Control Inverter settings
-2. Ability to discharge battery to a SoC by a given time using Solcast i.e. discharge to 50% by 6pm
-3. Seamless battery discharge prior to EV charging 
-4. Handling of CT clamps in different positions on the Henley block
-5. User notifications to mobile devices
-6. Handles Free Electric Sessions from Octoplus
-7. ~~Handles Saving Sessions~~
+1. Control Inverter settings.
+2. Ability to discharge battery to a SoC by a given time using Solcast i.e. discharge to 50% by 6pm.
+3. Seamless battery discharge prior to EV charging.
+4. Handling of CT clamps in different positions on the Henley block.
+5. User notifications to mobile devices.
+6. Handles Free Electric Sessions from Octoplus.
+7. ~~Handles Saving Sessions~~.
+8. Calculates Capacity SoH on each full recharge.
 
 ![delme](https://github.com/user-attachments/assets/c2eb91f9-8c83-4f31-8a76-75df950f1d05)
 
