@@ -147,6 +147,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v5.7.0|**21/09/25**|solax_zappi_octopus\templates.yaml|  v5.7.0 Refined pre emptive discharcharges with use of sensor.solcast_pv_forecast_forecast_next_hour and sensor.solcast_pv_forecast_forecast_this_hour|
 | v5.6.4|**21/09/25**| Solax & Octopus Settings.yaml (the dashboard)| Bug Fix to dashboard - Wrong entity in nightly soc target|
 | v5.6.3|**21/09/25**|solax_zappi_octopus\templates.yaml|  Rejigged the pre-emptive times so that margin_delta is applied consistently.|
 | v5.6.2 |**20/09/25**|solax_zappi_octopus\templates.yaml| Minor bug fix to octopus_intelligent_target_time to prevent errors on reload of templates from developer tools|
