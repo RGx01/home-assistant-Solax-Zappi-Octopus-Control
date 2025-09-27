@@ -2,33 +2,37 @@
   alias: 5001 - Solax Zappi Octopus Control
   description: "# 5001 - Solax Zappi Octopus Control\nSee documentation in repo.\n\n#
     Initial installation instructions\n1. This is 5001. You also need 5002 5003 5004
-    and 5005 to make this work successfully. \n\n**Change Log**\nv5.5.0 Added 4 triggers
-    for finished discharge just in case EV is connected during daily discharge. Removed
-    Option 4 as it was legacy\nv5.4.1 Added new daily export which works with pre-emptive\nv5.3.0
-    Introducing safe switching of octopus_intelligent_smart_charge\nv5.0 Refactor
-    out account names\nv3.8 Estimated time EV needs to charge based on required %
-    and registered EV size\nv3.7 Pre-emptive discharge of solax before EV charging
-    option (when EV is connected)\n         Pre-emptive discharge before 23:30 when
-    EV is disconnected\nv3.6 Min soc calculation updated in variables\nv3.5 Variable
+    and 5005 to make this work successfully. \n\n**Change Log**\n- v5.7.2 Tidy up
+    making ready for new predictive methodology\n- v5.7.1 \n   - Narrowed discharge
+    available band to 5%\n   - Renamed discharge trigger id's so that option 3 is
+    always run when any discharge is finished\n- v5.5.0 Added 4 triggers for finished
+    discharge just in case EV is connected during daily discharge. Removed Option
+    4 as it was legacy\n- v5.4.1 Added new daily export which works with pre-emptive\n-
+    v5.3.0 Introducing safe switching of octopus_intelligent_smart_charge\n- v5.0
+    Refactor out account names\n- v3.8 Estimated time EV needs to charge based on
+    required % and registered EV size\n- v3.7 Pre-emptive discharge of solax before
+    EV charging option (when EV is connected) Pre-emptive discharge before 23:30 when
+    EV is disconnected\n- v3.6 Min soc calculation updated in variables\n- v3.5 Variable
     for loops (to confirm solax commands have been applied should be set to min of
-    3)\nv3.4 Added condition to check if saving session is in progress\nv3.3 Changed
+    3)\n- v3.4 Added condition to check if saving session is in progress\n- v3.3 Changed
     the logic slightly for setting SoC limits. Sometimes depending on which mode is
     being set (self use or feed in) the inverter seems to randomly reject the second
     service call. so I now set the first soc limit to match the default return to
-    mode.\nv3.2 Added an input boolean switch to enable possibility to check what
-    kind of discharge is occurring when a manual discharge is occurring.\nv3.0.4 Added
-    a condition to prevent inverter reverting back to default if vehicle was charging
-    prior to a saving session starting.\nv3.0.3 Added When Condition to ensure inverter
-    mode is reset to default mode when it's time to start charging the solax battery.\nv3.0.2
-    further fixes to 3.0.1\nv3.0.1 Fixed issue that if user plugs in during a saving
-    session a charge could be initiated\nv3.0.0 Allow discharge battery before charging
-    EV\nv2.1.4.1 Spotted a potential bug if user starts charge at 23:30 where it could
-    clash with tail battery export\nv2.1.4 Renamed automation\nv2.1.3.1 fixed missing
-    scenario where min_SoC would not be set properly at 23:30 or if FAST charging
-    was selected.\nv2.1.3 More readable notifications\nv2.1.1 Update dispatch trigger
-    for octopus dispatch from on to off rather than just to off. false triggers when
-    sensor is unavailable \nv2.1 updated setting of modes and SoC's wrt rest sensor
-    sensor.solax_rest_local_settings\nv2.0 Remove legacy dev work"
+    mode.\n- v3.2 Added an input boolean switch to enable possibility to check what
+    kind of discharge is occurring when a manual discharge is occurring.\n- v3.0.4
+    Added a condition to prevent inverter reverting back to default if vehicle was
+    charging prior to a saving session starting.\n- v3.0.3 Added When Condition to
+    ensure inverter mode is reset to default mode when it's time to start charging
+    the solax battery.\n- v3.0.2 further fixes to 3.0.1\n- v3.0.1 Fixed issue that
+    if user plugs in during a saving session a charge could be initiated\n- v3.0.0
+    Allow discharge battery before charging EV\n- v2.1.4.1 Spotted a potential bug
+    if user starts charge at 23:30 where it could clash with tail battery export\n-
+    v2.1.4 Renamed automation\n- v2.1.3.1 fixed missing scenario where min_SoC would
+    not be set properly at 23:30 or if FAST charging was selected.\n- v2.1.3 More
+    readable notifications\n- v2.1.1 Update dispatch trigger for octopus dispatch
+    from on to off rather than just to off. false triggers when sensor is unavailable
+    \n- v2.1 updated setting of modes and SoC's wrt rest sensor sensor.solax_rest_local_settings\n-
+    v2.0 Remove legacy dev work"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -104,40 +108,9 @@
   - at: sensor.ev_start_time
     id: Time to Start Charging
     trigger: time
-  - at: sensor.pre_nightly_battery_export_time
-    id: Solax Discharge Prior to 2330 START
-    enabled: true
-    trigger: time
   - trigger: time
     at: sensor.daily_battery_export_time_ev_disconnected
     id: Daily Export
-  - at: '23:30:00'
-    id: Discharge_battery_at_2330
-    enabled: true
-    trigger: time
-  - trigger: state
-    entity_id:
-    - binary_sensor.solax_discharge_before_2330
-    from: 'on'
-    to: 'off'
-    id: Solax Discharge Prior to 2330 END
-    enabled: false
-  - trigger: state
-    entity_id:
-    - binary_sensor.solax_discharge_before_2330
-    to: 'off'
-    from: 'on'
-    id: finish discharge
-    for:
-      hours: 0
-      minutes: 2
-      seconds: 0
-  - entity_id:
-    - binary_sensor.octopus_intelligent_dispatching
-    to: 'off'
-    id: Peak Rate
-    trigger: state
-    from: 'on'
   - entity_id:
     - select.zappi_charge_mode
     to: Fast
@@ -153,14 +126,6 @@
     to: Fast
     id: Fast
     trigger: state
-  - entity_id:
-    - input_button.solax_force_discharge
-    id: ForceDischarge
-    trigger: state
-  - entity_id:
-    - input_button.solax_stop_discharge
-    id: StopForceDischarge
-    trigger: state
   - trigger: state
     entity_id:
     - input_boolean.octopus_schedule_anytime
@@ -171,6 +136,12 @@
     - input_boolean.solar_export_priority
     to: 'on'
     id: Only allow EV charging after sunset
+  - entity_id:
+    - binary_sensor.octopus_intelligent_dispatching
+    to: 'off'
+    id: Peak Rate
+    trigger: state
+    from: 'on'
   - trigger: state
     entity_id:
     - input_boolean.use_clever_time
@@ -209,17 +180,6 @@
       minutes: 0
       seconds: 30
     id: Zappi eco mode
-  - trigger: state
-    entity_id:
-    - sensor.solax_local_manual_mode_behaviour
-    to: Do Nothing
-    for:
-      hours: 0
-      minutes: 3
-      seconds: 0
-    id: Check Discharge Mode
-    from: Force Discharge
-    enabled: true
   - trigger: time
     at:
       entity_id: input_datetime.solax_battery_start_charge_time
@@ -228,12 +188,6 @@
   - trigger: time
     at: sensor.solax_local_battery_setting_stop_charge_2
     id: Charge Period 2 End
-  - trigger: state
-    entity_id:
-    - binary_sensor.solax_discharge_before_ev_charge
-    from: 'on'
-    to: 'off'
-    id: Solax Discharge Prior to EV
   - trigger: state
     entity_id:
     - number.octopus_intelligent_charge_target
@@ -262,36 +216,46 @@
       seconds: 59
     from: 'off'
     to: 'on'
+  - at: sensor.pre_nightly_battery_export_time
+    id: Solax Discharge Prior to 2330 START
+    enabled: true
+    trigger: time
+  - at: '23:30:00'
+    id: Discharge_battery_at_2330
+    enabled: true
+    trigger: time
   - trigger: state
     entity_id:
     - binary_sensor.solax_discharge_daily
     to: 'off'
     from: 'on'
     id: finish discharge
-    for:
-      hours: 0
-      minutes: 2
-      seconds: 0
-  - trigger: state
-    entity_id:
-    - binary_sensor.solax_discharge_daily_prior
-    to: 'off'
-    from: 'on'
-    id: finish discharge
-    for:
-      hours: 0
-      minutes: 2
-      seconds: 0
   - trigger: state
     entity_id:
     - binary_sensor.solax_discharge_nightly
     to: 'off'
     from: 'on'
     id: finish discharge
-    for:
-      hours: 0
-      minutes: 2
-      seconds: 0
+  - trigger: state
+    entity_id:
+    - binary_sensor.solax_discharge_before_ev_charge
+    from: 'on'
+    to: 'off'
+    id: finish discharge
+  - trigger: state
+    entity_id:
+    - binary_sensor.solax_discharge_manual
+    from: 'on'
+    to: 'off'
+    id: finish discharge
+  - entity_id:
+    - input_button.solax_stop_discharge
+    id: StopForceDischarge
+    trigger: state
+  - entity_id:
+    - input_button.solax_force_discharge
+    id: ForceDischarge
+    trigger: state
   conditions: []
   actions:
   - choose:
@@ -547,7 +511,6 @@
         - Disconnected To Connected
         - Time to Start Charging
         - Allow Octopus to Determine Schedule
-        - Solax Discharge Prior to EV
         - finish discharge
       - condition: state
         entity_id: sensor.zappi_plug_status
@@ -647,7 +610,7 @@
               - condition: numeric_state
                 entity_id: sensor.solax_local_battery_soc
                 above: input_number.solax_discharge_limit_soc_before_ev
-                value_template: '{{ state.state | float(0)  - 9 }}'
+                value_template: '{{ state.state | float(0)  - 5 }}'
               then:
               - action: select.select_option
                 metadata: {}
@@ -788,12 +751,16 @@
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
           above: input_number.solax_manual_forced_discharge_limit_soc
-          value_template: '{{ state.state | float(0)  - 9 }}'
+          value_template: '{{ state.state | float(0)  - 5 }}'
         then:
         - action: script.solax_set_mode_and_settings
           data:
             mode: 3
             manual_mode: 2
+        - event: solax_discharge
+          event_data:
+            battery_discharge: Manual Discharge
+          enabled: true
         - event: Solax Zappi Octopus Control
           event_data:
             message: Manual Discharge @ {{now().strftime('%H:%M')}}
@@ -879,56 +846,24 @@
           state: 'on'
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
-          value_template: '{{ state.state | float(0)  - 9 }}'
+          value_template: '{{ state.state | float(0)  - 5 }}'
           above: input_number.solax_nightly_discharge_limit_soc
         - condition: template
           value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
             != 3)}}'
         then:
-        - choose:
-          - conditions:
-            - condition: state
-              entity_id: input_boolean.pre_emptive_export_battery
-              state: 'off'
-            sequence:
-            - action: script.solax_set_mode_and_settings
-              data:
-                mode: 3
-                manual_mode: 2
-            - event: solax_discharge
-              event_data:
-                battery_discharge: discharge nightly
-              enabled: true
-            - event: Solax Zappi Octopus Control
-              event_data:
-                message: 'Attempting Discharge @ {{now().strftime(''%H:%M'')}}. '
-                title: Battery Export Started
-                class: normal
-              enabled: true
-          - conditions:
-            - condition: state
-              entity_id: input_boolean.pre_emptive_export_battery
-              state: 'on'
-            sequence:
-            - event: solax_discharge
-              event_data:
-                battery_discharge: discharge before 2330
-              enabled: true
-            - action: script.solax_set_mode_and_settings
-              data:
-                mode: 3
-                manual_mode: 2
-            - event: Solax Zappi Octopus Control
-              event_data:
-                message: 'Attempting Discharge @ {{now().strftime(''%H:%M'')}}. '
-                title: Battery Export Started
-                class: normal
-              enabled: true
-        else:
+        - action: script.solax_set_mode_and_settings
+          data:
+            mode: 3
+            manual_mode: 2
+        - event: solax_discharge
+          event_data:
+            battery_discharge: discharge nightly
+          enabled: true
         - event: Solax Zappi Octopus Control
           event_data:
-            message: 'Cheap Rate @ {{now().strftime(''%H:%M'')}}. '
-            title: Cheap Rate
+            message: 'Attempting Discharge @ {{now().strftime(''%H:%M'')}}. '
+            title: Battery Export Started
             class: normal
           enabled: true
     - conditions:
@@ -1026,54 +961,6 @@
           target:
             entity_id: select.zappi_charge_mode
     - conditions:
-      - condition: state
-        entity_id: sensor.solax_local_inverter_mode
-        state: Manual
-        for:
-          hours: 0
-          minutes: 2
-          seconds: 0
-      - condition: time
-        after: '23:30:00'
-        before: input_datetime.solax_battery_start_charge_time
-        enabled: false
-      - condition: or
-        conditions:
-        - condition: state
-          entity_id: input_boolean.export_battery
-          state: 'on'
-        - condition: state
-          entity_id: binary_sensor.solax_discharge_before_ev_charge
-          state: 'on'
-        - condition: template
-          value_template: '{{(states(''sensor.solax_local_manual_mode_behaviour'')
-            == "Do Nothing")}}'
-      - condition: trigger
-        id:
-        - Check Discharge Mode
-      sequence:
-      - if:
-        - condition: numeric_state
-          entity_id: sensor.solax_local_battery_soc
-          value_template: '{{ state.state | float(0)  - 9 }}'
-          above: input_number.solax_manual_forced_discharge_limit_soc
-        then:
-        - event: Solax Zappi Octopus Control
-          event_data:
-            message: Manual discharge failure @ {{now().strftime('%H:%M')}}. Setting
-              modes issue. Attempting to recover.
-            title: Manual Discharge Failure
-            class: high
-          enabled: true
-        - action: script.solax_set_mode_and_settings
-          data:
-            mode: 3
-            manual_mode: 2
-        else:
-        - action: script.solax_set_mode_and_settings
-          data:
-            mode: '{{default_mode}}'
-    - conditions:
       - condition: trigger
         id:
         - Charge Solax
@@ -1136,7 +1023,7 @@
         - condition: numeric_state
           entity_id: sensor.solax_local_battery_soc
           value_template: '{{ state.state | float(0)  - 5 }}'
-          above: input_number.solax_manual_forced_discharge_limit_soc
+          above: input_number.solax_daily_discharge_limit_soc
         - condition: template
           value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
             != 3)}}'

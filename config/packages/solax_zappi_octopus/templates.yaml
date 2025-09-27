@@ -1,6 +1,7 @@
 ###############################################
 #
 # Change log
+# v5.7.2 Preperaration for new predictive methodology
 # v5.7.0 Refined pre emptive discharcharges with use of 
 #        sensor.solcast_pv_forecast_forecast_next_hour and 
 #        sensor.solcast_pv_forecast_forecast_this_hour
@@ -714,20 +715,20 @@ solax_zappi_octopus_templates:
     # Setting this binary sensor from on to off is a trigger in 5001 to check the settings for min soc.
     ######################################################
 
-    - trigger:
-        - trigger: event
-          event_type: solax_discharge
-          event_data:
-            battery_discharge: "discharge before 2330"
-        - trigger: event
-          event_type: solax_discharge
-          event_data:
-            battery_discharge: "do nothing"
-      binary_sensor:
-        - name: Solax Discharge Before 2330
-          unique_id: solax_discharge_before_2330
-          state: >
-            {{true if trigger.event.data.battery_discharge == "discharge before 2330" else false}}
+    # - trigger:
+    #     - trigger: event
+    #       event_type: solax_discharge
+    #       event_data:
+    #         battery_discharge: "discharge before 2330"
+    #     - trigger: event
+    #       event_type: solax_discharge
+    #       event_data:
+    #         battery_discharge: "do nothing"
+    #   binary_sensor:
+    #     - name: Solax Discharge Before 2330
+    #       unique_id: solax_discharge_before_2330
+    #       state: >
+    #         {{true if trigger.event.data.battery_discharge == "discharge before 2330" else false}}
 
     - trigger:
         - trigger: event
@@ -935,31 +936,38 @@ solax_zappi_octopus_templates:
               {% if is_state('input_boolean.pre_emptive_export_battery','on') and capacity_left > 0 %}
 
                 {# --- Base discharge time (battery only) --- #}
-                {% set raw_seconds_to_discharge = (capacity_left / inverter_kw) * 3600 %}
 
+                {% set raw_seconds_to_discharge = (capacity_left / inverter_kw) * 3600 %}
+    
+                {# --- PV forecast inputs --- #}
+                {% set forecast_this_hour = states('sensor.solcast_pv_forecast_forecast_this_hour') | float(0) / 1000 * inverter_eta %}
+                {% set forecast_next_hour = states('sensor.solcast_pv_forecast_forecast_next_hour') | float(0) / 1000 * inverter_eta %}
+                {% set forecast_remaining_today = states('sensor.solcast_pv_forecast_remaining_today') | float(0) / 1000 * inverter_eta %}
+    
+                {# --- Weighted near-term forecast (this+next hour) --- #}
+                {% set frac_into_hour = now_dt.minute / 60 + now_dt.second / 3600 %}
+                {% set forecast_near_term = forecast_this_hour * (1 - frac_into_hour) + forecast_next_hour * frac_into_hour %}
+    
+                {# --- Remaining PV beyond near-term --- #}
+                {% set long_term_pv_kwh = [forecast_remaining_today - forecast_this_hour - forecast_next_hour, 0] | max %}
+    
                 {# --- PV contribution window --- #}
                 {% if raw_seconds_to_discharge <= (sunset_ts - threshold_ts) %}
                   {% set pv_contrib_window = raw_seconds_to_discharge %}
                 {% else %}
                   {% set pv_contrib_window = max(sunset_ts - threshold_ts, 0) %}
                 {% endif %}
-
-                {# --- Weighted near-term PV forecast (kWh/hr) --- #}
-                {% set forecast_this_hour = states('sensor.solcast_pv_forecast_forecast_this_hour') | float(0) / 1000 * inverter_eta %}
-                {% set forecast_next_hour = states('sensor.solcast_pv_forecast_forecast_next_hour') | float(0) / 1000 * inverter_eta %}
-                {% set frac_into_hour = now_dt.minute / 60 + now_dt.second / 3600 %}
-                {% set forecast_near_term = forecast_this_hour * (1 - frac_into_hour) + forecast_next_hour * frac_into_hour %}
-
-                {# --- Scale PV contribution by window --- #}
-                {% set pv_contrib_kwh = forecast_near_term * (pv_contrib_window / 3600) %}
-
+    
+                {# --- Total PV kWh available before sunset/discharge --- #}
+                {% set pv_contrib_kwh = forecast_near_term + long_term_pv_kwh %}
+    
                 {# --- Clamp PV to inverter capacity --- #}
                 {% set pv_contrib_kwh = [pv_contrib_kwh, inverter_kw * (pv_contrib_window / 3600)] | min %}
-
+    
                 {# --- Total energy to discharge (battery + PV) --- #}
                 {% set total_to_discharge = capacity_left + pv_contrib_kwh %}
                 {% set seconds_to_discharge_raw = (total_to_discharge / inverter_kw) * 3600 %}
-
+    
                 {# --- Start time calculation --- #}
                 {% set raw_start_ts = threshold_ts - seconds_to_discharge_raw %}
                 {% set computed_start_ts = raw_start_ts + safety_margin + margin_delta %}
@@ -977,13 +985,15 @@ solax_zappi_octopus_templates:
             {% if starttime_ts is not none and starttime_ts > now_ts %}
                 {% set deadband_window = 180 %}
                 {% if (starttime_ts - now_ts) < deadband_window %}
-                    {{ states('sensor.ev_start_time') | as_datetime | as_local }}
+                    {{ states('input_datetime.pre_export_battery_before_charging_ev_time') | as_datetime | as_local }}
                 {% else %}
                     {{ starttime_dt }}
                 {% endif %}
             {% else %}
                 {{ none }}
             {% endif %}
+
+
             
     ######################################################
     # DAILY discharge time
@@ -1016,6 +1026,110 @@ solax_zappi_octopus_templates:
             last_triggered: >-
               {{ trigger.to_state.last_changed }}
 
+
+    # - sensor:
+    #     - name: Pre Daily Battery Export Time Calc
+    #       unique_id: pre_daily_battery_export_time_calc
+    #       device_class: timestamp
+    #       state: >
+    #         {# === Inputs === #}
+    #         {% set now_ts = as_timestamp(now().replace(second=0, microsecond=0)) %}
+    #         {% set target_dt = today_at(states('input_datetime.daily_battery_export_time')) %}
+    #         {% set target_time = as_timestamp(target_dt) %}
+    #         {% set margin_min = states('input_number.battery_export_margin_delta') | float(0) %}
+
+    #         {# Patch sunset to today (sun.sun rolls to next day) #}
+    #         {% set sunset_dt = state_attr('sun.sun','next_setting') | as_datetime | default(now_ts|as_datetime) %}
+    #         {% set sunset_time = as_timestamp(
+    #             sunset_dt.replace(year=(now_ts|as_datetime).year, month=(now_ts|as_datetime).month, day=(now_ts|as_datetime).day)
+    #         ) %}
+
+    #         {# Parameters #}
+    #         {% set inverter_power = states('input_number.solax_inverter_capacity') | float(1) %}
+    #         {% set E_target = state_attr('sensor.solax_discharge_capacity','daily') | float(0) %}
+    #         {% set forecast_remaining_kwh = states('sensor.solcast_pv_forecast_forecast_remaining_today') | float(0) %}
+
+    #         {# Short-circuit: if target is 0 → return None (let protections hold helper value) #}
+    #         {% if E_target == 0 %}
+    #           {{ none }}
+    #         {% else %}
+
+    #           {# Derived slope model #}
+    #           {% set daylight_hours_left = (sunset_time - now_ts) / 3600 %}
+    #           {% if daylight_hours_left <= 0 %}
+    #             {% set daylight_hours_left = 0.0001 %}
+    #           {% endif %}
+    #           {% set slope = -forecast_remaining_kwh / daylight_hours_left %}
+    #           {% set P0 = forecast_remaining_kwh / daylight_hours_left * 2 %}
+
+    #           {# === Cases === #}
+    #           {% set result_ts = none %}
+
+    #           {% if target_time <= sunset_time %}
+    #             {# Case 1: target before sunset #}
+    #             {% set delta = P0**2 + 2 * slope * E_target %}
+    #             {% if delta >= 0 and slope != 0 %}
+    #               {% set s_hours = (-P0 + delta**0.5) / slope %}
+    #               {% set candidate = target_time - s_hours*3600 %}
+    #               {% if candidate > now_ts %}
+    #                 {% set result_ts = candidate %}
+    #               {% endif %}
+    #             {% endif %}
+
+    #           {% elif target_time > sunset_time %}
+    #             {# Case 2: target after sunset #}
+    #             {% set after_sunset_hours = (target_time - sunset_time) / 3600 %}
+    #             {% set E_after = inverter_power * after_sunset_hours %}
+    #             {% set E_before = E_target - E_after %}
+    #             {% if E_before <= 0 %}
+    #               {% set candidate = target_time - (E_target / inverter_power) * 3600 %}
+    #               {% if candidate > now_ts %}
+    #                 {% set result_ts = candidate %}
+    #               {% endif %}
+    #             {% else %}
+    #               {% set delta = P0**2 + 2 * slope * E_before %}
+    #               {% if delta >= 0 and slope != 0 %}
+    #                 {% set s_hours = (-P0 + delta**0.5) / slope %}
+    #                 {% set candidate = sunset_time - s_hours*3600 %}
+    #                 {% if candidate > now_ts %}
+    #                   {% set result_ts = candidate %}
+    #                 {% endif %}
+    #               {% endif %}
+    #             {% endif %}
+    #           {% endif %}
+
+    #           {# === Post-processing === #}
+    #           {% if result_ts not in [none, 'None', 'none'] %}
+    #             {# Apply margin shift #}
+    #             {% set result_ts = result_ts + margin_min*60 %}
+
+    #             {# Deadband lock-in with no forward jumps, but allows earlier target resets #}
+    #             {% set stored_raw = states('input_datetime.pre_daily_battery_export_time') %}
+    #             {% if stored_raw not in ['', 'unknown', 'None', none] %}
+    #               {% set stored_ts = as_timestamp(stored_raw | as_datetime) %}
+    #             {% else %}
+    #               {% set stored_ts = 0 %}
+    #             {% endif %}
+
+    #             {% if stored_ts > 0 %}
+    #               {% set target_raw = states('input_datetime.daily_battery_export_time') %}
+    #               {% set target_ts_now = as_timestamp(today_at(target_raw)) if target_raw not in ['', 'unknown','None', none] else none %}
+
+    #               {% if target_ts_now is not none and target_ts_now >= stored_ts %}
+    #                 {% if (result_ts - stored_ts)|abs <= 120 %}
+    #                   {% set result_ts = stored_ts %}
+    #                 {% elif result_ts > stored_ts %}
+    #                   {% set result_ts = stored_ts %}
+    #                 {% endif %}
+    #               {% endif %}
+    #             {% endif %}
+    #           {% endif %}
+
+    #           {{ result_ts | timestamp_local if result_ts not in [none,'None','none'] else none }}
+    #         {% endif %}
+
+
+
     - sensor:
         - name: Pre Daily Battery Export Time Calc
           unique_id: pre_daily_battery_export_time_calc
@@ -1033,11 +1147,10 @@ solax_zappi_octopus_templates:
             {% set sunset_ts = sunset_dt | as_timestamp | default(now_ts) %}
 
             {# ---- Battery status ---- #}
-            {% set seconds_to_discharge_prior = state_attr('sensor.solax_seconds_to_discharge','daily') | default(0) | int %}
             {% set capacity_left = state_attr('sensor.solax_discharge_capacity','daily') | default(0) | float %}
             {% set inverter_kw = states('input_number.solax_inverter_capacity') | float(1) %}
 
-            {# ---- Threshold / export time ---- #}
+            {# ---- Threshold: daily export time ---- #}
             {% set threshold_raw = today_at(states('input_datetime.daily_battery_export_time')) | default('') %}
             {% if threshold_raw not in ['', 'unknown', 'None', none] %}
               {% set threshold_dt = threshold_raw | as_datetime | as_local %}
@@ -1055,43 +1168,41 @@ solax_zappi_octopus_templates:
                   and is_state('input_boolean.export_battery_daily','on') 
                   and threshold_ts is not none %}
 
-              {% if is_state('input_boolean.pre_emptive_export_battery','on') and seconds_to_discharge_prior > 0 %}
+              {% if capacity_left > 0 %}
                 
                 {# --- Base discharge time (battery only) --- #}
-                {% set raw_seconds_to_discharge = (capacity_left / inverter_kw) * 3600 %}
-                
-                {# --- PV contribution window --- #}
-                {% if raw_seconds_to_discharge <= (sunset_ts - threshold_ts) %}
-                  {% set pv_contrib_window = raw_seconds_to_discharge %}
-                {% else %}
-                  {% set pv_contrib_window = max(sunset_ts - threshold_ts, 0) %}
-                {% endif %}
+                {% set seconds_no_pv = (capacity_left / inverter_kw) * 3600 %}
 
-                {# --- Weighted near-term PV forecast (kWh/hr) --- #}
-                {% set forecast_this_hour = states('sensor.solcast_pv_forecast_forecast_this_hour') | float(0) / 1000 * inverter_eta %}
-                {% set forecast_next_hour = states('sensor.solcast_pv_forecast_forecast_next_hour') | float(0) / 1000 * inverter_eta %}
-                {% set frac_into_hour = now_dt.minute / 60 + now_dt.second / 3600 %}
-                {% set forecast_near_term = forecast_this_hour * (1 - frac_into_hour) + forecast_next_hour * frac_into_hour %}
+                {# --- PV forecast inputs --- #}
+                {% set f_this = states('sensor.solcast_pv_forecast_forecast_this_hour') | float(0) / 1000 * inverter_eta %}
+                {% set f_next = states('sensor.solcast_pv_forecast_forecast_next_hour') | float(0) / 1000 * inverter_eta %}
+                {% set f_remain = states('sensor.solcast_pv_forecast_remaining_today') | float(0) / 1000 * inverter_eta %}
 
-                {# --- Scale PV contribution by window --- #}
-                {% set pv_contrib_kwh = forecast_near_term * (pv_contrib_window / 3600) %}
+                {# --- Weighted short-term forecast (this+next hour) --- #}
+                {% set frac = now_dt.minute/60 + now_dt.second/3600 %}
+                {% set f_near = f_this * (1 - frac) + f_next * frac %}
 
-                {# --- Clamp PV to inverter capacity --- #}
-                {% set pv_contrib_kwh = [pv_contrib_kwh, inverter_kw * (pv_contrib_window / 3600)] | min %}
+                {# --- PV contribution window (overlap with daylight) --- #}
+                {% set overlap_s = [sunset_ts - (threshold_ts - seconds_no_pv), 0] | max %}
+                {% set overlap_h = overlap_s / 3600 %}
 
-                {# --- Total energy to discharge (battery + PV) --- #}
-                {% set total_to_discharge = capacity_left + pv_contrib_kwh %}
-                {% set seconds_to_discharge_raw = (total_to_discharge / inverter_kw) * 3600 %}
+                {# --- PV support energy available --- #}
+                {% set pv_support = [f_near * overlap_h, f_remain] | min %}
+
+                {# --- Effective discharge duration (shorter with PV help) --- #}
+                {% set seconds_with_pv = seconds_no_pv - (pv_support / inverter_kw) * 3600 %}
+                {% set seconds_final = [seconds_with_pv, 0] | max %}
 
                 {# --- Start time calculation --- #}
-                {% set raw_start_ts = threshold_ts - seconds_to_discharge_raw %}
+                {% set raw_start_ts = threshold_ts - seconds_final %}
                 {% set computed_start_ts = raw_start_ts + safety_margin + margin_delta %}
                 {% set final_start_ts = [computed_start_ts, threshold_ts] | min %}
                 {% set starttime_dt = final_start_ts | as_datetime | as_local %}
 
               {% else %}
-                {# --- Pre-emptive export off or no discharge time --- #}
+                {# --- No discharge required --- #}
                 {% set starttime_dt = threshold_dt %}
+                
               {% endif %}
             {% endif %}
 
@@ -1100,15 +1211,13 @@ solax_zappi_octopus_templates:
             {% if starttime_ts is not none and starttime_ts > now_ts %}
                 {% set deadband_window = 180 %}
                 {% if (starttime_ts - now_ts) < deadband_window %}
-                    {{ today_at(states('input_datetime.daily_battery_export_time')) | as_datetime | as_local }}
+                    {{ states('input_datetime.pre_daily_battery_export_time') | as_datetime | as_local }}
                 {% else %}
                     {{ starttime_dt }}
                 {% endif %}
             {% else %}
                 {{ none }}
             {% endif %}
-
-
             
     ######################################################
     # Octopus Night Tariff Start Time
@@ -1128,6 +1237,17 @@ solax_zappi_octopus_templates:
           attributes:
             last_triggered: >-
               {{ trigger.to_state.last_changed }}
+    
+    # - time:
+    #     - name: Octopus Cheap Start
+    #       unique_id: octopus_cheap_rate
+    #       icon: mdi:clock
+    #       state: >
+    #         {% set target_hour = 23 %}
+    #         {% set target_minute = 30 %}
+    #         {% set cheap =as_datetime(now().replace(hour=target_hour, minute=target_minute, second=0, microsecond=0))|as_local%}
+    #         {{cheap}}
+    #       device_class: "timestamp"
 
     - sensor:
         - name: Pre Nightly Battery Export Time Calc
@@ -1139,7 +1259,7 @@ solax_zappi_octopus_templates:
             {% set now_ts = now_dt | as_timestamp %}
 
             {# ---- Base nightly target ---- #}
-            {% set nightly_target_ts = today_at("23:30") | as_timestamp + 86400 %}  {# Next day 23:30 #}
+            {% set nightly_target_ts = today_at("23:30") | as_timestamp  %}  {# Next day 23:30 #}
 
             {# ---- Battery status ---- #}
             {% set capacity_left = state_attr('sensor.solax_discharge_capacity','nightly') | float(0) %}
@@ -1170,13 +1290,13 @@ solax_zappi_octopus_templates:
             {% endif %}
 
             {# ---- Output with deadband lock-in ---- #}
-            {% set starttime_ts = starttime | as_timestamp if starttime is not none else none %}
-            {% if starttime_ts is not none and starttime_ts > now() | as_timestamp %}
+            {% set starttime_ts = starttime_dt | as_timestamp if starttime_dt is not none else none %}
+            {% if starttime_ts is not none and starttime_ts > now_ts %}
                 {% set deadband_window = 180 %}
                 {% if (starttime_ts - (now() | as_timestamp)) < deadband_window %}
-                    {{ (today_at("23:30") | as_timestamp + 86400) | as_datetime | as_local }}
+                    {{ ((today_at("23:30") | as_timestamp ) +86400)| as_datetime | as_local }}
                 {% else %}
-                    {{ starttime | as_datetime | as_local }}
+                    {{ starttime_ts | as_datetime | as_local }}
                 {% endif %}
             {% else %}
                 {{ none }}
