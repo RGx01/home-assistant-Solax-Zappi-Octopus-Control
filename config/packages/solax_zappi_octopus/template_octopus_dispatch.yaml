@@ -1,0 +1,334 @@
+
+########################################
+# v1.0 
+# Template to agragate the total of the dispatches
+########################################
+solax_zappi_octopus_template_octopus_dispatch:
+  template:
+
+    ######################################################
+    # Octopus dispatch kWh
+    ######################################################
+    - sensor:
+        - name: "Octopus Total Planned Dispatch"
+          unique_id: octopus_total_planned_dispatch
+          icon: mdi:ev-station
+          unit_of_measurement: "kWh"
+          device_class: "energy"
+          state_class: total
+          state: >
+            {%- set planned = state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') or [] -%}
+            {%- set ns2 = namespace(total_dispatch=0.0) -%}
+            {%- for dispatch in planned -%}
+              {%- if dispatch.start is not none and dispatch.end is not none -%}
+                {%- set ns2.total_dispatch = ns2.total_dispatch + ((dispatch.end|as_timestamp - dispatch.start|as_timestamp)/3600*6.9) -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {{ ns2.total_dispatch }}
+
+          attributes:
+            total_dispatches: >
+              {{ (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') or []) | count }}
+
+            dispatches: >
+              {% set planned = state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') or [] %}
+              {% set ns3 = namespace(members=[]) %}
+              {% for dispatch in planned %}
+                {% if dispatch.start is not none and dispatch.end is not none %}
+                  {% set ns3.members = ns3.members + [{
+                    "dispatch": (dispatch.start|as_datetime|as_local).strftime('%H:%M') 
+                              + " to " 
+                              + (dispatch.end|as_datetime|as_local).strftime('%H:%M')
+                  }] %}
+                {% endif %}
+              {% endfor %}
+              {{ ns3.members }}
+            gaps: >
+              {%- set total_dispatch = states('sensor.octopus_total_planned_dispatch') | float(0) -%}
+              {%- if total_dispatch < 1 -%}
+                []  {# No gaps if there’s less than 1 kWh planned dispatch total #}
+              {%- else -%}
+                {%- set planned = state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') or [] -%}
+                {%- set now_t = now() -%}
+                {%- set now_ts = now_t.timestamp() -%}
+
+                {# --- Determine the next 23:30 cutoff --- #}
+                {%- set cutoff_dt = today_at("23:30") -%}
+                {%- if now_t > cutoff_dt -%}
+                  {# If we’re past today's 23:30, move to *tomorrow's* 23:30 #}
+                  {%- set cutoff_dt = cutoff_dt + timedelta(days=1) -%}
+                {%- endif -%}
+                {%- set cutoff_ts = cutoff_dt.timestamp() -%}
+
+                {# --- Namespace to store intervals and gaps --- #}
+                {%- set ns = namespace(intervals=[], gaps=[], last_end=now_ts) -%}
+
+                {# --- Build dispatch intervals that overlap the window [now, cutoff_dt] --- #}
+                {%- for d in planned -%}
+                  {%- if d.start is not none and d.end is not none -%}
+                    {%- set s_dt = as_local(as_datetime(d.start)) -%}
+                    {%- set e_dt = as_local(as_datetime(d.end)) -%}
+                    {%- if e_dt > now_t and s_dt < cutoff_dt -%}
+                      {%- set s_ts = max(s_dt.timestamp(), now_ts) -%}
+                      {%- set e_ts = min(e_dt.timestamp(), cutoff_ts) -%}
+                      {%- if e_ts > s_ts -%}
+                        {%- set ns.intervals = ns.intervals + [(s_ts, e_ts)] -%}
+                      {%- endif -%}
+                    {%- endif -%}
+                  {%- endif -%}
+                {%- endfor -%}
+
+                {# --- Sort by start time --- #}
+                {%- set ns.intervals = ns.intervals | sort(attribute=0) -%}
+
+                {# --- Compute gaps between now and cutoff --- #}
+                {%- for s, e in ns.intervals -%}
+                  {%- if s > ns.last_end -%}
+                    {%- set gap_start = ns.last_end | timestamp_custom("%H:%M", true) -%}
+                    {%- set gap_end = s | timestamp_custom("%H:%M", true) -%}
+                    {%- set ns.gaps = ns.gaps + [{"gap": gap_start ~ " to " ~ gap_end}] -%}
+                  {%- endif -%}
+                  {%- set ns.last_end = max(ns.last_end, e) -%}
+                {%- endfor -%}
+
+                {# --- Add final gap up to cutoff if needed --- #}
+                {%- if ns.last_end < cutoff_ts -%}
+                  {%- set gap_start = ns.last_end | timestamp_custom("%H:%M", true) -%}
+                  {%- set gap_end = cutoff_ts | timestamp_custom("%H:%M", true) -%}
+                  {%- set ns.gaps = ns.gaps + [{"gap": gap_start ~ " to " ~ gap_end}] -%}
+                {%- endif -%}
+
+                {{ ns.gaps }}
+              {%- endif -%}
+
+
+
+    ######################################################
+    # Octopus dispatch kWh
+    ######################################################
+    # - sensor:
+    #     - name: "Octopus Total Planned Dispatch"
+    #       unique_id: octopus_total_planned_dispatch
+    #       icon: mdi:ev-station
+    #       unit_of_measurement: "kWh"
+    #       device_class: "energy"
+    #       state_class: total
+    #       state: >
+    #         {%- set ns2 = namespace( total_dispatch = 0 ) -%}
+    #         {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
+    #           {%- for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') -%}
+    #             {%- set ns2.total_dispatch = ns2.total_dispatch|float + dispatch.charge_in_kwh|float%}
+    #           {%- endfor -%}
+    #         {%- endif  -%}
+    #         {{ns2.total_dispatch|float (default=0.0)}}
+    #       attributes:
+    #         total_dispatches: >
+    #           {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
+    #             {{state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches')|list|count}}
+    #           {%- else -%}
+    #             {{0}}
+    #           {%- endif  %}
+    #         dispatches: >
+    #           {% set ns3= namespace(members=[]) %}
+    #           {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
+    #             {% for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') -%}
+    #               {% set ns3.members = ns3.members + [{ "dispatch":(dispatch.start|as_datetime|as_local).strftime('%H:%M') + " to " + (dispatch.end | as_datetime | as_local).strftime('%H:%M') }] %}
+    #             {%- endfor -%}
+    #             {{ns3.members}}
+    #           {%- else -%}
+    #             {{None}}
+    #           {%- endif  %}
+
+    ###############################################
+    # Total Dispatch for this session
+    # There is a bug waiting to happen here. 
+    # if user changes the % required in the UI/app then the 
+    # then remaining energy required won't get updated. ATM
+    # it is a one time deal to be set before dispatch is calculated
+    ###############################################
+
+
+    - trigger:
+        - trigger: state
+          entity_id: sensor.octopus_total_planned_dispatch
+        - trigger: state
+          entity_id: number.octopus_intelligent_charge_target
+        - trigger: state
+          entity_id: switch.octopus_intelligent_smart_charge
+          to: "off"
+
+      action:
+        - choose:
+            # CASE A: sensor changed 0 -> non-zero: update only if helper is still 0
+            #         OR the charge_target was changed very recently (race window)
+            - conditions: >
+                {{
+                  trigger.entity_id == 'sensor.octopus_total_planned_dispatch'
+                  and trigger.from_state is not none
+                  and (trigger.from_state.state | float(0)) == 0
+                  and (trigger.to_state.state | float(0)) != 0
+                  and (
+                    (states('input_number.octopus_intelligent_total_dispatch') | float(0)) == 0
+                    or (
+                      states['number.octopus_intelligent_charge_target'] is not none
+                      and (as_timestamp(states['number.octopus_intelligent_charge_target'].last_changed)
+                          >= (as_timestamp(trigger.to_state.last_changed) - 60))
+                    )
+                  )
+                }}
+              sequence:
+                - service: input_number.set_value
+                  target:
+                    entity_id: input_number.octopus_intelligent_total_dispatch
+                  data:
+                    value: "{{ states('sensor.octopus_total_planned_dispatch') | float(0) }}"
+
+            # CASE B: user changed the charge target while helper is already non-zero:
+            #         allow user change to force an update to the helper.
+            - conditions: >
+                {{
+                  trigger.entity_id == 'number.octopus_intelligent_charge_target'
+                  and (states('input_number.octopus_intelligent_total_dispatch') | float(0)) != 0
+                }}
+              sequence:
+                - service: input_number.set_value
+                  target:
+                    entity_id: input_number.octopus_intelligent_total_dispatch
+                  data:
+                    value: "{{ states('sensor.octopus_total_planned_dispatch') | float(0) }}"
+            # CASE C: Smart Charge switch turned off → reset helper
+            - conditions: >
+                {{ trigger.entity_id == 'switch.octopus_intelligent_smart_charge' and trigger.to_state.state == 'off' }}
+              sequence:
+                - service: input_number.set_value
+                  target:
+                    entity_id: input_number.octopus_intelligent_total_dispatch
+                  data:
+                    value: 0
+
+    ###############################################
+    # Remaining Dispatch for this session
+    ###############################################
+    - sensor:
+        - name: "Octopus Intelligent Remaining Dispatch"
+          unique_id: octopus_intelligent_remaining_dispatch
+          icon: mdi:flash
+          unit_of_measurement: "kWh"
+          device_class: "energy"
+          state_class: total
+          state: >
+            {{states('input_number.octopus_intelligent_total_dispatch')|float(3) - states('sensor.zappi_charge_added_session')|float(3) }}
+
+    ######################################################
+    # Gaps in EV charging Schedule 
+    ######################################################            
+    - sensor:
+        - name: "Octopus Next Gap Duration"
+          unique_id: octopus_next_gap_duration
+          unit_of_measurement: "h"
+          icon: mdi:clock-outline
+          state: >
+            {% set min_gap_hr = 20 / 60 %}
+            {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps') %}
+            {% if gaps is not iterable %}
+              0
+            {% else %}
+              {% set ns = namespace(found_gap=0) %}
+              {% for gap in gaps %}
+                {% if 'gap' in gap %}
+                  {% set parts = gap['gap'].split(' to ') %}
+                  {% if parts | count == 2 %}
+                    {% set start = today_at(parts[0]) %}
+                    {% set end = today_at(parts[1]) %}
+                    {% if start < now() %}
+                      {% set start = now() %}
+                    {% endif %}
+                    {% set dur_hr = (end - start).total_seconds() / 3600 %}
+                    {% if dur_hr >= min_gap_hr %}
+                      {% set ns.found_gap = dur_hr %}
+                      {% break %}
+                    {% endif %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.found_gap | round(2) }}
+            {% endif %}
+
+          attributes:
+            next_gap_start: >
+              {% set min_gap_hr = 20 / 60 %}
+              {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps') %}
+              {% if gaps is not iterable %}
+                ''
+              {% else %}
+                {% set ns = namespace(start_time='') %}
+                {% for gap in gaps %}
+                  {% if 'gap' in gap %}
+                    {% set parts = gap['gap'].split(' to ') %}
+                    {% if parts | count == 2 %}
+                      {% set start = today_at(parts[0]) %}
+                      {% set end = today_at(parts[1]) %}
+                      {% if start < now() %}
+                        {% set start = now() %}
+                      {% endif %}
+                      {% set dur_hr = (end - start).total_seconds() / 3600 %}
+                      {% if dur_hr >= min_gap_hr %}
+                        {% set ns.start_time = start.isoformat() %}
+                        {% break %}
+                      {% endif %}
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+                {{ ns.start_time }}
+              {% endif %}
+
+            next_gap_end: >
+              {% set min_gap_hr = 20 / 60 %}
+              {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps') %}
+              {% if gaps is not iterable %}
+                ''
+              {% else %}
+                {% set ns = namespace(end_time='') %}
+                {% for gap in gaps %}
+                  {% if 'gap' in gap %}
+                    {% set parts = gap['gap'].split(' to ') %}
+                    {% if parts | count == 2 %}
+                      {% set start = today_at(parts[0]) %}
+                      {% set end = today_at(parts[1]) %}
+                      {% if start < now() %}
+                        {% set start = now() %}
+                      {% endif %}
+                      {% set dur_hr = (end - start).total_seconds() / 3600 %}
+                      {% if dur_hr >= min_gap_hr %}
+                        {% set ns.end_time = end.isoformat() %}
+                        {% break %}
+                      {% endif %}
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+                {{ ns.end_time }}
+              {% endif %}
+
+
+    ######################################################
+    # Hours of charge required
+    ######################################################    
+    - sensor:
+      - name:  Calculated EV Charge Start Time
+        unique_id: calculated_ev_charge_start_time
+        device_class: "timestamp"
+        icon: mdi:clock-alert
+        state: >
+          {% set td = timedelta(days=10) %}
+          {% set target_time = states('sensor.octopus_intelligent_target_time') %}
+          {% set battery_size = states('input_number.ev_battery_size')|float(0) %}
+          {% set charge_pct = states('number.octopus_intelligent_charge_target')|int(100) %}
+          {% set seconds = (charge_pct/100 * battery_size / 6.8 * 3600) | int %}
+          {% set start = target_time | as_timestamp | int - seconds if target_time not in ['unknown','unavailable',''] else none %}
+          {% set eleventhirty = (target_time | as_datetime if target_time not in ['unknown','unavailable',''] else now()).date() | as_timestamp - 1800 %}
+          {% if start is not none %}
+            {% set dt = (start if start < eleventhirty else eleventhirty) | as_datetime |as_local%}
+          {% else %}
+            {% set dt = none %}
+          {% endif %}
+          {{ dt.isoformat() if dt else (now() + td).isoformat() }}

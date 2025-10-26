@@ -1,0 +1,104 @@
+
+######################################################
+# v1.0.0  Mobile notifications
+######################################################
+solax_zappi_octopus_template_notifications:
+  template:
+    ######################################################
+    ### Devices list
+    ######################################################
+    - trigger:
+        - trigger: homeassistant
+          event: start
+          id: "HA_START"
+        - trigger: time_pattern
+          minutes: /1
+      sensor:
+        - name: Solax Zappi Octopus Device List
+          unique_id: solax_zappi_octopus_device_list
+          state: "{{ now().timestamp() | timestamp_custom() }}"
+          attributes:
+            mobile_devices: >
+              {% set ns= namespace(members=[]) %}
+              {% if  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list |length >0%}
+                {% for item in  integration_entities('mobile_app') | select('match','device_tracker') | map('replace', 'device_tracker.', 'mobile_app_') | list %}
+                  {% set ns.members = ns.members + [{"device": item}] %}
+                {%- endfor -%}
+              {%- endif  -%}
+              {% set ns.members =  [{"device": " "}]+ns.members  %}
+              {{ns.members}}
+    
+    - trigger: 
+        - trigger: state
+          entity_id: 
+            - sensor.solax_zappi_octopus_device_list
+          attribute: mobile_devices
+        - trigger: homeassistant
+          event: start
+          id: "HA_START"
+        - trigger: time_pattern
+          minutes: /1
+      action:
+        - service: input_select.set_options
+          target:
+            entity_id: input_select.solax_automation_notification_devices
+          data:
+            options: >
+              {% set opts = (state_attr('sensor.solax_zappi_octopus_device_list', 'mobile_devices')) | map(attribute='device') | list %}
+              {{ opts if opts else ['Default'] }}
+
+    - trigger: 
+        - trigger: state
+          entity_id: input_select.solax_automation_notification_devices
+        - trigger: state
+          entity_id: input_button.solax_zappi_octopus_reset_device_list
+      sensor:
+        - name: Solax Zappi Octopus Devices to Notify
+          unique_id: solax_zappi_octopus_devices_to_notify
+          state: "{{ now().timestamp() | timestamp_custom() }}"
+          attributes:
+            mobile_devices: >
+              {% if trigger.entity_id == 'input_select.solax_automation_notification_devices' %}
+                {% set current = this.attributes.get('mobile_devices', []) | map(attribute='device') | list %}
+                {% set current1 = this.attributes.get('mobile_devices', []) %}
+                {% if states('input_select.solax_automation_notification_devices') not in current and states('input_select.solax_automation_notification_devices') != ' ' %}
+                    {% set new = [{"device": states('input_select.solax_automation_notification_devices')}] %}
+                    {{ new + current1 }}
+                {% else %}
+                    {% set old = {"device": states('input_select.solax_automation_notification_devices')} %}
+                    {% set current1 = state_attr('sensor.solax_zappi_octopus_devices_to_notify', 'mobile_devices')| reject("equalto", old) |list  %}
+                    {{ current1 }}
+                {% endif %}
+              {% else %}
+                {{[{"device": " "}]}}
+              {% endif %}
+
+    ######################################################
+    ### Notification list
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: input_select.solax_zappi_octopus_notification_list
+        - trigger: state
+          entity_id: input_button.solax_zappi_octopus_reset_notification_exclusions
+      sensor:
+        - name: Solax Zappi Octopus Notification to Exclude
+          unique_id: solax_zappi_octopus_notification_to_exclude
+          state: "{{ now().timestamp() | timestamp_custom() }}"
+          attributes:
+            notification_list: >
+              {% if trigger.entity_id == 'input_select.solax_zappi_octopus_notification_list' %}
+                {% set current = this.attributes.get('notification_list', []) | map(attribute='notification') | list %}
+                {% set current1 = this.attributes.get('notification_list', []) %}
+                {% if states('input_select.solax_zappi_octopus_notification_list') not in current and states('input_select.solax_zappi_octopus_notification_list') != ' ' %}
+                    {% set new = [{"notification": states('input_select.solax_zappi_octopus_notification_list')}] %}
+                    {{ new + current1 }}
+                {% else %}
+                    {% set old = {"notification": states('input_select.solax_zappi_octopus_notification_list')} %}
+                    {% set current1 = state_attr('sensor.solax_zappi_octopus_notification_to_exclude', 'notification_list')| reject("equalto", old) |list  %}
+                    {{ current1 }}
+                {% endif %}
+              {% else %}
+                {{[{"notification": " "}]}}
+              {% endif %}
+          icon: mdi:alert

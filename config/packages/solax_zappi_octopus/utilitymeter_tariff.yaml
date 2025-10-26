@@ -1,0 +1,123 @@
+
+######################################################
+# v1.0.0 tariff events for utility meters and triggering events
+######################################################
+solax_zappi_octopus_utilitymeter_tariff:
+  template:
+    ######################################################
+    # Generate an event when theres a new dispatch
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: sensor.octopus_total_planned_dispatch
+          from: "0"
+          not_to:
+            - unavailable
+      action:
+        - event: Solax Zappi Octopus Control
+          event_data:
+            message: >-
+              Octopus Planned Dispatch @
+              {{now().strftime('%H:%M')}}. 
+              {{states('sensor.octopus_total_planned_dispatch')}}kWh.
+            title: Octopus Dispatch
+            class: normal
+
+    ######################################################
+    # Generate tariff events and selects utility meter settings when:
+    #   dispatching changes
+    #   free electric sessions moved to saving sessions package
+    #   between 05:30 and 23:30
+    ######################################################
+    - trigger:
+        - trigger: time
+          at: sensor.octopus_free_electricity_start
+        - trigger: state
+          entity_id: binary_sensor.octopus_intelligent_dispatching
+          from: "off"
+          to: "on"
+        - trigger: state
+          entity_id: binary_sensor.octopus_energy_electricity_off_peak
+          from: "off"
+          to: "on"
+      action:
+        - event: octopus_tariff
+          event_data:
+            tariff: >
+              {{ 'free' if states.binary_sensor.free_electricity_today is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_start') is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_end') is not none
+                        and now()|as_timestamp >= (state_attr('binary_sensor.free_electricity_today','session_start')|as_timestamp - 120)
+                        and now()|as_timestamp <= (state_attr('binary_sensor.free_electricity_today','session_end')|as_timestamp)
+                else 'offpeak' if (is_state('binary_sensor.octopus_energy_electricity_off_peak','on') or is_state('binary_sensor.octopus_intelligent_dispatching','on')) else 'peak'}}
+            time: >
+              {{now()|as_datetime}}
+        - service: select.select_option
+          data:
+            entity_id: select.daily_grid_import
+            option: >
+              {{ 'free' if states.binary_sensor.free_electricity_today is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_start') is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_end') is not none
+                        and now()|as_timestamp >= (state_attr('binary_sensor.free_electricity_today','session_start')|as_timestamp - 120)
+                        and now()|as_timestamp <= (state_attr('binary_sensor.free_electricity_today','session_end')|as_timestamp)
+                else 'offpeak' if (is_state('binary_sensor.octopus_energy_electricity_off_peak','on') or is_state('binary_sensor.octopus_intelligent_dispatching','on')) else 'peak'}}
+        - service: select.select_option
+          data:
+            entity_id: select.monthly_grid_import
+            option: >
+              {{ 'free' if states.binary_sensor.free_electricity_today is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_start') is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_end') is not none
+                        and now()|as_timestamp >= (state_attr('binary_sensor.free_electricity_today','session_start')|as_timestamp - 120)
+                        and now()|as_timestamp <= (state_attr('binary_sensor.free_electricity_today','session_end')|as_timestamp)
+                else 'offpeak' if (is_state('binary_sensor.octopus_energy_electricity_off_peak','on') or is_state('binary_sensor.octopus_intelligent_dispatching','on')) else 'peak'}}
+
+
+    - trigger:
+        - trigger: state
+          entity_id: binary_sensor.free_electricity_today
+          from: "on"
+          to: "off"
+          for:
+            minutes: 2
+        - trigger: state
+          entity_id: binary_sensor.octopus_intelligent_dispatching
+          from: "on"
+          to: "off"
+        - trigger: state
+          entity_id: binary_sensor.octopus_energy_electricity_off_peak
+          from: "on"
+          to: "off"
+      action:
+        - event: octopus_tariff
+          event_data:
+            tariff: >
+              {{ 'free' if states.binary_sensor.free_electricity_today is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_start') is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_end') is not none
+                        and now()|as_timestamp >= (state_attr('binary_sensor.free_electricity_today','session_start')|as_timestamp - 120)
+                        and now()|as_timestamp <= (state_attr('binary_sensor.free_electricity_today','session_end')|as_timestamp)
+                else 'offpeak' if (is_state('binary_sensor.octopus_energy_electricity_off_peak','on') or is_state('binary_sensor.octopus_intelligent_dispatching','on')) else 'peak'}}
+            time: >
+              {{now()|as_datetime}}
+        - service: select.select_option
+          data:
+            entity_id: select.daily_grid_import
+            option: >
+              {{ 'free' if states.binary_sensor.free_electricity_today is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_start') is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_end') is not none
+                        and now()|as_timestamp >= (state_attr('binary_sensor.free_electricity_today','session_start')|as_timestamp - 120)
+                        and now()|as_timestamp <= (state_attr('binary_sensor.free_electricity_today','session_end')|as_timestamp)
+                else 'offpeak' if (is_state('binary_sensor.octopus_energy_electricity_off_peak','on') or is_state('binary_sensor.octopus_intelligent_dispatching','on')) else 'peak'}}
+        - service: select.select_option
+          data:
+            entity_id: select.monthly_grid_import
+            option: >
+              {{ 'free' if states.binary_sensor.free_electricity_today is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_start') is not none
+                        and state_attr('binary_sensor.free_electricity_today','session_end') is not none
+                        and now()|as_timestamp >= (state_attr('binary_sensor.free_electricity_today','session_start')|as_timestamp - 120)
+                        and now()|as_timestamp <= (state_attr('binary_sensor.free_electricity_today','session_end')|as_timestamp)
+                else 'offpeak' if (is_state('binary_sensor.octopus_energy_electricity_off_peak','on') or is_state('binary_sensor.octopus_intelligent_dispatching','on')) else 'peak'}}
