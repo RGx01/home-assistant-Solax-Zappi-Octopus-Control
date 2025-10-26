@@ -131,7 +131,7 @@ solax_zappi_octopus_input_number:
     battery_export_margin_delta:
       name: Export Margin Delta
       min: 0
-      max: 15
+      max: 60
       step: 1
       mode: box
       unit_of_measurement: "minutes"
@@ -185,6 +185,14 @@ solax_zappi_octopus_input_number:
       icon: mdi:battery-10
       unit_of_measurement: "%"
     battery_discharge_soc_window_limit:
+      name: SoC Distance Must Be G.T.E
+      min: 5
+      max: 25
+      step: 1
+      mode: box
+      icon: mdi:battery-10
+      unit_of_measurement: "%"
+    nightly_battery_discharge_soc_window_limit:
       name: SoC Distance Must Be G.T.E
       min: 5
       max: 25

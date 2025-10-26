@@ -1,5 +1,5 @@
 ########################################
-# v1.0 
+# v1.0.1 added nightly_battery_discharge_soc_window_limit
 # Template to estimate remaining energy required to survive the day
 ########################################
 solax_zappi_octopus_template_discharge_magic:
@@ -318,7 +318,14 @@ solax_zappi_octopus_template_discharge_magic:
             {# --- Compute fresh JIT start timestamp --- #}
             {% set remaining_kwh_to_min = states('sensor.solax_discharge_capacity')|float(0) %}
             {% set discharge_time_sec = ((remaining_kwh_to_min / inverter_cap) * 3600) if inverter_cap > 0 else 0 %}
-            {% set target_ts = (today_at('23:30:00') + timedelta(minutes=margin_delta)).timestamp() %}
+            {# set target_ts = (today_at('23:30:00') + timedelta(minutes=margin_delta)).timestamp() #}
+            {# --- Compute 23:30 + margin_delta, safe across midnight --- #}
+            {% set base_time = today_at('23:30:00') %}
+            {% set adjusted = base_time + timedelta(minutes=margin_delta) %}
+            {% if adjusted < base_time %}
+              {% set adjusted = adjusted + timedelta(days=1) %}
+            {% endif %}
+            {% set target_ts = adjusted.timestamp() %}
             {% set calc_start_ts = target_ts - discharge_time_sec %}
 
             {# --- Use previously locked timestamp if present --- #}
@@ -348,8 +355,16 @@ solax_zappi_octopus_template_discharge_magic:
               {% set margin_delta = states('input_number.battery_export_margin_delta') | float(5) %}
               {% set remaining_kwh_to_min =states('sensor.solax_discharge_capacity')|float(0) %}
               {% set discharge_time_sec = ((remaining_kwh_to_min / inverter_cap) * 3600) if inverter_cap > 0 else 0 %}
-              {% set target_ts = (today_at('23:30:00') + timedelta(minutes=margin_delta)).timestamp() %}
+              {# set target_ts = (today_at('23:30:00') + timedelta(minutes=margin_delta)).timestamp() #}
+              {# --- Compute 23:30 + margin_delta, safe across midnight --- #}
+              {% set base_time = today_at('23:30:00') %}
+              {% set adjusted = base_time + timedelta(minutes=margin_delta) %}
+              {% if adjusted < base_time %}
+                {% set adjusted = adjusted + timedelta(days=1) %}
+              {% endif %}
+              {% set target_ts = adjusted.timestamp() %}
               {% set calc_start_ts = target_ts - discharge_time_sec %}
+              
 
               {% set prev_ts = state_attr('binary_sensor.jit_2330_discharge_allowed','locked_start') | float(0) %}
 
@@ -368,7 +383,14 @@ solax_zappi_octopus_template_discharge_magic:
                 {% set inverter_cap = states('input_number.solax_inverter_capacity') | float(0) %}
                 {% set margin_delta = states('input_number.battery_export_margin_delta') | float(5) %}
                 {% set discharge_time_sec = ((remaining_kwh_to_min / inverter_cap) * 3600) if inverter_cap > 0 else 0 %}
-                {% set target_ts = (today_at('23:30:00') + timedelta(minutes=margin_delta)).timestamp() %}
+                {# set target_ts = (today_at('23:30:00') + timedelta(minutes=margin_delta)).timestamp() #}
+                {# --- Compute 23:30 + margin_delta, safe across midnight --- #}
+                {% set base_time = today_at('23:30:00') %}
+                {% set adjusted = base_time + timedelta(minutes=margin_delta) %}
+                {% if adjusted < base_time %}
+                  {% set adjusted = adjusted + timedelta(days=1) %}
+                {% endif %}
+                {% set target_ts = adjusted.timestamp() %}
                 {% set calc_start_ts = target_ts - discharge_time_sec %}
                 {{calc_start_ts|as_datetime|as_local}}
               {% endif %}
@@ -394,7 +416,7 @@ solax_zappi_octopus_template_discharge_magic:
               states('input_number.octopus_free_session_battery_prep_soc')|int(default=20)
             ] | max %}
 
-            {% set soc_window = states('input_number.battery_discharge_soc_window_limit') | float(6) %}
+            {% set soc_window = states('input_number.nightly_battery_discharge_soc_window_limit') | float(6) %}
             {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
             {% set ev_status = states('sensor.zappi_plug_status') | string %}
             {% set now_time = now() %}
