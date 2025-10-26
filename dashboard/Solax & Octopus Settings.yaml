@@ -1,4 +1,4 @@
-# v6.0.0
+# v6.0.1
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -549,7 +549,7 @@ sections:
             type: attribute
             attribute: next_gap_end
           - entity: input_number.battery_discharge_soc_window_limit
-        title: Discharge During Octopus Schedule
+        title: Export During Octopus Schedule
         show_header_toggle: false
         state_color: true
         visibility:
@@ -599,6 +599,12 @@ sections:
                 state: "on"
             row:
               entity: input_number.battery_export_margin_delta
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery_nightly
+                state: "on"
+            row:
+              entity: input_number.nightly_battery_discharge_soc_window_limit
           - type: conditional
             conditions:
               - entity: input_boolean.export_battery_nightly
@@ -1750,4 +1756,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-
