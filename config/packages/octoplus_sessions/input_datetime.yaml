@@ -26,16 +26,16 @@ ococtoplus_sessions_input_datetime:
       has_time: true
       icon: mdi:clock
 
-    #Octopus Saving Session
-    saving_session_start:
-      name: Octopus Saving Session Start
-      has_date: true
-      has_time: true
-      icon: mdi:clock-digital
+    # #Octopus Saving Session
+    # saving_session_start:
+    #   name: Octopus Saving Session Start
+    #   has_date: true
+    #   has_time: true
+    #   icon: mdi:clock-digital
 
-    #Octopus Saving Session
-    saving_session_end:
-      name: Octopus Saving Session End
-      has_date: true
-      has_time: true
-      icon: mdi:clock-digital
+    # #Octopus Saving Session
+    # saving_session_end:
+    #   name: Octopus Saving Session End
+    #   has_date: true
+    #   has_time: true
+    #   icon: mdi:clock-digital

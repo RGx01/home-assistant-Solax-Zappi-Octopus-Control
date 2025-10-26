@@ -14,29 +14,29 @@ octoplus_sessions_input_number:
       mode: box
       icon: mdi:battery-arrow-down
 
-    #Octopus Saving Session Target Discharge SoC
-    octopus_saving_session_target_battery_soc:
-      name: Target Battery Discharge SoC
-      min: 15
-      max: 90
-      step: 1
-      mode: box
-      icon: mdi:battery-arrow-down
+    # #Octopus Saving Session Target Discharge SoC
+    # octopus_saving_session_target_battery_soc:
+    #   name: Target Battery Discharge SoC
+    #   min: 15
+    #   max: 90
+    #   step: 1
+    #   mode: box
+    #   icon: mdi:battery-arrow-down
 
-    #Octopus Saving Session Target Charge SoC
-    octopus_saving_session_target_battery_charge_soc:
-      name: Target Battery Preparation SoC
-      min: 15
-      max: 95
-      step: 1
-      mode: box
-      icon: mdi:battery-arrow-up
+    # #Octopus Saving Session Target Charge SoC
+    # octopus_saving_session_target_battery_charge_soc:
+    #   name: Target Battery Preparation SoC
+    #   min: 15
+    #   max: 95
+    #   step: 1
+    #   mode: box
+    #   icon: mdi:battery-arrow-up
 
-    #Octopus Saving Session Target Discharge SoC
-    octopus_saving_session_prep_time:
-      name: Preparation Time (minutes)
-      min: 0
-      max: 60
-      step: 1
-      mode: box
-      icon: mdi:timer
+    # #Octopus Saving Session Target Discharge SoC
+    # octopus_saving_session_prep_time:
+    #   name: Preparation Time (minutes)
+    #   min: 0
+    #   max: 60
+    #   step: 1
+    #   mode: box
+    #   icon: mdi:timer

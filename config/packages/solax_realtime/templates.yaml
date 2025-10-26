@@ -1,6 +1,7 @@
     ######################################################
     # Change log - this may only work for X1 hybrid g4
     ######################################################
+    # v1.2.0     Increased reliabilty
     # v1.1.0     Further Refactoring/tidy
     # v1.0.0     Refactored into package
     ######################################################
@@ -9,39 +10,45 @@ solax_realtime_templates:
     - sensor:
         - name: solax_local
           state: >
-            {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10  %}
+            {# if state_attr('sensor.solax_rest_local', 'sn')|length == 10  #}
+            {% if states('sensor.solax_rest_local_safe') not in ['unknown', 'unavailable','None','none',''] %}
               {{ now().strftime("%H:%M:%S") }}
             {% else %}
               {{ (states('sensor.solax_local')) }}
             {% endif %}
           attributes:
             sn: >-
-              {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10 %}
-                {{ (state_attr('sensor.solax_rest_local', 'sn')) }}
+              {# if state_attr('sensor.solax_rest_local', 'sn')|length == 10 #}
+              {% if states('sensor.solax_rest_local_safe') not in ['unknown', 'unavailable','None','none',''] %}
+                {{ (state_attr('sensor.solax_rest_local_safe', 'sn')) }}
               {% else %}
                 {{ (state_attr('sensor.solax_local', 'sn')) }}
               {% endif %}
             ver: >-
-              {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10 %}
-                {{ (state_attr('sensor.solax_rest_local', 'ver')) }}
+              {# if state_attr('sensor.solax_rest_local', 'sn')|length == 10 #}
+              {% if states('sensor.solax_rest_local_safe') not in ['unknown', 'unavailable','None','none',''] %}
+                {{ (state_attr('sensor.solax_rest_local_safe', 'ver')) }}
               {% else %}
                 {{ (state_attr('sensor.solax_local', 'ver')) }}
               {% endif %}
             type: >-
-              {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10 %}
-                {{ (state_attr('sensor.solax_rest_local', 'type')) }}
+              {# if state_attr('sensor.solax_rest_local', 'sn')|length == 10 #}
+              {% if states('sensor.solax_rest_local_safe') not in ['unknown', 'unavailable','None','none',''] %}
+                {{ (state_attr('sensor.solax_rest_local_safe', 'type')) }}
               {% else %}
                 {{ (state_attr('sensor.solax_local', 'type')) }}
               {% endif %}
             Data: >-
-              {% if state_attr('sensor.solax_rest_local', 'Data')|length > 30 or states('sensor.solax_rest_local') not in ['unknown', 'unavailable','None',''] %}
-                {{ (state_attr('sensor.solax_rest_local', 'Data')) }}
+              {# if state_attr('sensor.solax_rest_local', 'Data')|length > 30 or states('sensor.solax_rest_local') not in ['unknown', 'unavailable','None',''] #}
+              {% if states('sensor.solax_rest_local_safe') not in ['unknown', 'unavailable','None','none',''] %}
+                {{ (state_attr('sensor.solax_rest_local_safe', 'Data')) }}
               {% else %}
                 {{ (state_attr('sensor.solax_local', 'Data')) }}
               {% endif %}
             Information: >-
-              {% if state_attr('sensor.solax_rest_local', 'sn')|length == 10 %}
-                {{ (state_attr('sensor.solax_rest_local', 'Information')) }}
+              {# if state_attr('sensor.solax_rest_local', 'sn')|length == 10 #}
+              {% if states('sensor.solax_rest_local_safe') not in ['unknown', 'unavailable','None','none',''] %}
+                {{ (state_attr('sensor.solax_rest_local_safe', 'Information')) }}
               {% else %}
                 {{ (state_attr('sensor.solax_local', 'Information')) }}
               {% endif %}
@@ -49,7 +56,7 @@ solax_realtime_templates:
         - name: "Solax Local Type"
           unique_id: solax_local_type
           state: >
-            {% set attr = state_attr('sensor.solax_rest_local', 'type') %}
+            {% set attr = state_attr('sensor.solax_local', 'type') %}
             {% if attr == 3 %}X1 hybrid g3
             {% elif attr == 4 %}X1 boost air mini
             {% elif attr == 5 %}X3 hybrid g1
@@ -240,7 +247,7 @@ solax_realtime_templates:
           unit_of_measurement: "%"
           state_class: measurement
           icon: >
-            {% set b_soc = state_attr('sensor.solax_local', 'Data')[68] / 10 %}
+            {% set b_soc = state_attr('sensor.solax_local', 'Data')[18] %}
             {% if b_soc > 95 %}mdi:battery
             {% elif b_soc > 89 %}mdi:battery-90
             {% elif b_soc > 79 %}mdi:battery-80
@@ -251,7 +258,8 @@ solax_realtime_templates:
             {% elif b_soc > 29 %}mdi:battery-30
             {% elif b_soc > 19 %}mdi:battery-20
             {% elif b_soc > 9 %}mdi:battery-10
-            {% else %}mdi:battery-0{% endif %}
+            {% else %} mdi:battery-outline
+            {% endif %}
 
         ### Feed-in power (positive for feed-in, negative for consumption) ###
         - name: "Solax Local Feedin Power"

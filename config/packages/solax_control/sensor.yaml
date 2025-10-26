@@ -1,6 +1,22 @@
     ###################################
     # Solax X1 Hybrid G4 Rest Sensors #
-    # Added:
+    ###################################
+    # v1.3.0 Added:
+    #  headers:
+    #    Connection: "close"
+    #    Cache-Control: "no-cache"
+    # This means:
+    # HA will not reuse the same socket between multiple requests,
+    # it protects from intermediaries (like switches, NAT, or the inverter’s own HTTP daemon) can cache or drop traffic silently,
+    # and stale responses can appear valid ).
+    # If you send Connection: close in your headers, each REST command:
+    # Opens a new TCP connection,
+    # Sends your POST/GET,
+    # Forces the inverter to respond fresh,
+    # Then closes the connection cleanly.
+    # Enables templates to confirm a response was valid.
+    #
+    # V1.0.0
     # 12 - Feed In Min SOC %
     # 13 - Feed In Charge from grid to %
     # 14 - battery heating enable - read only unless the dongle is unlocked
@@ -13,14 +29,18 @@
     ###################################
 solax_control_sensor:
   sensor:
-    #    ### Solax Local REST settings Self Use###
     - platform: rest
-      scan_interval: 3601
-      unique_id: d2e621bd-dada-4eab-984f-cd524cdbee68
+      scan_interval: 3599
+      unique_id: solax_rest_local_settings
       resource: !secret solax_local_ip
       payload: !secret solax_local_settings_payload
       method: POST
+      headers:
+        Connection: "close"
+        Cache-Control: "no-cache"
       name: "solax_rest_local_settings"
+      force_update: true
+      timeout: 9 # this must be carefully balanced or be less than refresh_delay in the solax_set_mode_and_settings script.
       # Unfortunately settings are not returned as a JSON document but an array of numbers, so having to pick just the relevant to avoid the max 255 chars limit
       # 0 - Self Use Min SOC %
       # 1 - Self Use Charge from grid (0 for disabled, 1 for enabled)

@@ -1,5 +1,7 @@
     ###################################
     # Solax X1 Hybrid G4 Rest Sensors #
+    # v1.2.0 Increased reliabilty
+    # v1.0.1 Added a safe sensor to prevent dodgy values when network glitches etc
     ###################################
 solax_realtime_sensor:
   sensor:
@@ -16,11 +18,26 @@ solax_realtime_sensor:
         - type
         - Data
         - Information
-#      value_template: "OK" # dummy value, not used; avoids the "State max length is 255 characters" error
       value_template: >
-        {% if value_json is defined %}
           {{ "OK" }}
-        {%- else -%}
-          {{ "None" }}
-        {%- endif -%}
+
+  ############################################
+  # Solax Local proxy to normalize state #
+  ############################################
+  template:
+    - sensor:
+        - name: "solax_rest_local_safe"
+          state: >
+            {% set s = states('sensor.solax_rest_local') %}
+            {% if s in ['unavailable', 'unknown', '', 'none', 'None'] %}
+              None
+            {% else %}
+              {{ s }}
+            {% endif %}
+          attributes:
+            sn: "{{ state_attr('sensor.solax_rest_local', 'sn') }}"
+            ver: "{{ state_attr('sensor.solax_rest_local', 'ver') }}"
+            type: "{{ state_attr('sensor.solax_rest_local', 'type') }}"
+            Data: "{{ state_attr('sensor.solax_rest_local', 'Data') }}"
+            Information: "{{ state_attr('sensor.solax_rest_local', 'Information') }}"
 

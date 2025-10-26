@@ -1,12 +1,6 @@
 ###############################
-# V5.4.0.   Added individual discharge limits
-#           solax_manual_forced_discharge_limit_soc
-#           solax_daily_discharge_limit_soc
-#           solax_nightly_discharge_limit_soc
-# V5.0.1    Added Battery Export Margin Delta (minutes)
-#           This is to account for sometimes Battery SoC is not quite linear
-#           and also not always accurate
-# V3.0.0 Added Units
+# Input Numbers to support the 
+# solax_zappi_octopus package
 ###############################
 solax_zappi_octopus_input_number:
   input_number:
@@ -66,35 +60,35 @@ solax_zappi_octopus_input_number:
       mode: box
       icon: mdi:battery-20
     #Daily forced discharge limit
-    solax_daily_discharge_limit_soc:
-      name: Daily Discharge SoC
-      unit_of_measurement: "%"
-      #initial: 18
-      min: 10
-      max: 80
-      step: 1
-      mode: box
-      icon: mdi:battery-20
+    # solax_daily_discharge_limit_soc:
+    #   name: Daily Discharge SoC
+    #   unit_of_measurement: "%"
+    #   #initial: 18
+    #   min: 10
+    #   max: 80
+    #   step: 1
+    #   mode: box
+    #   icon: mdi:battery-20
     #Nightly forced discharge limit
-    solax_nightly_discharge_limit_soc:
-      name: Nightly Discharge SoC
-      unit_of_measurement: "%"
-      #initial: 18
-      min: 10
-      max: 80
-      step: 1
-      mode: box
-      icon: mdi:battery-20
+    # solax_nightly_discharge_limit_soc:
+    #   name: Nightly Discharge SoC
+    #   unit_of_measurement: "%"
+    #   #initial: 18
+    #   min: 10
+    #   max: 80
+    #   step: 1
+    #   mode: box
+    #   icon: mdi:battery-20
     # Discharge limit when discharging to meet ev charge start time
-    solax_discharge_limit_soc_before_ev:
-      name: Discharge to SoC (Before charging EV)
-      unit_of_measurement: "%"
-      #initial: 18
-      min: 10
-      max: 100
-      step: 1
-      mode: box
-      icon: mdi:battery-20
+    # solax_discharge_limit_soc_before_ev:
+    #   name: Discharge to SoC (Before charging EV)
+    #   unit_of_measurement: "%"
+    #   #initial: 18
+    #   min: 10
+    #   max: 100
+    #   step: 1
+    #   mode: box
+    #   icon: mdi:battery-20
     #Default Min SoC discharge limit
     solax_default_discharge_limit_soc:
       name: Default Minimum SoC
@@ -129,7 +123,7 @@ solax_zappi_octopus_input_number:
     delay_when_ev_connected:
       name: Delay after EV is Connected
       unit_of_measurement: "minutes"
-      min: 0
+      min: 1
       max: 15
       step: 1
       mode: box
@@ -166,3 +160,51 @@ solax_zappi_octopus_input_number:
       mode: box
       icon: mdi:skull-crossbones
       unit_of_measurement: "%"
+    octopus_intelligent_total_dispatch:
+      name: Octopus Intelligent Total Dispatch
+      min: 0
+      max: 200
+      step: 0.1
+      mode: box
+      icon: mdi:ev-station
+      unit_of_measurement: "kWh"
+    hours_of_reserve_energy:
+      name: Hours of Reserve Energy
+      min: 0
+      max: 24
+      step: 0.25
+      mode: box
+      icon: mdi:clock-star-four-points-outline
+      unit_of_measurement: "hr"
+    additional_reserve_soc:
+      name: Additional Reserve Soc
+      min: 0
+      max: 10
+      step: 1
+      mode: box
+      icon: mdi:battery-10
+      unit_of_measurement: "%"
+    battery_discharge_soc_window_limit:
+      name: SoC Distance Must Be G.T.E
+      min: 5
+      max: 25
+      step: 1
+      mode: box
+      icon: mdi:battery-10
+      unit_of_measurement: "%"
+    daily_battery_discharge_soc_window_limit:
+      name: SoC Distance Must Be G.T.E
+      min: 10
+      max: 50
+      step: 1
+      mode: box
+      icon: mdi:battery-10
+      unit_of_measurement: "%"
+    typical_house_power_evening:
+      name: Typical House Power (Evening kW)
+      min: 0.000
+      max: 2.000
+      step: 0.001
+      mode: box
+      icon: mdi:transmission-tower-import
+      unit_of_measurement: "%"      

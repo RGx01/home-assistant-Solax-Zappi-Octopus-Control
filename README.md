@@ -1,14 +1,15 @@
 # Solax-Zappi-Octopus-Control
 Written specifically for IOG Zappi and Solax X1-G4 Inverter
 Main features:
-1. Control Inverter settings.
-2. Ability to discharge battery to a SoC by a given time using Solcast i.e. discharge to 50% by 6pm.
-3. Seamless battery discharge prior to EV charging.
-4. Handling of CT clamps in different positions on the Henley block.
-5. User notifications to mobile devices.
-6. Handles Free Electric Sessions from Octoplus.
-7. ~~Handles Saving Sessions~~.
-8. Calculates Capacity SoH on each full recharge.
+1. Control Inverter settings locally with REST.
+2. Option - Daily discharge to a Target SoC based on typical usage
+3. Option - Just in Time discharge to 10% by 23:30
+4. Option - Discharge between gaps in Octopus Dispatch (aim for Target SoC based on typical usage)
+5. Handling of CT clamps in different positions on the Henley block.
+6. User notifications to mobile devices.
+7. Handles Free Electric Sessions from Octoplus.
+8. ~~Handles Saving Sessions~~. Removed
+9. Calculates Capacity SoH on each full recharge.
 
 ![delme](https://github.com/user-attachments/assets/c2eb91f9-8c83-4f31-8a76-75df950f1d05)
 
@@ -28,7 +29,7 @@ Main features:
 * HACS https://hacs.xyz/docs/use/
 * Electricity Maps https://www.home-assistant.io/integrations/co2signal/
     - must be configured
-* Octopus Energy (by bottlecapdave) https://bottlecapdave.github.io/HomeAssistant-OctopusEnergy/
+* Octopus Energy (by bottlecapdave) V17 https://bottlecapdave.github.io/HomeAssistant-OctopusEnergy/
     - must be configured
     - must have the free electric entity enabled (not done by default, manual process)
 * Myenergi https://github.com/CJNE/ha-myenergi
@@ -56,7 +57,8 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
      - Find and replace YYYYYYYYYY with your registration number (found on the devices page on the solax cloud)
      - Find http://192.168.xxx.xxx and replace with http://192.168.1.fixed_ip
 6. .\config\packages\octopus_renamed_entities\template.yaml
-     - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
+     - Find and replace all METER_MPAN with your own
+     - Find and replace all L_O_N_G_ZAPPIID with your own
 7. .\config\packages\solax_zappi_octopus\utility_meters.yaml
     - Find ev_charging_daily_vehicle and replace the vehicle names and set them as you wish
     - Find ev_charging_monthly_vehicle and replace the vehicle names and set them as you wish
@@ -64,7 +66,7 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
     - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
 9. .\config\packages\zappi_renamed_entities\template.yaml
     - Find and replace all zappi serial numbers zappi_XXXXXXXX with your own i.e. zappi_12345678
-10. Copy the contents of automations_5001-6001.yaml to the bottom of .\config automations.yaml
+10. Copy the contents of automations_5000-5005.yaml to the bottom of .\config automations.yaml
 11. Edit your configuration.yaml to pick up the new packages.
 
 Rather than putting all the config in the single '\config\configuration.yaml file, to keep things clean and tidy and more manageable, the package files can referenced like this in the configuration.yaml:
@@ -105,9 +107,7 @@ automation: !include automations.yaml
     - default inverter mode.
     - default charge to level
     - default min_soc
-    - under 'Pre-emptive Battery Exports' set: 
-        - Solax Battery SoH Stored initial value to 100 (it will recalucate each time a full charge cycle)
-    - forced discharge limit for both 'prior to ev charging' and 'nightly discharge'.
+    - Solax Battery SoH Stored initial value to 100 (it will recalucate each time a full charge cycle 10-100%)
     - select Octopus schedule type
     - EV registered battery size
     - EV ready time
@@ -147,22 +147,4 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
-| v5.7.1|**21/09/25**|solax_zappi_octopus\templates.yaml| Deadband lockin so that sensor doesn't re-evaluate after an export starts|
-| v5.7.0|**21/09/25**|solax_zappi_octopus\templates.yaml| Refined pre emptive discharcharges with use of sensor.solcast_pv_forecast_forecast_next_hour and sensor.solcast_pv_forecast_forecast_this_hour|
-| v5.6.4|**21/09/25**| Solax & Octopus Settings.yaml (the dashboard)| Bug Fix to dashboard - Wrong entity in nightly soc target|
-| v5.6.3|**21/09/25**|solax_zappi_octopus\templates.yaml|  Rejigged the pre-emptive times so that margin_delta is applied consistently.|
-| v5.6.2 |**20/09/25**|solax_zappi_octopus\templates.yaml| Minor bug fix to octopus_intelligent_target_time to prevent errors on reload of templates from developer tools|
-| v5.6.1|**20/09/25**|automations_5001-6001.yaml <br> octopus_renamed_entities\templates <br>solax_zappi_octopus\templates.yaml | BUG Fix with clamping of pre emptive and sensor thrashing of octopus mirror sensors|
-| v5.6.0|**20/09/25**|octopus_renamed_entities\templates <br>solax_zappi_octopus\templates.yaml <br>solax_zappi_octopus\utilitymeter.yam| Duplicting attributes for octopus dispatch sensor so easier to install, also removed dependancy on zappi serial number in utility meter |
-| v5.5.0|**20/09/25**|automations_5001-6001.yaml <br>solax_zappi_octopus\templates.yaml| Improved pre emptive discharges|
-| v5.4.1|**18/09/25**|automations_5001-6001.yaml <br>solax_zappi_octopus\templates.yaml| bug fixes missing from previous release|
-| v5.4.0|**18/09/25** |automations_5001-6001.yaml <br> octoplus_sessions\templates.yaml <br> solax_zappi_octopus\input_boolean.yaml <br> solax_zappi_octopus\input_datetime.yaml <br> solax_zappi_octopus\input_number.yaml <br> solax_zappi_octopus\templates.yaml <br> Solax & Octopus Settings.yaml (the dashboard)| Added Daily Exporting for when EV is disconnected. Supports pre-emptive discharge so you can aim for a SoC to reach at a specific time|
-| v5.3.0| **17/09/25** | automations_5001-6001.yaml <br> solax_zappi_octopus\templates.yaml <br> solax_zappi_octopus\input_number.yaml <br> Solax & Octopus Settings.yaml (the dashboard) | Introducing safe switching of octopus_intelligent_smart_charge. Sometimes the API fails when kraken endpoints are unreachable. This is an attempt to trap and notify if this happens. <br> Fixed bug with solax_local_battery_in_from_solar sensor <br> Added  Battery true capacity based on grid stored/theoretical stored = Capacity SoH. This refines predictions of time to discharge before charging EV and discharging battery before 23:30. To get the calculation to work you must charge from 10 -100% periodicallly <br> Dashboard tweak|
-| v5.2.0| **15/09/25** | automations_5001-6001.yaml <br> octoplus_sessions\templates.yaml| Corrected Typo in octoplus sessions that may effect end time not being used correctly <br> Ajusted 6001 to end 2 min charging early to make sure dispatch qits on time|
-| v5.1.1| **14/09/25** | automations_5001-6001.yaml|Fixed bug in Free Electric notification where end time was announced as start time|
-| v5.1.0| **13/09/25**| solax_additions deleted <br> solax_realtime added <br> solax_zappi_octopus has new files | solax_additions deleted and replaced with solax_realtime <br> anything that was in solax additions that wasn't to do with realtime data is moved to solax_zappi_octopus|
-| v5.0.1| **12/09/25**| solax_zappi_octopus\input_number.yaml <br>solax_zappi_octopus\templates.yaml <br> Solax & Octopus Settings.yaml (the dashboard)|  Added a configurable export margin delta for when preemptive discharges under estimate<br> Fixed an issue where an EV may not get fully charged if it's plugged in after the pre export battery time |
-| v5.0  | **12/09/25**| All | Major refactor |
-
-# Known Issues
-- fixed ~~in Automation 5001 Option 3, there is a known issue which I plan to fix soon where if the EV is connected after the predicted EV start time and the option is set to discharge the house battery you may not get the full EV charge.~~
+| v6.0.0|**21/09/25**|All| ident-potent inverter/zappi control|

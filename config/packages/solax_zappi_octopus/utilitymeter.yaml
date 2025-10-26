@@ -59,13 +59,13 @@ solax_zappi_octopus_utilitymeter:
     daily_load:
       unique_id: f88ebe90-536f-4978-ad26-486825890e3a
       source: sensor.solax_local_load_aggregated_energy
-      name: Daily Load
+      name: Daily Use
       cycle: daily
 
     monthly_load:
       unique_id: 82db8bd0-02d2-4cb3-94c2-a8c25e949086
       source: sensor.solax_local_load_aggregated_energy
-      name: Monthly Load
+      name: Monthly Used
       cycle: monthly
       offset:
         days: 2
@@ -77,13 +77,13 @@ solax_zappi_octopus_utilitymeter:
     daily_house_load:
       unique_id: e028afa2-8d86-4504-a107-8212306082dd
       source: sensor.solax_local_house_load_aggregated_energy
-      name: Daily House Load
+      name: Daily House Used
       cycle: daily
 
     monthly_house_load:
       unique_id: 2cf0b05d-def6-4955-a8bb-12293de735ae
       source: sensor.solax_local_house_load_aggregated_energy
-      name: Monthly House Load
+      name: Monthly House Used
       cycle: monthly
       offset:
         days: 2

@@ -2,6 +2,7 @@ solax_zappi_octopus_input_boolean:
   input_boolean:
     ###########################################
     # Solax Zappi Octopus UI
+    # v6.0.0 Cleaned up
     # v5.4.0 Added export_battery_daily
     # v3.7   Pre-emptive battery exports
     # v3.1   Solax System on/off State
@@ -24,23 +25,17 @@ solax_zappi_octopus_input_boolean:
     use_fixed_time:
       name: Octopus Schedule at Fixed Time
       icon: mdi:ev-station
-    use_clever_time:
-      name: Octopus Schedule a Single Dispatch 
-      icon: mdi:ev-station
     #Prevent EV charging before sunset
     solar_export_priority:
       name: Octopus Schedule after Sun Elevation Threshold
       icon: mdi:solar-power
-    priorise_export_over_ev:
-      name: Prioritise Battery Export Over Octopus Schedule
-      icon: mdi:transmission-tower-export
     #Prevent EV discharging Solax Battery
     ev_solax_battery_drain:
       name: Prevent Zappi Draining Battery
       icon: mdi:battery-10
     #use grid during octopus dispatch
     use_grid_during_octopus_dispatch:
-      name: Use Grid During Octopus Dispatch
+      name: Use Grid During Octopus Off Peak
       icon: mdi:transmission-tower-import
     #Solax automation running
     solax_automation_running:
@@ -60,20 +55,12 @@ solax_zappi_octopus_input_boolean:
       icon: mdi:heating-coil
     #Export battery switch is used to determine if the remainder of solax battery can be dumped back to the grid during off peak
     export_battery_daily:
-      name: Daily Battery Export (EV Disconnected)
-      icon: mdi:battery-arrow-down
+      name: Daily Battery Export
+      icon: mdi:light-switch
     #Export battery switch is used to determine if the remainder of solax battery can be dumped back to the grid during off peak
-    export_battery:
+    export_battery_nightly:
       name: Nightly Battery Export (EV Disconnected)
-      icon: mdi:battery-arrow-down
-    #Attempt to discharge battery before programmed EV charge time /cheap rate time
-    pre_emptive_export_battery:
-      name: Pre-emptive Battery Exports
-      icon: mdi:battery-arrow-down    
-    #Attempt to discharge battery before charging EV
-    export_battery_prior:
-      name: Export Battery Before Charging EV
-      icon: mdi:battery-arrow-down
+      icon: mdi:light-switch 
     #Manual Export
     export_battery_manual:
       name: Export Battery Manual
@@ -91,9 +78,9 @@ solax_zappi_octopus_input_boolean:
       name: Zappi always in ECO+ Mode (when connected)
       icon: mdi:leaf
     # Switch to indicate if a saving session is in progress
-    saving_session_active:
-      name: Saving Session In Progress
-      icon: mdi:leaf
+    # saving_session_active:
+    #   name: Saving Session In Progress
+    #   icon: mdi:leaf
     solax_octopus_hide_settings:
       name: Hide Settings
       icon: mdi:eye-off
@@ -105,5 +92,23 @@ solax_zappi_octopus_input_boolean:
       icon: mdi:eye-off
     solax_octopus_hide_stats:
       name: Hide Stats Charts
+      icon: mdi:eye-off
+    battery_discharge_now:
+      name: Battery Discharge Now
+      icon: mdi:lightning-bolt-circle
+    battery_discharge_in_dispatch_gaps:
+      name: Battery Discharge in Dispatch Gaps
+      icon: mdi:light-switch
+    free_electric:
+      name: free_electric
+      icon: mdi:light-switch
+    daily_export_when_ev_connected:
+      name: Allow when connected if no EV schedule
+      icon: mdi:transmission-tower-export
+    nightly_export_when_ev_connected:
+      name: Allow when connected if no EV schedule
+      icon: mdi:transmission-tower-export
+    battery_reserve_show_hide:
+      name: Show/Hide
       icon: mdi:eye-off
     ###########################################

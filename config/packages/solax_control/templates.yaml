@@ -1,26 +1,48 @@
 ####################################
+# v1.3.0 Added attribute to show if cached sensor values are used
 # v1.2.0 Tidy up
 ####################################
 
 solax_control_templates:
   template:
-    - sensor:
-        # Core data holder
+    - trigger:
+        - platform: state
+          entity_id: sensor.solax_rest_local_settings
+      sensor:
         - name: solax_local_settings
-          state: "{{ now().strftime('%H:%M:%S') }}"
+          state: >-
+            {% set rest_state = states('sensor.solax_rest_local_settings') %}
+            {% set rest_last_updated = states.sensor.solax_rest_local_settings.last_updated | default(0) %}
+            {% if rest_state not in ['unavailable', 'unknown', 'none'] %}
+              {{ as_timestamp(rest_last_updated) | timestamp_custom('%Y-%m-%d %H:%M:%S') }}
+            {% else %}
+              {{ state_attr('sensor.solax_local_settings','last_valid_update')
+                  | default('unknown') }}
+            {% endif %}
           attributes:
             Data: >-
-              {% if is_number(states('sensor.solax_rest_local_settings')|length) and
-                    states('sensor.solax_rest_local_settings')|length > 30 %}
-                {{ states('sensor.solax_rest_local_settings') }}
+              {% set rest_state = states('sensor.solax_rest_local_settings') %}
+              {% if rest_state not in ['unavailable', 'unknown', 'none'] %}
+                {{ rest_state }}
               {% else %}
                 {{ state_attr('sensor.solax_local_settings','Data') }}
               {% endif %}
-
+            using_cache: >-
+              {% set rest_state = states('sensor.solax_rest_local_settings') %}
+              {{ rest_state in ['unavailable', 'unknown', 'none'] }}
+            last_valid_update: >-
+              {% set rest_state = states('sensor.solax_rest_local_settings') %}
+              {% set rest_last_updated = states.sensor.solax_rest_local_settings.last_updated | default(0) %}
+              {% if rest_state not in ['unavailable', 'unknown', 'none'] %}
+                {{ as_timestamp(rest_last_updated) | timestamp_custom('%Y-%m-%d %H:%M:%S') }}
+              {% else %}
+                {{ state_attr('sensor.solax_local_settings','last_valid_update')
+                    | default('unknown') }}
+              {% endif %}
         ######################################################
         # Solax Local Settings
         ######################################################
-
+    - sensor:
         # System on/off
         - name: "Solax Local System State"
           unique_id: solax_local_system_state

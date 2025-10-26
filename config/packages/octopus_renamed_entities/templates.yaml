@@ -1,7 +1,7 @@
 ###############################################
-# Replace octopus account number z_ZZZZZZZZ
-# V5.6.1 Fixed thrashing of dispatch mirror sensor
-# V5.0. Refactor
+# Replace METER_MPAN with your own
+# Replace L_O_N_G_ZAPPIID with your own
+# V6.0.0 Refactor for Octopus Energy V17+
 ###############################################
 octopus_renamed_entities_templates:
   template:
@@ -12,13 +12,13 @@ octopus_renamed_entities_templates:
         - name: "Octopus Intelligent Target Time"
           unique_id: octopus_intelligent_target_time
           icon: mdi:battery-clock
-          state: "{{ states('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time') }}"
+          state: "{{ states('select.octopus_energy_L_O_N_G_ZAPPIID_intelligent_target_time') }}"
           options: >
-            {{ state_attr('select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time', 'options') }}
+            {{ state_attr('select.octopus_energy_L_O_N_G_ZAPPIID_intelligent_target_time', 'options') }}
           select_option:
             - service: select.select_option
               target:
-                entity_id: select.octopus_energy_z_ZZZZZZZZ_intelligent_target_time
+                entity_id: select.octopus_energy_L_O_N_G_ZAPPIID_intelligent_target_time
               data:
                 option: "{{ option }}"
 
@@ -29,7 +29,7 @@ octopus_renamed_entities_templates:
     - number:
         - name: "Octopus Intelligent Charge Target"
           unique_id: octopus_intelligent_charge_target
-          state: "{{ states('number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target') | float }}"
+          state: "{{ states('number.octopus_energy_L_O_N_G_ZAPPIID_intelligent_charge_target') | float }}"
           icon: mdi:battery-charging
           min: 10
           max: 100
@@ -37,7 +37,7 @@ octopus_renamed_entities_templates:
           set_value:
             - service: number.set_value
               target:
-                entity_id: number.octopus_energy_z_ZZZZZZZZ_intelligent_charge_target
+                entity_id: number.octopus_energy_L_O_N_G_ZAPPIID_intelligent_charge_target
               data:
                 value: "{{ value }}"
 
@@ -50,16 +50,33 @@ octopus_renamed_entities_templates:
           unique_id: octopus_intelligent_smart_charge
           icon: mdi:ev-station
           state: >
-            {{ is_state('switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge', 'on') }}
+            {{ is_state('switch.octopus_energy_L_O_N_G_ZAPPIID_intelligent_smart_charge', 'on') }}
           turn_on:
             - service: switch.turn_on
               target:
-                entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+                entity_id: switch.octopus_energy_L_O_N_G_ZAPPIID_intelligent_smart_charge
           turn_off:
             - service: switch.turn_off
               target:
-                entity_id: switch.octopus_energy_z_ZZZZZZZZ_intelligent_smart_charge
+                entity_id: switch.octopus_energy_L_O_N_G_ZAPPIID_intelligent_smart_charge
 
+    ######################################################
+    # Octopus Dispatch avoiding unknown when cloud response is not available
+    # Also automations don't need customising
+    ######################################################
+
+    - binary_sensor:
+        - name: Octopus Energy Electricity Off Peak
+          unique_id: octopus_energy_electricity_off_peak
+          state: >
+            {% set master = 'binary_sensor.octopus_energy_electricity_METER_MPAN_off_peak' %}
+            {% set s = states(master) %}
+            {% if s in ['unavailable', 'unknown'] %}
+              {{states('binary_sensor.octopus_energy_electricity_off_peak')}}
+            {% else %}
+              {{ s }}
+            {% endif %}
+            
 
     ######################################################
     # Octopus Dispatch avoiding unknown when cloud response is not available
@@ -68,9 +85,9 @@ octopus_renamed_entities_templates:
 
     - binary_sensor:
         - name: Octopus Intelligent Dispatching
-          unique_id: Octopus_intelligent_dispatching
+          unique_id: octopus_intelligent_dispatching
           state: >
-            {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+            {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
             {% set s = states(master) %}
             {% if s in ['unavailable', 'unknown'] %}
               off
@@ -80,7 +97,7 @@ octopus_renamed_entities_templates:
           icon: mdi:power-plug-battery
           attributes:
             planned_dispatches: >
-              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
               {% set ns = namespace(out=[]) %}
               {% for item in state_attr(master,'planned_dispatches') or [] %}
                 {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
@@ -91,7 +108,7 @@ octopus_renamed_entities_templates:
               {{ ns.out }}
 
             completed_dispatches: >
-              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
               {% set ns = namespace(out=[]) %}
               {% for item in state_attr(master,'completed_dispatches') or [] %}
                 {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
@@ -102,7 +119,7 @@ octopus_renamed_entities_templates:
               {{ ns.out }}
 
             started_dispatches: >
-              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
               {% set ns = namespace(out=[]) %}
               {% for item in state_attr(master,'started_dispatches') or [] %}
                 {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
@@ -113,36 +130,57 @@ octopus_renamed_entities_templates:
               {{ ns.out }}
 
             provider: >
-              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
               {% set val = state_attr(master,'provider') %}
               {{ val if val is not none else none }}
 
             vehicle_battery_size_in_kwh: >
-              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
               {% set val = state_attr(master,'vehicle_battery_size_in_kwh') %}
               {{ val if val is not none else none }}
 
             charge_point_power_in_kw: >
-              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
               {% set val = state_attr(master,'charge_point_power_in_kw') %}
               {{ val if val is not none else none }}
 
             current_start: >
-              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
               {% set val = state_attr(master,'current_start') %}
               {{ val if val is not none else none }}
 
             current_end: >
-              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
               {% set val = state_attr(master,'current_end') %}
               {{ val if val is not none else none }}
 
             next_start: >
-              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
               {% set val = state_attr(master,'next_start') %}
               {{ val if val is not none else none }}
 
             next_end: >
-              {% set master = 'binary_sensor.octopus_energy_z_ZZZZZZZZ_intelligent_dispatching' %}
+              {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
               {% set val = state_attr(master,'next_end') %}
               {{ val if val is not none else none }}
+
+    ####################################################
+    # Octopus depricated the time.Intelligent Target Time
+    # but it's used in an automation so this is calculated
+    # from the select.Intelligent Target Time
+    #####################################################
+    - sensor:
+        - name: Octopus Intelligent Target Time
+          unique_id: octopus_intelligent_target_time
+          device_class: "timestamp"
+          state: >
+            {% set time_str = states('select.octopus_intelligent_target_time') %}
+            {# Use default '05:30' if the state is invalid #}
+            {% set valid_time = time_str if time_str not in ['', 'unknown', 'None', none] and ':' in time_str else '05:30' %}
+            {% set t = today_at(valid_time) | as_datetime | as_local %}
+            {% if now() | as_timestamp > t | as_timestamp + 180 %}
+              {% set x = t | as_timestamp + 86400 %}
+              {{ x | as_datetime | as_local }}
+            {% else %}
+              {{ t | as_local }}
+            {% endif %}

@@ -1,29 +1,4 @@
-# replace zappi_XXXXXXXX with your zappi regno
-# replace z_ZZZZZZZZ with your octopus account
-# v5.7.1 Changed the free electric start time to be the sensor time for automation start
-#        Changed Battery SoH chart to also track temperature. 
-#        Sensible names in stats charts
-# v5.6.4 Bug Fix - Wrong entity in nightly soc target
-# v5.6.0 Tweaks to go with release
-# v5.4.1 Tweaks to go with release
-# v5.3.0 Minor update to show hide charge period 2 when the switch is enabled
-# v5.0.1 Minor update to include Export Margin Delta (min)
-# v5.0   Refactored
-# v4.0.  Predicted production using Solcast
-#        Added a Battery SoH sensor to help discharge pridictions
-#        Added a predicted Shcedule start time based on EV battery size
-# v3.8   Added function to estimate what time EV needs to start based on % charge required and target time
-# v3.7   Added pre emptive discharge options
-# v3.2.2 Added switches to hide/unhide bits of the dashboard
-# v3.2.1 Added house load power to the Heading Card
-# v3.2   Dashboard tidy
-# v3.1   Added better notification options and cell voltage
-#        Added Solax System On/Off
-# v3.0.5 Added missing titles to load chart
-# v3.0.4 Tidy up of charts
-# v3.0.3 Chart presentation improvement
-# v3.0.1 Added new charting params
-# v3.0.0 Various enhancments to go with the release
+# v6.0.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -56,37 +31,6 @@ sections:
             color: green
             tap_action:
               action: more-info
-          - type: entity
-            show_state: true
-            show_icon: false
-            entity: sensor.octopus_completed_dispatch
-            name: Completed
-            visibility:
-              - condition: state
-                entity: binary_sensor.octopus_intelligent_dispatching
-                state: "on"
-              - condition: state
-                entity: sensor.zappi_plug_status
-                state: EV Connected
-            tap_action:
-              action: more-info
-            state_content:
-              - name
-              - state
-          - type: entity
-            show_state: true
-            show_icon: true
-            entity: sensor.octopus_completed_dispatch
-            visibility:
-              - condition: state
-                entity: sensor.zappi_plug_status
-                state: Charging
-            tap_action:
-              action: more-info
-            state_content:
-              - name
-              - state
-            name: Completed
       - type: markdown
         content: >-
           {% if state_attr('sensor.octopus_total_planned_dispatch','dispatches')
@@ -109,8 +53,6 @@ sections:
         entities:
           - entity: input_boolean.octopus_schedule_anytime
             state_color: true
-          - entity: input_boolean.use_clever_time
-            state_color: true
           - entity: input_boolean.use_fixed_time
             state_color: true
           - entity: input_boolean.solar_export_priority
@@ -125,81 +67,6 @@ sections:
       - type: conditional
         conditions:
           - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "off"
-        card:
-          type: entities
-          entities:
-            - type: conditional
-              conditions:
-                - entity: binary_sensor.free_electricity_today
-                  state_not: "off"
-                - entity: input_boolean.octopus_free_electric_soc_use
-                  state_not: "on"
-              row:
-                entity: input_datetime.octopus_free_electricity_prep
-                format: time
-            - type: conditional
-              conditions:
-                - entity: input_boolean.export_battery_daily
-                  state_not: "off"
-                - entity: sensor.zappi_plug_status
-                  state: EV Disconnected
-              row:
-                entity: sensor.daily_battery_export_time_ev_disconnected
-                format: time
-            - type: conditional
-              conditions:
-                - entity: sensor.zappi_plug_status
-                  state: EV Connected
-              row:
-                entity: sensor.ev_start_time
-                format: time
-            - type: conditional
-              conditions:
-                - entity: input_boolean.export_battery_prior
-                  state_not: "off"
-                - entity: binary_sensor.solax_battery_export_before_ev_charge_allowed
-                  state: "on"
-              row:
-                entity: sensor.pre_export_battery_before_charging_ev_time
-                format: time
-            - type: conditional
-              conditions:
-                - entity: input_boolean.export_battery
-                  state_not: "off"
-                - entity: sensor.zappi_plug_status
-                  state: EV Disconnected
-              row:
-                entity: sensor.pre_nightly_battery_export_time
-                format: time
-            - type: conditional
-              conditions:
-                - entity: binary_sensor.solax_discharge_daily
-                  state: "on"
-              row:
-                entity: binary_sensor.solax_discharge_daily
-            - type: conditional
-              conditions:
-                - entity: binary_sensor.solax_discharge_before_ev_charge
-                  state: "on"
-              row:
-                entity: binary_sensor.solax_discharge_before_ev_charge
-            - type: conditional
-              conditions:
-                - entity: binary_sensor.solax_discharge_nightly
-                  state: "on"
-              row:
-                entity: binary_sensor.solax_discharge_nightly
-            - type: conditional
-              conditions:
-                - entity: binary_sensor.solax_discharge_free_electric_prep
-                  state: "on"
-              row:
-                entity: binary_sensor.solax_discharge_free_electric_prep
-      - type: conditional
-        conditions:
-          - condition: state
             entity: input_boolean.solar_export_priority
             state: "on"
           - condition: state
@@ -208,8 +75,8 @@ sections:
         card:
           type: entities
           entities:
-            - entity: sensor.ev_start_time
-              format: time
+            - entity: sensor.octopus_schedule_time
+              format: datetime
             - entity: input_number.sun_degrees_above_horizon
             - entity: number.octopus_intelligent_charge_target
             - entity: select.octopus_intelligent_target_time
@@ -225,28 +92,11 @@ sections:
         card:
           type: entities
           entities:
-            - entity: sensor.ev_start_time
-              format: time
+            - entity: sensor.octopus_schedule_time
+              format: datetime
             - entity: number.octopus_intelligent_charge_target
             - entity: select.octopus_intelligent_target_time
           title: Schedule Anytime
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: input_boolean.use_clever_time
-            state: "on"
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
-        card:
-          type: entities
-          entities:
-            - entity: sensor.ev_start_time
-              format: time
-            - entity: input_number.ev_battery_size
-            - entity: number.octopus_intelligent_charge_target
-            - entity: select.octopus_intelligent_target_time
-          title: Single Dispatch
       - type: conditional
         conditions:
           - condition: and
@@ -257,17 +107,14 @@ sections:
               - condition: state
                 entity: input_boolean.octopus_schedule_anytime
                 state: "off"
-              - condition: state
-                entity: input_boolean.use_clever_time
-                state: "off"
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
             state: "on"
         card:
           type: entities
           entities:
-            - entity: sensor.ev_start_time
-              format: time
+            - entity: sensor.octopus_schedule_time
+              format: datetime
             - entity: input_datetime.don_t_charge_ev_before_time
             - entity: number.octopus_intelligent_charge_target
             - entity: select.octopus_intelligent_target_time
@@ -397,6 +244,64 @@ sections:
             state_content:
               - name
               - state
+      - type: entities
+        entities:
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.ev_gap_discharge_allowed
+                state: "on"
+            row:
+              entity: binary_sensor.ev_gap_discharge_allowed
+              name: Dispatch Gap Export
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.daily_export_discharge_allowed
+                state: "on"
+            row:
+              entity: binary_sensor.daily_export_discharge_allowed
+              name: Daily Export
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.jit_2330_discharge_allowed
+                state: "on"
+            row:
+              entity: binary_sensor.jit_2330_discharge_allowed
+              name: Nightly Export
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.manual_discharge_allowed
+                state: "on"
+            row:
+              entity: binary_sensor.manual_discharge_allowed
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.free_electric_discharge_allowed
+                state: "on"
+            row:
+              entity: binary_sensor.free_electric_discharge_allowed
+              name: Free Electric Battery Prep Export
+        title: Battery Exporting Status
+        visibility:
+          - condition: or
+            conditions:
+              - condition: state
+                entity: binary_sensor.free_electric_discharge_allowed
+                state: "on"
+              - condition: state
+                entity: binary_sensor.jit_2330_discharge_allowed
+                state: "on"
+              - condition: state
+                entity: binary_sensor.solax_discharge_before_ev_charge
+                state: "on"
+              - condition: state
+                entity: binary_sensor.daily_export_discharge_allowed
+                state: "on"
+              - condition: state
+                entity: binary_sensor.manual_discharge_allowed
+                state: "on"
+              - condition: state
+                entity: binary_sensor.ev_gap_discharge_allowed
+                state: "on"
       - type: custom:power-flow-card-plus
         entities:
           battery:
@@ -470,6 +375,7 @@ sections:
           - entity: input_number.solax_default_discharge_limit_soc
           - entity: input_number.solax_default_charge_to_limit_soc
           - entity: input_number.solax_battery_capacity
+          - entity: input_number.solax_battery_soh_stored
           - entity: input_number.solax_inverter_capacity
         grid_options:
           columns: 15
@@ -633,120 +539,17 @@ sections:
           action: none
       - type: entities
         entities:
-          - entity: binary_sensor.solax_battery_export_before_ev_charge_allowed
-          - entity: input_boolean.pre_emptive_export_battery
-            state_color: true
-          - type: conditional
-            conditions:
-              - entity: input_boolean.pre_emptive_export_battery
-                state_not: "off"
-            row:
-              entity: input_number.battery_export_margin_delta
-              format: time
-          - type: conditional
-            conditions:
-              - entity: input_boolean.pre_emptive_export_battery
-                state_not: "off"
-            row:
-              entity: input_number.solax_battery_soh_stored
-              format: time
-          - type: conditional
-            conditions:
-              - entity: input_boolean.export_battery_daily
-                state_not: "off"
-            row:
-              entity: sensor.daily_battery_export_time_ev_disconnected
-              format: time
-          - type: conditional
-            conditions:
-              - entity: input_boolean.export_battery_prior
-                state_not: "off"
-            row:
-              entity: sensor.pre_export_battery_before_charging_ev_time
-              format: time
-          - type: conditional
-            conditions:
-              - entity: input_boolean.export_battery
-                state_not: "off"
-              - entity: sensor.zappi_plug_status
-                state: EV Disconnected
-            row:
-              entity: sensor.pre_nightly_battery_export_time
-              format: time
-        title: Solax Battery Exports
-        show_header_toggle: false
-        state_color: true
-        visibility:
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
-      - type: entities
-        entities:
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.solax_discharge_daily
-                state: "on"
-            row:
-              entity: binary_sensor.solax_discharge_daily
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.solax_discharge_before_ev_charge
-                state: "on"
-            row:
-              entity: binary_sensor.solax_discharge_before_ev_charge
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.solax_discharge_nightly
-                state: "on"
-            row:
-              entity: binary_sensor.solax_discharge_nightly
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.solax_discharge_manual
-                state: "on"
-            row:
-              entity: binary_sensor.solax_discharge_manual
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.solax_discharge_free_electric_prep
-                state: "on"
-            row:
-              entity: binary_sensor.solax_discharge_free_electric_prep
-        title: Exporting Status
-        visibility:
-          - condition: or
-            conditions:
-              - condition: state
-                entity: binary_sensor.solax_discharge_free_electric_prep
-                state: "on"
-              - condition: state
-                entity: binary_sensor.solax_discharge_nightly
-                state: "on"
-              - condition: state
-                entity: binary_sensor.solax_discharge_before_ev_charge
-                state: "on"
-              - condition: state
-                entity: binary_sensor.solax_discharge_daily
-                state: "on"
-              - condition: state
-                entity: binary_sensor.solax_discharge_manual
-                state: "on"
-      - type: entities
-        entities:
-          - entity: input_boolean.export_battery_prior
-          - type: conditional
-            conditions:
-              - entity: input_boolean.export_battery_prior
-                state_not: "off"
-            row:
-              entity: input_number.solax_discharge_limit_soc_before_ev
-          - type: conditional
-            conditions:
-              - entity: input_boolean.export_battery_prior
-                state_not: "off"
-            row:
-              entity: input_boolean.priorise_export_over_ev
-        title: Export Before Charging EV
+          - entity: input_boolean.battery_discharge_in_dispatch_gaps
+          - entity: sensor.octopus_next_gap_duration
+            name: Next Gap Start
+            type: attribute
+            attribute: next_gap_start
+          - entity: sensor.octopus_next_gap_duration
+            name: Next Gap End
+            type: attribute
+            attribute: next_gap_end
+          - entity: input_number.battery_discharge_soc_window_limit
+        title: Discharge During Octopus Schedule
         show_header_toggle: false
         state_color: true
         visibility:
@@ -759,15 +562,21 @@ sections:
           - type: conditional
             conditions:
               - entity: input_boolean.export_battery_daily
-                state_not: "off"
+                state: "on"
             row:
-              entity: input_datetime.daily_battery_export_time
+              entity: input_boolean.daily_export_when_ev_connected
           - type: conditional
             conditions:
               - entity: input_boolean.export_battery_daily
-                state_not: "off"
+                state: "on"
             row:
-              entity: input_number.solax_daily_discharge_limit_soc
+              entity: input_number.daily_battery_discharge_soc_window_limit
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery_daily
+                state: "on"
+            row:
+              entity: input_datetime.daily_battery_export_time
         title: Daily Export
         show_header_toggle: false
         state_color: true
@@ -777,15 +586,118 @@ sections:
             state: "on"
       - type: entities
         entities:
-          - entity: input_boolean.export_battery
+          - entity: input_boolean.export_battery_nightly
           - type: conditional
             conditions:
-              - entity: input_boolean.export_battery
-                state_not: "off"
+              - entity: input_boolean.export_battery_nightly
+                state: "on"
             row:
-              entity: input_number.solax_nightly_discharge_limit_soc
-        title: Nightly Export
+              entity: input_boolean.nightly_export_when_ev_connected
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery_nightly
+                state: "on"
+            row:
+              entity: input_number.battery_export_margin_delta
+          - type: conditional
+            conditions:
+              - entity: input_boolean.export_battery_nightly
+                state: "on"
+            row:
+              entity: binary_sensor.jit_2330_discharge_allowed
+              name: Nightly Export
+              type: attribute
+              attribute: just_in_time_start_2330
+        title: JiT Nightly Exports
         show_header_toggle: false
+        state_color: true
+        visibility:
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
+      - type: entities
+        entities:
+          - entity: input_boolean.battery_reserve_show_hide
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.battery_exportable_allowance_kwh
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.battery_discharge_target_soc
+              name: Total Reserved
+              type: attribute
+              attribute: Total_reserved_kWh
+              suffix: kWh
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.battery_discharge_target_soc
+              name: Required kWh to get to 23:30
+              type: attribute
+              attribute: Required_kWh_2330
+              suffix: kWh
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.solax_discharge_capacity
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.battery_discharge_target_soc
+              name: Required SoC to get to 23:30
+              type: attribute
+              attribute: Required_SoC_2330
+              suffix: "%"
+          - entity: input_number.additional_reserve_soc
+          - entity: input_number.hours_of_reserve_energy
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.battery_discharge_target_soc
+              name: Hours of Reserve SoC
+              type: attribute
+              attribute: Requested_reserve_SoC
+              suffix: "%"
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.discharge_reserve_margin
+              name: Hours of Reserve kWh
+          - entity: input_number.typical_house_power_evening
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.battery_discharge_target_soc
+              name: Default Min SoC
+              type: attribute
+              attribute: Default_min_soc
+              suffix: "%"
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.solax_local_battery_soh
+        show_header_toggle: false
+        title: Battery Reserves
         state_color: true
         visibility:
           - condition: state
@@ -798,14 +710,6 @@ sections:
           - entity: input_button.solax_stop_discharge
         title: Force Discharge
         show_header_toggle: false
-        state_color: true
-        visibility:
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
-      - type: entities
-        entities:
-          - entity: automation.octopus_free_electric_automation
         state_color: true
         visibility:
           - condition: state
@@ -831,14 +735,12 @@ sections:
               - condition: and
                 conditions:
                   - condition: state
-                    entity: automation.octopus_free_electric_automation
-                    state: "on"
-                  - condition: state
                     entity: input_boolean.solax_octopus_hide_settings
                     state: "on"
         card:
           type: entities
           entities:
+            - entity: input_boolean.free_electric
             - entity: sensor.octopus_free_electricity_start
               format: datetime
             - entity: sensor.octopus_free_electricity_stop
@@ -848,6 +750,7 @@ sections:
             - entity: input_number.octopus_free_session_battery_prep_soc
             - entity: input_datetime.octopus_free_electricity_prep
             - entity: binary_sensor.free_electricity_today
+          state_color: true
     column_span: 1
   - type: grid
     cards:
@@ -936,13 +839,15 @@ sections:
             name: Grid Power
       - type: history-graph
         entities:
-          - entity: select.daily_grid_import
-            name: Log
-          - entity: binary_sensor.octopus_intelligent_dispatching
-          - entity: binary_sensor.solax_local_battery_charging_period
           - entity: sensor.solax_local_inverter_mode
           - entity: sensor.solax_local_manual_mode_behaviour
+          - entity: binary_sensor.solax_local_battery_charging_period
+          - entity: select.daily_grid_import
+            name: Log
+          - entity: binary_sensor.octopus_energy_electricity_off_peak
+          - entity: binary_sensor.octopus_intelligent_dispatching
           - entity: sensor.zappi_plug_status
+          - entity: sensor.zappi_status
           - entity: sensor.solax_runmode
         fit_y_data: true
         hours_to_show: 36
@@ -1102,10 +1007,8 @@ sections:
           - entity: input_number.solax_default_charge_to_limit_soc
           - entity: input_number.solax_default_discharge_limit_soc
           - entity: input_number.solax_manual_forced_discharge_limit_soc
-          - entity: input_number.solax_discharge_limit_soc_before_ev
           - entity: sensor.solax_local_battery_soc
-          - entity: input_number.solax_daily_discharge_limit_soc
-          - entity: input_number.solax_nightly_discharge_limit_soc
+          - entity: sensor.battery_discharge_target_soc
         grid_options:
           columns: 36
           rows: auto
@@ -1165,10 +1068,10 @@ sections:
         entities:
           - entity: sensor.solax_local_battery_soh
           - entity: sensor.solax_local_battery_temperature
-        grid_options:
-          columns: full
-          rows: 8
         fit_y_data: false
+        grid_options:
+          columns: 36
+          rows: auto
     column_span: 3
     visibility:
       - condition: state
@@ -1847,6 +1750,4 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-
-
 

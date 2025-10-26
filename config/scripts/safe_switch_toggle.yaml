@@ -1,5 +1,5 @@
 safe_switch_toggle:
-  description: "Toggle a switch safely with retry if it fails"
+  description: "Toggle a switch safely with configurable retry and back-off if it fails"
   fields:
     target_switch:
       description: "The switch to toggle"
@@ -7,34 +7,72 @@ safe_switch_toggle:
     desired_state:
       description: "The state to set (on/off)"
       example: "on"
+    retry:
+      description: "Current retry attempt (for internal recursion)"
+      example: 1
+      default: 1
+    max_retries:
+      description: "Maximum number of retry attempts"
+      example: 3
+      default: 3
+    backoff:
+      description: "Base delay in seconds between retries (will double each retry)"
+      example: 5
+      default: 5
   sequence:
+    # --- Skip if already correct ---
     - choose:
         - conditions:
             - condition: template
               value_template: >
                 {{ states(target_switch) == desired_state }}
-          sequence: []   # do nothing if already correct state
+          sequence: []
         - conditions: []
           sequence:
+            # --- Perform action ---
             - action: "switch.turn_{{ desired_state }}"
               target:
                 entity_id: "{{ target_switch }}"
               continue_on_error: true
 
-            - delay: "00:00:05"
+            # --- Wait with exponential backoff ---
+            - delay:
+                seconds: "{{ (backoff | int) * (2 ** ((retry | default(1)) - 1)) | int }}"
 
+            # --- Check result ---
             - choose:
                 - conditions:
                     - condition: template
                       value_template: >
                         {{ states(target_switch) != desired_state }}
                   sequence:
-                    - event: Solax Zappi Octopus Control
-                      event_data:
-                        message: >
-                          ⚠️ Failed to turn {{ desired_state }} {{ target_switch }}, retrying...
-                        title: ⚠️ Failed to turn {{ desired_state }} {{ target_switch }} 
-                        class: high
-                    - action: "switch.turn_{{ desired_state }}"
-                      target:
-                        entity_id: "{{ target_switch }}"
+                    - choose:
+                        # Retry again if not exceeded max_retries
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ (retry | default(1)) < (max_retries | int) }}"
+                          sequence:
+                            - event: Solax Zappi Octopus Control
+                              event_data:
+                                message: >
+                                  Attempt {{ retry | default(1) }} failed for {{ target_switch }},
+                                  retrying in {{ (backoff * (2 ** (retry | default(1)))) | int }}s...
+                                class: warning
+                            - action: script.safe_switch_toggle
+                              data:
+                                target_switch: "{{ target_switch }}"
+                                desired_state: "{{ desired_state }}"
+                                retry: "{{ (retry | default(1)) + 1 }}"
+                                max_retries: "{{ max_retries }}"
+                                backoff: "{{ backoff }}"
+                        # Give up if we've hit the limit
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ (retry | default(1)) >= (max_retries | int) }}"
+                          sequence:
+                            - event: Solax Zappi Octopus Control
+                              event_data:
+                                message: >
+                                  Gave up turning {{ desired_state }} {{ target_switch }}
+                                  after {{ max_retries }} attempts.
+                                class: high

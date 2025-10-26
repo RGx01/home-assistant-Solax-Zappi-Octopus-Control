@@ -1,0 +1,523 @@
+########################################
+# v1.0 
+# Template to estimate remaining energy required to survive the day
+########################################
+solax_zappi_octopus_template_discharge_magic:
+  template:
+    ######################################################
+    # How much Power to run the house
+    ######################################################
+    - sensor:
+      - name: "Typical House Power (Evening)"
+        unique_id: typical_house_power_evening
+        unit_of_measurement: "kW"
+        state: >
+          {{ states('input_number.typical_house_power_evening') }}
+        
+    ######################################################
+    # How much energy to run the house
+    ######################################################
+    - sensor:
+      - name: "House Energy Needed Until 2330"
+        unique_id: house_energy_needed_until_2330
+        unit_of_measurement: "kWh"
+        state: >
+          {% set avg_kw = states('sensor.typical_house_power_evening')| float(0) %}
+          {% set cutoff = today_at('23:30')|as_datetime|as_local|as_timestamp %}
+          {% set now_time = now()|as_local|as_timestamp %}
+          {% set hours = ((cutoff - now_time) / 3600) | float(0) %}
+          {{ (avg_kw * hours) | round(3) }}
+          
+    ######################################################
+    # How much buffer energy needed as a margin
+    ######################################################
+    - sensor:
+      - name: "Discharge Reserve Margin"
+        unique_id: discharge_reserve_margin
+        unit_of_measurement: "kWh"
+        state: >
+          {{ states('input_number.hours_of_reserve_energy')|float(0) * states('sensor.typical_house_power_evening')|float(0) }}
+
+
+    ######################################################
+    # How much energy can safley be exported
+    ######################################################
+    - sensor:
+        - name: "Battery Exportable Allowance kWh"
+          unique_id: battery_exportable_allowance_kwh
+          unit_of_measurement: "kWh"
+          state: >
+            {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
+            {% set target_soc = states('sensor.battery_discharge_target_soc') | float(0) %}
+            {% set batt_usable = state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10)  %}
+            {% set exportable = batt_usable * ((soc - target_soc) / 100) %}
+            {{ [exportable, 0] | max | round(2) }}
+          attributes:
+            current_soc: "{{ states('sensor.solax_local_battery_soc') }}"
+            target_soc: "{{ states('sensor.battery_discharge_target_soc') }}"
+            batt_usable_kwh: >
+              {{ state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10)  }}
+            total_reserved_kwh: "{{ state_attr('sensor.battery_discharge_target_soc', 'Total_reserved_kWh') }}"
+            note: "Energy available for export before reaching the discharge target SoC (already includes reserves & buffers)."
+
+    ######################################################
+    # Calculate Shortfall
+    ######################################################
+
+    ######################################################
+    # Calculate Taret SoC
+    ######################################################
+    - sensor:
+      - name: "Battery Discharge Target SoC"
+        unique_id: battery_discharge_target_soc
+        unit_of_measurement: "%"
+        state: >
+          {% set min_soc = states('input_number.solax_default_discharge_limit_soc') | float(10) %}
+          {% set reserve_pct = states('input_number.additional_reserve_soc')|int(0) %}
+          {% set reserve_kwh = states('sensor.discharge_reserve_margin') | float(0.5) %}
+          {% set house_kwh = states('sensor.house_energy_needed_until_2330') | float(0.5) %}
+          {% set batt_usable = state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10) %}
+
+          {# Convert kWh to % of usable battery #}
+          {% set reserve_soc = (reserve_kwh / batt_usable * 100) if batt_usable > 0 else 0 %}
+          {% set house_soc = (house_kwh / batt_usable * 100) if batt_usable > 0 else 0 %}
+
+          {# Final target SoC #}
+          {% set final_soc = min_soc + reserve_soc + reserve_pct + house_soc %}
+          {% set final_soc = [final_soc, 100] | min %}
+          {{ final_soc | round(0) }}
+
+        attributes:
+          Default_min_soc: "{{ states('input_number.solax_default_discharge_limit_soc') | float(10) }}"
+          Additional_buffer_pct: "{{states('input_number.additional_reserve_soc')|int(0)}}"
+          Requested_reserve_SoC: >
+            {% set reserve_kwh = states('sensor.discharge_reserve_margin') | float(0.5) %}
+            {% set batt_usable = state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10) %}
+            {% if batt_usable > 0 %}
+              {{ (reserve_kwh / batt_usable * 100) | round(2) }}
+            {% else %}
+              0
+            {% endif %}
+          Required_SoC_2330: >
+            {% set house_kwh = states('sensor.house_energy_needed_until_2330') | float(0.5) %}
+            {% set batt_usable = state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10) %}
+            {% if batt_usable > 0 %}
+              {{ (house_kwh / batt_usable * 100) | round(2) }}
+            {% else %}
+              0
+            {% endif %}
+          Battery_size_kwh: >
+            {{ state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10) | round(2) }}
+          Required_kWh_2330: "{{ states('sensor.house_energy_needed_until_2330') | float(0.5) }}"
+          Requested_reserve_kwh: "{{ states('sensor.discharge_reserve_margin') | float(0.5) }}"
+          Total_reserved_kWh: >
+            {% set reserve_kwh = states('sensor.discharge_reserve_margin') | float(0.5) %}
+            {% set house_kwh = states('sensor.house_energy_needed_until_2330') | float(0.5) %}
+            {% set reserve_pct = states('input_number.additional_reserve_soc')|int(0) %}
+            {% set batt_usable = state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10) %}
+            {% set reserve_kwh_pct = (batt_usable * (reserve_pct / 100)) if batt_usable > 0 else 0 %}
+            {{ (reserve_kwh + house_kwh + reserve_kwh_pct) | round(2) }}          
+          note: "Target SoC = min_soc + discharge_buffer + buffer_pct + house_energy"
+
+
+    ######################################################
+    # Safe Single flag to indicate if discharge can occur
+    ######################################################
+    - trigger:
+        - platform: state
+          entity_id: binary_sensor.battery_discharge_now
+          from:
+            - "on"
+            - "off"
+          to:
+            - "on"
+            - "off"
+      action:
+        - choose:
+            - conditions: "{{ trigger.to_state.state == 'on' }}"
+              sequence:
+                - service: input_boolean.turn_on
+                  target:
+                    entity_id: input_boolean.battery_discharge_now
+            - conditions: "{{ trigger.to_state.state == 'off' }}"
+              sequence:
+                - service: input_boolean.turn_off
+                  target:
+                    entity_id: input_boolean.battery_discharge_now
+
+    ######################################################
+    # Single flag to indicate if discharge can occur
+    ######################################################
+    - binary_sensor:
+        - name: "Battery Discharge Now"
+          unique_id: battery_discharge_now
+          device_class: power
+          state: >
+            {{ is_state('binary_sensor.ev_gap_discharge_allowed','on')
+              or is_state('binary_sensor.daily_export_discharge_allowed','on')
+              or is_state('binary_sensor.jit_2330_discharge_allowed','on') 
+              or is_state('binary_sensor.manual_discharge_allowed','on')
+              or is_state('binary_sensor.free_electric_discharge_allowed','on')}}
+          attributes:
+            ev_gap_discharge: "{{ is_state('binary_sensor.ev_gap_discharge_allowed','on') }}"
+            daily_export_discharge: "{{ is_state('binary_sensor.daily_export_discharge_allowed','on') }}"
+            jit_2330_discharge: "{{ is_state('binary_sensor.jit_2330_discharge_allowed','on') }}"
+            manual_discharge: "{{ is_state('binary_sensor.manual_discharge_allowed','on') }}"
+            free_discharge: "{{ is_state('binary_sensor.free_electric_discharge_allowed','on') }}"
+
+
+    ######################################################
+    # Discharge can occur in octopus Gaps
+    ######################################################
+    - binary_sensor:
+        - name: "EV Gap Discharge Allowed"
+          unique_id: ev_gap_discharge_allowed
+          device_class: power
+          state: >
+            {% set free_electric = is_state('binary_sensor.free_electricity_today','off')%}
+            {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
+            {% set target_soc = states('sensor.battery_discharge_target_soc') | float(0) %}
+            {% set soc_window = states('input_number.battery_discharge_soc_window_limit') | float(6) %}
+            {% set exportable_kwh = states('sensor.battery_exportable_allowance_kwh') | float(0) %}
+            {% set ev_status = states('sensor.zappi_plug_status') | string %}
+            {% set connected_for_min = (as_timestamp(now()) - as_timestamp(states.sensor.zappi_plug_status.last_changed)) / 60 %}
+            {% set min_connected_min = 10 %}
+            {% set next_gap_hr = states('sensor.octopus_next_gap_duration') | float(0) %}
+            {% set min_gap_hr = 0.3 %}
+            {% set has_gap = next_gap_hr >= min_gap_hr %}
+            {% set solar_threshold_raw = states('sensor.solar_export_threshold') %}
+            {% set solar_threshold = (solar_threshold_raw | as_datetime | as_local)
+              if solar_threshold_raw not in ['unknown','unavailable','',none] else none %}
+            {% set now_time = now() %}
+            {% set prev_state = is_state('binary_sensor.ev_gap_discharge_allowed','on') %}
+            {% set dispatch_time = (as_timestamp(now()) - states.input_number.octopus_intelligent_total_dispatch.last_changed|as_timestamp)/60 %}
+            {% set dispatch = states.input_number.octopus_intelligent_total_dispatch.state|int >0 and dispatch_time > 10 and states('switch.octopus_intelligent_smart_charge') == 'on'%}
+
+            {% set upper_threshold = target_soc + soc_window %}
+            {% set lower_threshold = target_soc  %}
+
+            {{ is_state('input_boolean.battery_discharge_in_dispatch_gaps','on')
+              and free_electric
+              and dispatch
+              and ev_status == 'EV Connected'
+              and connected_for_min >= min_connected_min
+              and has_gap
+              and exportable_kwh > 0
+              and (solar_threshold is none or now_time >= solar_threshold)
+              and (
+                (prev_state and soc > lower_threshold)
+                or (not prev_state and soc >= upper_threshold)
+              )
+            }}
+          attributes:
+            ev_status: "{{ states('sensor.zappi_plug_status') }}"
+            connected_for_min: >
+              {{ ((as_timestamp(now()) - as_timestamp(states.sensor.zappi_plug_status.last_changed)) / 60) | round(1) }}
+            next_gap_duration_hr: "{{ states('sensor.octopus_next_gap_duration') }}"
+            solar_threshold: >
+              {% set s = states('sensor.solar_export_threshold') %}
+              {{ (s | as_datetime | as_local) if s not in ['unknown','unavailable','',none] else none }}
+            hysteresis_upper_threshold: >
+              {% set target_soc = states('sensor.battery_discharge_target_soc') | float(0) %}
+              {% set soc_window = states('input_number.battery_discharge_soc_window_limit') | float(6) %}
+              {{ (target_soc + soc_window) | round(2) }}
+            hysteresis_lower_threshold: >
+              {% set target_soc = states('sensor.battery_discharge_target_soc') | float(0) %}
+              {% set soc_window = states('input_number.battery_discharge_soc_window_limit') | float(6) %}
+              {{ target_soc | round(2) }}
+
+# need to check that ev_start_time isn't within 10 minuts of the discharge time
+
+    ######################################################
+    # Discharge can occur at a fixed time daily
+    ######################################################
+    - binary_sensor:
+        - name: "Daily Export Discharge Allowed"
+          unique_id: daily_export_discharge_allowed
+          device_class: power
+          state: >
+            {% set planned_dispatch = states('sensor.octopus_total_planned_dispatch')| float(0)%}
+            {% set allow_with_ev_connected = is_state('input_boolean.daily_export_when_ev_connected','on') and planned_dispatch < 1 %}
+            {% set free_electric = is_state('binary_sensor.free_electricity_today','off')%}
+            {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
+            {% set target_soc = states('sensor.battery_discharge_target_soc') | float(0) %}
+            {% set soc_window = states('input_number.daily_battery_discharge_soc_window_limit') | float(6) %}
+            {% set exportable_kwh = states('sensor.battery_exportable_allowance_kwh') | float(0) %}
+            {% set ev_status = states('sensor.zappi_plug_status') | string %}
+            {% set now_time = now() %}
+            {% set daily_export_str = states('input_datetime.daily_battery_export_time') %}
+            {% set daily_export_time = (today_at(daily_export_str) | as_datetime | as_local)
+              if daily_export_str not in ['unknown','unavailable','',none] else none %}
+            {% set prev_state = is_state('binary_sensor.daily_export_discharge_allowed','on') %}
+
+            {% set upper_threshold = target_soc + soc_window %}
+            {% set lower_threshold = target_soc  %}
+
+            {{ is_state('input_boolean.export_battery_daily','on')
+              and free_electric
+              and (
+                    ev_status == 'EV Disconnected'
+                    or (ev_status == 'EV Connected' and allow_with_ev_connected)
+                  )
+              and exportable_kwh > 0
+              and (daily_export_time is not none and now_time >= daily_export_time)
+              and (
+                (prev_state and soc > lower_threshold)
+                or (not prev_state and soc >= upper_threshold)
+              )
+            }}
+          attributes:
+            daily_export_time: >
+              {% set t = states('input_datetime.daily_battery_export_time') %}
+              {{ (today_at(t) | as_local) if t not in ['unknown','unavailable','',none] else none }}
+            hysteresis_upper_threshold: >
+              {% set target_soc = states('sensor.battery_discharge_target_soc') | float(0) %}
+              {% set soc_window = states('input_number.daily_battery_discharge_soc_window_limit') | float(6) %}
+              {{ (target_soc + soc_window) | round(2) }}
+            hysteresis_lower_threshold: >
+              {% set target_soc = states('sensor.battery_discharge_target_soc') | float(0) %}
+              {% set soc_window = states('input_number.daily_battery_discharge_soc_window_limit') | float(6) %}
+              {{ target_soc  }}
+
+
+    ######################################################
+    # JIT discharge can occur for 23:30
+    ######################################################
+    - trigger:
+        - platform: state
+          entity_id:
+            - sensor.solax_local_battery_soc
+            - input_number.solax_default_discharge_limit_soc
+            - input_number.battery_discharge_soc_window_limit
+            - input_number.solax_inverter_capacity
+            - input_number.battery_export_margin_delta
+            - sensor.solax_discharge_capacity
+            - sensor.battery_exportable_allowance_kwh
+            - sensor.zappi_plug_status
+            - input_boolean.export_battery
+
+      binary_sensor:
+        - name: "JIT 2330 Discharge Allowed"
+          unique_id: jit_2330_discharge_allowed
+          device_class: power
+
+          state: >
+            {% set planned_dispatch = states('sensor.octopus_total_planned_dispatch')| float(0)%}
+            {% set allow_with_ev_connected = is_state('input_boolean.nightly_export_when_ev_connected','on') and (planned_dispatch < 1 or states('switch.octopus_intelligent_smart_charge') == 'off') %}
+
+            {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
+            {% set min_soc = states('input_number.solax_default_discharge_limit_soc') | float(20) %}
+            {% set soc_window = states('input_number.battery_discharge_soc_window_limit') | float(6) %}
+            
+            {% set inverter_cap = states('input_number.solax_inverter_capacity') | float(0) %}
+            {% set margin_delta = states('input_number.battery_export_margin_delta') | float(5) %}
+            
+            {% set ev_status = states('sensor.zappi_plug_status') | string %}
+            {% set now_ts = now().timestamp() %}
+
+            {# --- Compute fresh JIT start timestamp --- #}
+            {% set remaining_kwh_to_min = states('sensor.solax_discharge_capacity')|float(0) %}
+            {% set discharge_time_sec = ((remaining_kwh_to_min / inverter_cap) * 3600) if inverter_cap > 0 else 0 %}
+            {% set target_ts = (today_at('23:30:00') + timedelta(minutes=margin_delta)).timestamp() %}
+            {% set calc_start_ts = target_ts - discharge_time_sec %}
+
+            {# --- Use previously locked timestamp if present --- #}
+            {% set prev_locked_ts = state_attr('binary_sensor.jit_2330_discharge_allowed','locked_start') | float(0) %}
+            {% set just_in_time_start_ts = prev_locked_ts if prev_locked_ts > 0 else calc_start_ts %}
+
+            {# --- Hysteresis thresholds --- #}
+            {% set upper_threshold = min_soc + soc_window %}
+            {% set lower_threshold = min_soc %}
+            {% set was_on = is_state('binary_sensor.jit_2330_discharge_allowed', 'on') %}
+            {% set turn_on = soc >= upper_threshold %}
+            {% set keep_on = was_on and soc > lower_threshold %}
+
+            {{ is_state('input_boolean.export_battery_nightly','on')
+              and (
+                    ev_status == 'EV Disconnected'
+                    or (ev_status == 'EV Connected' and allow_with_ev_connected)
+                  )
+              and remaining_kwh_to_min > 0
+              and now_ts >= just_in_time_start_ts
+              and (turn_on or keep_on)
+            }}
+
+          attributes:
+            locked_start: >
+              {% set inverter_cap = states('input_number.solax_inverter_capacity') | float(0) %}
+              {% set margin_delta = states('input_number.battery_export_margin_delta') | float(5) %}
+              {% set remaining_kwh_to_min =states('sensor.solax_discharge_capacity')|float(0) %}
+              {% set discharge_time_sec = ((remaining_kwh_to_min / inverter_cap) * 3600) if inverter_cap > 0 else 0 %}
+              {% set target_ts = (today_at('23:30:00') + timedelta(minutes=margin_delta)).timestamp() %}
+              {% set calc_start_ts = target_ts - discharge_time_sec %}
+
+              {% set prev_ts = state_attr('binary_sensor.jit_2330_discharge_allowed','locked_start') | float(0) %}
+
+              {% if is_state('binary_sensor.jit_2330_discharge_allowed','on') %}
+                {{ prev_ts if prev_ts > 0 else calc_start_ts }}
+              {% else %}
+                0
+              {% endif %}
+
+            just_in_time_start_2330: >
+              {% set ts = state_attr('binary_sensor.jit_2330_discharge_allowed','locked_start') | float(0) %}
+              {% if ts > 0 %}
+                {{ ts | timestamp_custom('%Y-%m-%d %H:%M:%S', true) }}
+              {% else %}
+                {% set remaining_kwh_to_min =states('sensor.solax_discharge_capacity')|float(0) %}
+                {% set inverter_cap = states('input_number.solax_inverter_capacity') | float(0) %}
+                {% set margin_delta = states('input_number.battery_export_margin_delta') | float(5) %}
+                {% set discharge_time_sec = ((remaining_kwh_to_min / inverter_cap) * 3600) if inverter_cap > 0 else 0 %}
+                {% set target_ts = (today_at('23:30:00') + timedelta(minutes=margin_delta)).timestamp() %}
+                {% set calc_start_ts = target_ts - discharge_time_sec %}
+                {{calc_start_ts|as_datetime|as_local}}
+              {% endif %}
+
+            upper_threshold: "{{ (states('input_number.solax_default_discharge_limit_soc') | float(20)) + (states('input_number.battery_discharge_soc_window_limit') | float(6)) }}"
+            lower_threshold: "{{ states('input_number.solax_default_discharge_limit_soc') }}"
+            margin_delta: "{{ states('input_number.battery_export_margin_delta') }}"
+            exportable_kwh: "{{ states('sensor.battery_exportable_allowance_kwh') }}"
+            ev_status: "{{ states('sensor.zappi_plug_status') }}"
+
+
+    ######################################################
+    # Free Electric prep discharge can occur
+    ######################################################
+    - binary_sensor:
+        - name: "Free Electric Discharge Allowed"
+          unique_id: free_electric_discharge_allowed
+          device_class: power
+          state: >
+            {% set target_soc = [
+              states('sensor.solax_local_feed_in_battery_min_soc')|int(default=15),
+              states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15),
+              states('input_number.octopus_free_session_battery_prep_soc')|int(default=20)
+            ] | max %}
+
+            {% set soc_window = states('input_number.battery_discharge_soc_window_limit') | float(6) %}
+            {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
+            {% set ev_status = states('sensor.zappi_plug_status') | string %}
+            {% set now_time = now() %}
+
+            {% set prep_time_str = states('input_datetime.octopus_free_electricity_prep') %}
+            {% set prep_time = (
+              today_at(prep_time_str) | as_datetime | as_local
+            ) if prep_time_str not in ['unknown','unavailable','',none] else none %}
+
+            {% set start_str = states('sensor.octopus_free_electricity_start') %}
+            {% set start_time = (
+              as_datetime(start_str) | as_local
+            ) if start_str not in ['unknown','unavailable','',none] else none %}
+
+            {% set free_today = is_state('binary_sensor.free_electricity_today','on') %}
+            {% set prev_state = is_state('binary_sensor.free_electric_discharge_allowed','on') %}
+
+            {% set discharge_allowed = is_state('input_boolean.octopus_free_electric_soc_use','off')%}
+            {% set free_electric_soc = is_state('input_boolean.octopus_free_electric_soc_use','off')%}
+            {% set upper_threshold = soc_window + target_soc %}
+            {% set lower_threshold = target_soc %}
+
+            {# ---- Determine active window safely ---- #}
+            {% set valid_window = (
+              prep_time is not none and
+              start_time is not none and
+              start_time > now_time
+            ) %}
+
+            {% set active_window_hours = (
+              ((start_time - prep_time).total_seconds() / 3600)
+              if valid_window else 0
+            ) | float(0) %}
+
+            {{ valid_window
+              and free_electric_soc
+              and discharge_allowed
+              and free_today
+              and ev_status != 'Charging'
+              and now_time >= prep_time
+              and now_time < (prep_time + timedelta(hours=active_window_hours))
+              and (
+                (prev_state and soc > lower_threshold)
+                or (not prev_state and soc > upper_threshold)
+              )
+            }}
+
+
+          attributes:
+            free_electric_prep_time: >
+              {% set t = states('input_datetime.octopus_free_electricity_prep') %}
+              {{ (today_at(t) | as_local) if t not in ['unknown','unavailable','',none] else none }}
+            hysteresis_upper_threshold: >
+              {% set prep_soc = states('input_number.octopus_free_session_battery_prep_soc') | float(0) %}
+              {{ ( 100 ) | round(2) }}
+            hysteresis_lower_threshold: >
+              {% set prep_soc = states('input_number.octopus_free_session_battery_prep_soc') | float(0) %}
+              {{ prep_soc | round(2) }}
+
+    ######################################################
+    # Manual discharge can occur
+    ######################################################
+    - trigger:
+        # Re-evaluate and act whenever the user requests manual discharge or conditions change
+        - platform: state
+          entity_id:
+            - input_boolean.export_battery_manual
+            - sensor.solax_local_battery_soc
+            - sensor.zappi_plug_status
+            - sensor.solax_local_feed_in_battery_min_soc
+            - sensor.solax_local_selfuse_battery_min_soc
+            - input_number.solax_manual_forced_discharge_limit_soc
+      binary_sensor:
+        - name: "Manual Discharge Allowed"
+          unique_id: manual_discharge_allowed
+          device_class: power
+          state: >
+            {% set target_soc = [
+              states('sensor.solax_local_feed_in_battery_min_soc') | int(default=15),
+              states('sensor.solax_local_selfuse_battery_min_soc') | int(default=15),
+              states('input_number.solax_manual_forced_discharge_limit_soc') | int(default=20)
+            ] | max %}
+            {% set soc_window = states('input_number.battery_discharge_soc_window_limit') | float(6) %}
+            {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
+            {% set ev_status = states('sensor.zappi_plug_status') | string %}
+            {% set manual_discharge = is_state('input_boolean.export_battery_manual', 'on') %}
+            {% set prev_state = is_state('binary_sensor.manual_discharge_allowed', 'on') %}
+            {% set upper_threshold = soc_window+target_soc  %}
+            {% set lower_threshold = target_soc %}
+
+            {{ manual_discharge
+              and ev_status != 'Charging'
+              and (
+                (prev_state and soc > lower_threshold)
+                or (not prev_state and soc > upper_threshold)
+              )
+            }}
+
+    ######################################################
+    # Reset the manual discharge flag
+    ######################################################
+    - trigger:
+        - platform: state
+          entity_id: binary_sensor.manual_discharge_allowed
+          from: "on"
+          to: "off"
+      action:
+        # If user turned on manual discharge, but sensor can't be true, revert boolean
+        - if:
+            - condition: template
+              value_template: >
+                {{ is_state('input_boolean.export_battery_manual', 'on')
+                  and not (
+                    is_state('binary_sensor.manual_discharge_allowed', 'on')
+                  )
+                }}
+          then:
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.export_battery_manual
+
+
+
+
+
+

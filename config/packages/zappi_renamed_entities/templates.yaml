@@ -33,6 +33,34 @@ zappi_renamed_entities_templates:
               {{ dict(current, **new) }}
 
     ######################################################
+    # Zappi  status avoiding unknown when cloud response is not available
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: sensor.myenergi_zappi_XXXXXXXX_status
+          not_to:
+            - unavailable
+            - unknown
+      sensor:
+        - name: Zappi Status
+          unique_id: zappi_status
+          state: "{{states('sensor.myenergi_zappi_XXXXXXXX_status')}}"
+          icon: mdi:ev-station
+          attributes:
+            changes: >
+              {% set current = this.attributes.get('changes', {}) %}
+              {% set new =
+                { trigger.entity_id:
+                  {
+                    'datetime': trigger.to_state.last_changed.isoformat(),
+                    'from': trigger.from_state.state,
+                    'to': trigger.to_state.state
+                  }
+                }
+              %}
+              {{ dict(current, **new) }}
+              
+    ######################################################
     # for when zappi cloud sensor dips out
     ######################################################
     - sensor:

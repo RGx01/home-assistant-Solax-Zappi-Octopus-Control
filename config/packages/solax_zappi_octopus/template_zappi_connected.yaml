@@ -1,0 +1,77 @@
+########################################
+# v1.0 
+# Template to for when the ev is last connected
+# and last disconnected
+# TODO Replace Octopus_total_charge attribute
+########################################
+solax_zappi_octopus_template_zappi_connected:
+  template:
+
+    ######################################################
+    # Zappi last disconnect
+    ######################################################
+    - trigger:
+        - trigger: state
+          entity_id: sensor.zappi_plug_status
+          to:
+            - EV Disconnected
+          from:
+            - EV Connected
+            - Charging
+            - Waiting for EV
+            - Fault
+      action:
+        - if: "{{ trigger.to_state.state not in ['unknown','unavailable','None','none'] }}"
+          then:
+            - service: input_number.set_value
+              target:
+                entity_id: input_number.octopus_intelligent_total_dispatch
+              data:
+                value: 0
+      sensor:
+        - name: Zappi Last Disconnected
+          unique_id: zappi_last_disconnected
+          state: >
+            {{now()|as_datetime|as_local}}
+          attributes:
+            Octopus_total_charge: >
+              {% set ns = namespace( total_dispatch = 0 ) %}
+              {% if states('sensor.zappi_last_disconnected') in ['unknown', 'unavailable','none'] %}
+                {% set disconnected = now()|as_datetime|as_local %}
+              {% else %}
+                {% set disconnected = states('sensor.zappi_last_disconnected') %}
+              {%- endif-%}
+              {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','completed_dispatches') | length > 0) -%}
+                {%- for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') -%}
+                  {%- if dispatch.start|as_timestamp > disconnected|as_timestamp and dispatch.start|as_timestamp < states('sensor.zappi_last_connected')|as_timestamp-%}
+                    {%- set ns.total_dispatch = ns.total_dispatch|float (default=0.0) + dispatch.charge_in_kwh|float (default=0.0)%}
+                  {%- endif-%}
+                {%- endfor -%}
+                {{ns.total_dispatch|float (default=0.0)}}  
+              {%- endif  -%}
+          
+
+    ######################################################
+    # Zappi last Connected
+    ######################################################
+
+    - trigger:
+        - trigger: state
+          entity_id: sensor.zappi_plug_status
+          from:
+            - EV Disconnected
+          to:
+            - EV Connected
+      action:
+        - if: "{{ trigger.to_state.state not in ['unknown','unavailable','None','none'] }}"
+          then:
+            - service: input_number.set_value
+              target:
+                entity_id: input_number.octopus_intelligent_total_dispatch
+              data:
+                value: 0
+      sensor:
+        - name: Zappi Last Connected
+          unique_id: zappi_last_connected
+          state: >
+            {{now()}}

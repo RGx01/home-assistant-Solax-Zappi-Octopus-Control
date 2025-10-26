@@ -1,0 +1,92 @@
+########################################
+# v1.0 template to estimate remaining energy required to survive the day
+#
+# Battery must be charged from grid ideally from 10-100% to get a good read on SoH
+# 15-100% is the absolute threshold for getting a reading but obviously less accurate.
+# True SoH can't be calculated in the traditional way as we don't have access to enough info
+# from the cells (internal resistance etc). Charging from min to max gives us how much was 
+# stored against the theoretical max and is a reasonable replacement to true SoH
+# It's import to know the SoH so that we can reasonbly know how much is left in the battery 
+# at any time.
+########################################
+solax_zappi_octopus_template_battery_soh:
+  template:
+
+    ######################################################
+    # Min SoC
+    ######################################################  
+    - trigger:
+        - trigger: time
+          at: input_datetime.solax_battery_start_charge_time
+      sensor:
+        - name: Solax Local Min SoC
+          unique_id: solax_local_min_soc
+          unit_of_measurement: "%"
+          state_class: measurement
+          icon: mdi:battery-0
+          state: >
+            {{states('sensor.solax_local_battery_soc')}}
+    ######################################################
+    # Max SoC
+    ######################################################  
+    - trigger:
+        - trigger: time
+          at: input_datetime.solax_battery_stop_charge_time
+      sensor:
+        - name: Solax Local Max SoC
+          unique_id: solax_local_max_soc
+          unit_of_measurement: "%"
+          state_class: measurement
+          icon: mdi:battery
+          state: >
+            {{states('sensor.solax_local_battery_soc')}}
+
+    ######################################################
+    # Battery SoH
+    ######################################################
+    - trigger:
+        - platform: template
+          value_template: >
+            {{ now().timestamp() >= (as_timestamp(today_at(states('input_datetime.solax_battery_stop_charge_time')))+ 5) }}
+      sensor:
+        - name: Solax Local Battery SoH
+          unique_id: solax_local_battery_soh
+          unit_of_measurement: "%"
+          state_class: measurement
+          icon: mdi:battery
+          state: >
+            {# Read min/max SoC snapshots #}
+            {% set min_soc = states('sensor.solax_local_min_soc') | int(0) %}
+            {% set max_soc = states('sensor.solax_local_max_soc') | int(0) %}
+            {% set delta_soc = max_soc - min_soc %}
+
+            {# Read battery capacity and grid-stored energy #}
+            {% set capacity = states('input_number.solax_battery_capacity') | float(0) %}
+            {% set grid_stored = states('sensor.daily_grid_stored') | float(0) %}
+            {% set stored = states('input_number.solax_battery_soh_stored') | float(0) %}
+
+            {# Calculate SoH if charge window is meaningful, else use persisted value #}
+            {% if delta_soc >= 85 and capacity > 0 and grid_stored > 0 %}
+              {{ [ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1), 100 ] | min }}
+            {% else %}
+              {{ stored }}
+            {% endif %}
+      action:
+        - variables:
+            new_soh: >
+              {% set min_soc = states('sensor.solax_local_min_soc') | int(0) %}
+              {% set max_soc = states('sensor.solax_local_max_soc') | int(0) %}
+              {% set delta_soc = max_soc - min_soc %}
+              {% set capacity = states('input_number.solax_battery_capacity') | float(0) %}
+              {% set grid_stored = states('sensor.daily_grid_stored') | float(0) %}
+              {% set stored = states('input_number.solax_battery_soh_stored') | float(0) %}
+              {% if delta_soc >= 85 and capacity > 0 and grid_stored > 0 %}
+                {{ [ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1), 100 ] | min }}
+              {% else %}
+                {{ stored }}
+              {% endif %}
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.solax_battery_soh_stored
+          data:
+            value: "{{ new_soh }}"

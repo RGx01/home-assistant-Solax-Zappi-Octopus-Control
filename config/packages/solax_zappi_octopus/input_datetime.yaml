@@ -86,3 +86,13 @@ solax_zappi_octopus_input_datetime:
       name: Pre Daily Battery Export Time
       has_date: true
       has_time: true
+
+    pre_daily_battery_export_time2:
+      name: Pre Daily Battery Export Time2
+      has_date: true
+      has_time: true
+
+    pre_nightly_battery_export_time:
+      name: Pre Nightly Battery Export Time
+      has_date: true
+      has_time: true

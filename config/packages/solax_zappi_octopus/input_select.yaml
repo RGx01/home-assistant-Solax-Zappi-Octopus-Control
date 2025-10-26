@@ -51,21 +51,20 @@ solax_zappi_octopus_input_select:
       options:
         - ' '
         - EV Charging Started
-        - EV Stopped Charging - Attempting Battery Export.
         - Octopus Paused Charging.
         - EV Connected - Waiting for Octopus schedule
-        - EV Connected - Waiting for Solax to Discharge Before Getting Octopus Schedule
-        - EV Connected - No Charge Plan
+        - EV Finished Charging
         - EV Disconnected
-        - Forced Discharge Before EV Charge - Failed
-        - Manual Discharge Started
-        - Manual Discharge Stopped
-        - Battery Export Started
-        - Battery Export Finished
+        - Manual Battery Export Started
+        - Manual Battery Export Finished
+        - Daily Battery Export Started
+        - Daily Battery Export Finished
+        - Nightly Battery Export Started
+        - Nightly Battery Export Finished
+        - Battery Export in Dispatch Gap - Started
+        - Battery Export in Dispatch Gap - Finished
         - Cheap Rate
         - Peak Rate
-        - Octopus Dispatch
-        - Pre Discharge
       icon: mdi:alert
 
 
