@@ -397,8 +397,10 @@
   max: 4
 - id: '5001'
   alias: 5001 - Solax Zappi Octopus Control
-  description: "# 5001 - Solax Zappi Octopus Control\n---\n-  v1.0.0 \n + Indent-potent
-    handling of inverter mode and settings\n + Zappi and Octopus handling\n---\n\n"
+  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v1.0.1 Minor bug fix
+    to stop 'Finished Charge Message' when smart charge switch was off to begin with\n---\n-
+    \ v1.0.0 \n + Indent-potent handling of inverter mode and settings\n + Zappi and
+    Octopus handling\n---\n\n"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -1239,6 +1241,7 @@
       hours: 0
       minutes: 0
       seconds: 10
+    enabled: false
   - trigger: state
     entity_id:
     - input_datetime.solax_battery_start_heat_time
@@ -1247,6 +1250,7 @@
       hours: 0
       minutes: 0
       seconds: 10
+    enabled: false
   - trigger: state
     entity_id:
     - input_datetime.solax_battery_stop_heat_time
@@ -1255,6 +1259,7 @@
       hours: 0
       minutes: 0
       seconds: 10
+    enabled: false
   - trigger: state
     entity_id:
     - input_datetime.solax_start_heat_2
@@ -1263,6 +1268,7 @@
       hours: 0
       minutes: 0
       seconds: 10
+    enabled: false
   - trigger: state
     entity_id:
     - input_datetime.solax_stop_heat_2
@@ -1271,6 +1277,7 @@
       hours: 0
       minutes: 0
       seconds: 10
+    enabled: false
   - trigger: state
     entity_id:
     - input_boolean.solax_system_enable
@@ -1287,6 +1294,7 @@
       minutes: 0
       seconds: 10
     id: Battery Heat Level
+    enabled: false
   conditions:
   - condition: state
     entity_id: input_boolean.solax_automation_running
