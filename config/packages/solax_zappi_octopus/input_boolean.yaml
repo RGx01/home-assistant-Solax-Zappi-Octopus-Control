@@ -111,4 +111,13 @@ solax_zappi_octopus_input_boolean:
     battery_reserve_show_hide:
       name: Show/Hide
       icon: mdi:eye-off
+    daily_export_show_hide:
+      name: Show/Hide
+      icon: mdi:eye-off
+    nightly_export_show_hide:
+      name: Show/Hide
+      icon: mdi:eye-off
+    gap_export_show_hide:
+      name: Show/Hide
+      icon: mdi:eye-off
     ###########################################

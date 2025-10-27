@@ -155,7 +155,7 @@ solax_zappi_octopus_template_solax_extras:
           state_class: measurement
           device_class: power
           icon: mdi:battery
-
+          
         ### Inverter default working mode
         - name: "Solax Default Operation Mode"
           unique_id: solax_default_operation_mode
@@ -167,7 +167,6 @@ solax_zappi_octopus_template_solax_extras:
             {% set state =  states('input_select.solax_default_mode')  %}
             {{ mapper[state] if state in mapper else '0' }}
           icon: mdi:cursor-default-outline
-
 
     ######################################################
     # Generate an event if solax_rest_local_settings becomes unavailable

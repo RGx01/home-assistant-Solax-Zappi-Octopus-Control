@@ -760,6 +760,9 @@
       - condition: trigger
         id:
         - Dispatch Finished
+      - condition: state
+        entity_id: switch.octopus_intelligent_smart_charge
+        state: 'on'
       sequence:
       - action: script.safe_switch_toggle
         metadata: {}

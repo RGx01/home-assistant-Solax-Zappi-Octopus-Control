@@ -102,7 +102,7 @@ solax_zappi_octopus_template_discharge_magic:
             {% set house_kwh = states('sensor.house_energy_needed_until_2330') | float(0.5) %}
             {% set batt_usable = state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10) %}
             {% if batt_usable > 0 %}
-              {{ (house_kwh / batt_usable * 100) | round(2) }}
+              {{ states('input_number.solax_default_discharge_limit_soc')|int(10)+ (house_kwh / batt_usable * 100) | round(0) }}
             {% else %}
               0
             {% endif %}
