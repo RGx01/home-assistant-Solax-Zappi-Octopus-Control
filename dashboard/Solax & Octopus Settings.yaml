@@ -51,6 +51,19 @@ sections:
             above: 0
       - type: entities
         entities:
+          - entity: automation.solax_zappi_octopus_control
+          - entity: input_number.delay_when_ev_connected
+          - entity: switch.octopus_intelligent_smart_charge
+          - entity: select.zappi_charge_mode
+        show_header_toggle: false
+        state_color: true
+        title: Device Status - 5001 Controlled
+        visibility:
+          - condition: state
+            entity: input_boolean.solax_octopus_hide_settings
+            state: "on"
+      - type: entities
+        entities:
           - entity: input_boolean.octopus_schedule_anytime
             state_color: true
           - entity: input_boolean.use_fixed_time
@@ -126,19 +139,6 @@ sections:
         show_header_toggle: false
         state_color: true
         title: Eco Settings
-        visibility:
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
-      - type: entities
-        entities:
-          - entity: automation.solax_zappi_octopus_control
-          - entity: input_number.delay_when_ev_connected
-          - entity: switch.octopus_intelligent_smart_charge
-          - entity: select.zappi_charge_mode
-        show_header_toggle: false
-        state_color: true
-        title: Device Status - 5001 Controlled
         visibility:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
@@ -539,16 +539,32 @@ sections:
           action: none
       - type: entities
         entities:
+          - entity: input_boolean.gap_export_show_hide
           - entity: input_boolean.battery_discharge_in_dispatch_gaps
-          - entity: sensor.octopus_next_gap_duration
-            name: Next Gap Start
-            type: attribute
-            attribute: next_gap_start
-          - entity: sensor.octopus_next_gap_duration
-            name: Next Gap End
-            type: attribute
-            attribute: next_gap_end
-          - entity: input_number.battery_discharge_soc_window_limit
+          - type: conditional
+            conditions:
+              - entity: input_boolean.gap_export_show_hide
+                state: "on"
+            row:
+              entity: sensor.octopus_next_gap_duration
+              name: Next Gap Start
+              type: attribute
+              attribute: next_gap_start
+          - type: conditional
+            conditions:
+              - entity: input_boolean.gap_export_show_hide
+                state: "on"
+            row:
+              entity: sensor.octopus_next_gap_duration
+              name: Next Gap End
+              type: attribute
+              attribute: next_gap_end
+          - type: conditional
+            conditions:
+              - entity: input_boolean.gap_export_show_hide
+                state: "on"
+            row:
+              entity: input_number.battery_discharge_soc_window_limit
         title: Export During Octopus Schedule
         show_header_toggle: false
         state_color: true
@@ -558,22 +574,23 @@ sections:
             state: "on"
       - type: entities
         entities:
+          - entity: input_boolean.daily_export_show_hide
           - entity: input_boolean.export_battery_daily
           - type: conditional
             conditions:
-              - entity: input_boolean.export_battery_daily
+              - entity: input_boolean.daily_export_show_hide
                 state: "on"
             row:
               entity: input_boolean.daily_export_when_ev_connected
           - type: conditional
             conditions:
-              - entity: input_boolean.export_battery_daily
+              - entity: input_boolean.daily_export_show_hide
                 state: "on"
             row:
               entity: input_number.daily_battery_discharge_soc_window_limit
           - type: conditional
             conditions:
-              - entity: input_boolean.export_battery_daily
+              - entity: input_boolean.daily_export_show_hide
                 state: "on"
             row:
               entity: input_datetime.daily_battery_export_time
@@ -586,28 +603,29 @@ sections:
             state: "on"
       - type: entities
         entities:
+          - entity: input_boolean.nightly_export_show_hide
           - entity: input_boolean.export_battery_nightly
           - type: conditional
             conditions:
-              - entity: input_boolean.export_battery_nightly
+              - entity: input_boolean.nightly_export_show_hide
                 state: "on"
             row:
               entity: input_boolean.nightly_export_when_ev_connected
           - type: conditional
             conditions:
-              - entity: input_boolean.export_battery_nightly
+              - entity: input_boolean.nightly_export_show_hide
                 state: "on"
             row:
               entity: input_number.battery_export_margin_delta
           - type: conditional
             conditions:
-              - entity: input_boolean.export_battery_nightly
+              - entity: input_boolean.nightly_export_show_hide
                 state: "on"
             row:
               entity: input_number.nightly_battery_discharge_soc_window_limit
           - type: conditional
             conditions:
-              - entity: input_boolean.export_battery_nightly
+              - entity: input_boolean.nightly_export_show_hide
                 state: "on"
             row:
               entity: binary_sensor.jit_2330_discharge_allowed
@@ -1756,3 +1774,4 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
+
