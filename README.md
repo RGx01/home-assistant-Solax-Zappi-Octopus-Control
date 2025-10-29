@@ -147,4 +147,5 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
-| v6.0.0|**21/09/25**|All| ident-potent inverter/zappi control|
+| v6.0.2|**29/10/25**|All| bug fixes and restructured yaml packages|
+| v6.0.0|**21/10/25**|All| new architecture - ident-potent inverter/zappi control|
