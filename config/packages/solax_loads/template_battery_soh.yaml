@@ -9,7 +9,7 @@
 # It's import to know the SoH so that we can reasonbly know how much is left in the battery 
 # at any time.
 ########################################
-solax_zappi_octopus_template_battery_soh:
+solax_loads_template_battery_soh:
   template:
 
     ######################################################

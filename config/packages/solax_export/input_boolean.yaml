@@ -1,0 +1,5 @@
+solax_export_input_boolean:
+  input_boolean:
+    battery_discharge_now:
+      name: Battery Discharge Now
+      icon: mdi:lightning-bolt-circle

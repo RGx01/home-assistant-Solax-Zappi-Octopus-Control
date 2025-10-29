@@ -127,7 +127,7 @@
     entity_id:
     - binary_sensor.ev_gap_discharge_allowed
     to: 'off'
-    id: Discharge Nightly End
+    id: Discharge Gap End
     from: 'on'
     alias: Discharge Gap - End
   conditions: []
@@ -397,7 +397,7 @@
   max: 4
 - id: '5001'
   alias: 5001 - Solax Zappi Octopus Control
-  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v1.0.1 Minor bug fix
+  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v1.0.2 Minor bug fix
     to stop 'Finished Charge Message' when smart charge switch was off to begin with\n---\n-
     \ v1.0.0 \n + Indent-potent handling of inverter mode and settings\n + Zappi and
     Octopus handling\n---\n\n"
@@ -423,6 +423,13 @@
     to: EV Disconnected
     id: Waiting to Disconnected
     trigger: state
+  - trigger: state
+    entity_id:
+    - sensor.zappi_plug_status
+    from: EV Disconnected
+    to: EV Connected
+    id: EV Connected
+    alias: EV First Connected
   - alias: EV Schedule Time
     at:
       entity_id: sensor.octopus_schedule_time
@@ -654,11 +661,6 @@
         - Connected to Disconnected
         - Charging to Disconnected
         - Waiting to Disconnected
-      - condition: template
-        value_template: "{{(state_attr('sensor.solax_local_settings', 'Data')[10]
-          != default_mode) \nor (state_attr('sensor.solax_local_settings', 'Data')[0]
-          != min_soc) \nor (state_attr('sensor.solax_local_settings', 'Data')[12]
-          != min_soc)}}"
       sequence:
       - action: select.select_option
         metadata: {}
@@ -672,12 +674,19 @@
           desired_state: 'off'
           max_retries: 4
           backoff: 5
-      - action: script.solax_set_mode_and_settings
-        data:
-          mode: '{{default_mode}}'
-          settings:
-            selfuse_battery_min_soc: '{{min_soc}}'
-            feedin_battery_min_soc: '{{min_soc}}'
+      - if:
+        - condition: template
+          value_template: "{{(state_attr('sensor.solax_local_settings', 'Data')[10]
+            != default_mode) \nor (state_attr('sensor.solax_local_settings', 'Data')[0]
+            != min_soc) \nor (state_attr('sensor.solax_local_settings', 'Data')[12]
+            != min_soc)}}"
+        then:
+        - action: script.solax_set_mode_and_settings
+          data:
+            mode: '{{default_mode}}'
+            settings:
+              selfuse_battery_min_soc: '{{min_soc}}'
+              feedin_battery_min_soc: '{{min_soc}}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: EV disconnected @ {{now().strftime('%H:%M')}}

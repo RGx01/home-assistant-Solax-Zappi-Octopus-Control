@@ -1,4 +1,4 @@
-solax_zappi_octopus_input_button:
+solax_zappi_octopus_ui_input_button:
   input_button:
     # Refresh solax settings
     refresh:

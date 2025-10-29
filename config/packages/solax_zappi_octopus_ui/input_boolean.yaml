@@ -1,4 +1,4 @@
-solax_zappi_octopus_input_boolean:
+solax_zappi_octopus_ui_input_boolean:
   input_boolean:
     ###########################################
     # Solax Zappi Octopus UI
@@ -64,7 +64,7 @@ solax_zappi_octopus_input_boolean:
     #Manual Export
     export_battery_manual:
       name: Export Battery Manual
-      icon: mdi:battery-arrow-down
+      icon: mdi:light-switch 
     # solax System on/off
     solax_system_enable:
       name: Solax System Enable
@@ -93,9 +93,6 @@ solax_zappi_octopus_input_boolean:
     solax_octopus_hide_stats:
       name: Hide Stats Charts
       icon: mdi:eye-off
-    battery_discharge_now:
-      name: Battery Discharge Now
-      icon: mdi:lightning-bolt-circle
     battery_discharge_in_dispatch_gaps:
       name: Battery Discharge in Dispatch Gaps
       icon: mdi:light-switch

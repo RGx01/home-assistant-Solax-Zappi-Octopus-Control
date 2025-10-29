@@ -2,27 +2,8 @@
 ######################################################
 # v1.0.0 tariff events for utility meters and triggering events
 ######################################################
-solax_zappi_octopus_utilitymeter_tariff:
+solax_loads_utilitymeter_tariff:
   template:
-    ######################################################
-    # Generate an event when theres a new dispatch
-    ######################################################
-    - trigger:
-        - trigger: state
-          entity_id: sensor.octopus_total_planned_dispatch
-          from: "0"
-          not_to:
-            - unavailable
-      action:
-        - event: Solax Zappi Octopus Control
-          event_data:
-            message: >-
-              Octopus Planned Dispatch @
-              {{now().strftime('%H:%M')}}. 
-              {{states('sensor.octopus_total_planned_dispatch')}}kWh.
-            title: Octopus Dispatch
-            class: normal
-
     ######################################################
     # Generate tariff events and selects utility meter settings when:
     #   dispatching changes

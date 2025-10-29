@@ -4,7 +4,7 @@
 # and last disconnected
 # TODO Replace Octopus_total_charge attribute
 ########################################
-solax_zappi_octopus_template_zappi_connected:
+zappi_loads_template_zappi_connected:
   template:
 
     ######################################################

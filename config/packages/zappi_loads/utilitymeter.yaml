@@ -1,0 +1,123 @@
+
+##############################################################
+# v6.0.0 utility meter for solax
+##############################################################
+#
+# offset:
+#   days: 2 <---- update to your billing day (2 if your bills start on the 3rd)
+#
+# For EV Meters please add your own vehicles i.e.
+#         tariffs:
+#         - Car1
+#         - Car2
+#         - Guest
+# Automations should be added to detect which EV is plugged in and switch tariff
+# Automations should be added to detect which tariff is applicable and apply tariff to the meter
+##############################################################
+zappi_loads_utilitymeter:
+  utility_meter:
+    ##########################################################
+    # Import Meters
+    ##########################################################
+    daily_grid_used_myenergi:
+      unique_id: 723a0b2e-d318-414d-8d2f-1441d9d5c9e2
+      source: sensor.zappi_ct_grid_used_aggregated_energy 
+      name: Daily Grid Used (Myenergi)
+      cycle: daily
+
+    daily_grid_import_myenergi:
+      unique_id: ac47558c-5fd3-4334-ac39-c8f39c3ca585
+      source: sensor.zappi_ct_grid_used_aggregated_energy
+      name: Daily In From Grid (Myenergi)
+      cycle: daily
+      tariffs:
+        - peak
+        - offpeak
+        - free
+
+    monthly_grid_import_myenergi:
+      unique_id: cc0f4367-034b-40ab-8ad9-c5df8e6f02e6
+      source: sensor.zappi_ct_grid_used_aggregated_energy
+      name: Monthly In From Grid (Myenergi)
+      cycle: monthly
+      offset:
+        days: 2
+      tariffs:
+        - peak
+        - offpeak
+        - free
+
+    ##########################################################
+    #Export Meters
+    ##########################################################
+    export_daily_myenergi:
+      unique_id: 49e07f34-9427-4ca4-92d5-a7f3578c9d51
+      source: sensor.zappi_ct_grid_export_aggregated_energy
+      name: Daily Export (Myenergi)
+      cycle: daily
+      net_consumption: false
+      delta_values: false
+      periodically_resetting: true
+      always_available: false
+
+    export_monthly_myenergi:
+      unique_id: cd5208cb-96bf-4153-9e06-4860a780d122
+      source: sensor.zappi_ct_grid_export_aggregated_energy
+      name: Monthly Export (Myenergi)
+      cycle: monthly
+      net_consumption: false
+      delta_values: false
+      periodically_resetting: true
+      always_available: false
+      offset:
+        days: 2
+
+    ##########################################################
+    # EV Meters
+    ##########################################################
+    ev_charging_daily_vehicle:
+      unique_id: 2654432e-7161-4ce5-86e9-fe3919bd0df0
+      source: sensor.zappi_charge_added_session
+      name: Daily EV Charging Vehicle
+      cycle: daily
+      net_consumption: false
+      delta_values: false
+      periodically_resetting: true
+      always_available: false
+      tariffs:
+        - car1
+        - car2
+        - Guest
+
+    ev_charging_monthly_vehicle:
+      unique_id: 1c511899-2af4-4953-b32f-acb6e06058d2
+      source: sensor.zappi_charge_added_session
+      name: Monthly EV Charging Vehicle
+      cycle: monthly
+      net_consumption: false
+      delta_values: false
+      periodically_resetting: true
+      always_available: false
+      offset:
+        days: 2
+      tariffs:
+        - car1
+        - car2
+        - Guest
+
+    zappi_charging_daily:
+      unique_id: 493a5661-71ee-4b57-ae79-ca8f91aa9005
+      source: sensor.zappi_charge_added_session
+      name: Daily Zappi Charging 
+      periodically_resetting: true
+      cycle: daily
+
+    zappi_charging:
+      unique_id: 57867e2b-e56c-4753-94f8-9d105a547b2f
+      source: sensor.zappi_charge_added_session
+      name: Monthly Zappi Charging
+      periodically_resetting: true
+      cycle: monthly
+      offset:
+        days: 2
+    ##########################################################

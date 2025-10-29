@@ -1,8 +1,7 @@
 ###############################
-# Input Numbers to support the 
-# solax_zappi_octopus package
+# Input Numbers to support the package
 ###############################
-solax_zappi_octopus_input_number:
+solax_zappi_octopus_ui_input_number:
   input_number:
     # Solax UI
     sun_degrees_above_horizon:
@@ -59,36 +58,6 @@ solax_zappi_octopus_input_number:
       step: 1
       mode: box
       icon: mdi:battery-20
-    #Daily forced discharge limit
-    # solax_daily_discharge_limit_soc:
-    #   name: Daily Discharge SoC
-    #   unit_of_measurement: "%"
-    #   #initial: 18
-    #   min: 10
-    #   max: 80
-    #   step: 1
-    #   mode: box
-    #   icon: mdi:battery-20
-    #Nightly forced discharge limit
-    # solax_nightly_discharge_limit_soc:
-    #   name: Nightly Discharge SoC
-    #   unit_of_measurement: "%"
-    #   #initial: 18
-    #   min: 10
-    #   max: 80
-    #   step: 1
-    #   mode: box
-    #   icon: mdi:battery-20
-    # Discharge limit when discharging to meet ev charge start time
-    # solax_discharge_limit_soc_before_ev:
-    #   name: Discharge to SoC (Before charging EV)
-    #   unit_of_measurement: "%"
-    #   #initial: 18
-    #   min: 10
-    #   max: 100
-    #   step: 1
-    #   mode: box
-    #   icon: mdi:battery-20
     #Default Min SoC discharge limit
     solax_default_discharge_limit_soc:
       name: Default Minimum SoC

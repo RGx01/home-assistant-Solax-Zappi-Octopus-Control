@@ -1,4 +1,4 @@
-solax_zappi_octopus_input_datetime:
+solax_zappi_octopus_ui_input_datetime:
   input_datetime:
     #########################################
     #Solax UI
@@ -71,11 +71,6 @@ solax_zappi_octopus_input_datetime:
     don_t_charge_ev_before_time:
       name: Octopus Schedule After
       has_date: false
-      has_time: true
-
-    pre_export_battery_before_charging_ev_time:
-      name: Pre Export Battery Before Charging EV Time
-      has_date: true
       has_time: true
 
     daily_battery_export_time:

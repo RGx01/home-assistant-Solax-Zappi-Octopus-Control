@@ -3,7 +3,7 @@
 # Change log
 # v6.0.0 Cleaned up and split into different template files
 ###############################################
-solax_zappi_octopus_template_get_octopus_schedule:
+octopus_dispatches_template_get_octopus_schedule:
   template:
     ######################################################
     # Wobble
@@ -135,14 +135,18 @@ solax_zappi_octopus_template_get_octopus_schedule:
               {% set base_time = (now() + timedelta(days=10)) | as_local %}
             {% endif %}
 
-            {# --- Step 2: Apply delay if EV is connected and timing fits --- #}
+            {# --- Step 2: Adjust for connection timing --- #}
             {% if conn not in ['unknown','unavailable','none']
                   and disc not in ['unknown','unavailable','none'] %}
               {% set conn_dt = conn | as_datetime | as_local %}
               {% set disc_dt = disc | as_datetime | as_local %}
+
               {% if conn_dt > disc_dt %}
-                {% set lower_bound = base_time - timedelta(minutes=delay) %}
-                {% if conn_dt >= base_time or conn_dt >= lower_bound %}
+                {% if conn_dt > base_time %}
+                  {# EV connected *after* base time → new schedule = connection + delay #}
+                  {% set base_time = conn_dt + timedelta(minutes=delay) %}
+                {% else %}
+                  {# EV connected before base time → keep base time but apply delay #}
                   {% set base_time = base_time + timedelta(minutes=delay) %}
                 {% endif %}
               {% endif %}

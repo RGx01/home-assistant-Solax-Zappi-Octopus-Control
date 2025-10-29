@@ -9,15 +9,15 @@ safe_switch_toggle:
       example: "on"
     retry:
       description: "Current retry attempt (for internal recursion)"
-      example: 1
+      example: "1"
       default: 1
     max_retries:
       description: "Maximum number of retry attempts"
-      example: 3
+      example: "3"
       default: 3
     backoff:
       description: "Base delay in seconds between retries (will double each retry)"
-      example: 5
+      example: "5"
       default: 5
   sequence:
     # --- Skip if already correct ---

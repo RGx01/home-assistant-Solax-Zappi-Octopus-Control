@@ -2,7 +2,7 @@
 ######################################################
 # v1.0.0  Mobile notifications
 ######################################################
-solax_zappi_octopus_template_notifications:
+solax_zappi_octopus_notifications_template_notifications:
   template:
     ######################################################
     ### Devices list

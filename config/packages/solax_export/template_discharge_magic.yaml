@@ -2,7 +2,7 @@
 # v1.0.1 added nightly_battery_discharge_soc_window_limit
 # Template to estimate remaining energy required to survive the day
 ########################################
-solax_zappi_octopus_template_discharge_magic:
+solax_export_template_discharge_magic:
   template:
     ######################################################
     # How much Power to run the house
@@ -61,10 +61,6 @@ solax_zappi_octopus_template_discharge_magic:
             note: "Energy available for export before reaching the discharge target SoC (already includes reserves & buffers)."
 
     ######################################################
-    # Calculate Shortfall
-    ######################################################
-
-    ######################################################
     # Calculate Taret SoC
     ######################################################
     - sensor:
@@ -116,7 +112,14 @@ solax_zappi_octopus_template_discharge_magic:
             {% set reserve_pct = states('input_number.additional_reserve_soc')|int(0) %}
             {% set batt_usable = state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10) %}
             {% set reserve_kwh_pct = (batt_usable * (reserve_pct / 100)) if batt_usable > 0 else 0 %}
-            {{ (reserve_kwh + house_kwh + reserve_kwh_pct) | round(2) }}          
+            {{ (reserve_kwh + house_kwh + reserve_kwh_pct) | round(2) }}
+          deficite: >
+            {% set delta = states('sensor.solax_local_battery_soc') | float(0) - states('sensor.battery_discharge_target_soc') | float(0) %}
+            {% if delta < 0 %}
+              {{ delta | round(0) }}
+            {% else %}
+              {{""}}
+            {% endif %}        
           note: "Target SoC = min_soc + discharge_buffer + buffer_pct + house_energy"
 
 
@@ -181,9 +184,9 @@ solax_zappi_octopus_template_discharge_magic:
             {% set exportable_kwh = states('sensor.battery_exportable_allowance_kwh') | float(0) %}
             {% set ev_status = states('sensor.zappi_plug_status') | string %}
             {% set connected_for_min = (as_timestamp(now()) - as_timestamp(states.sensor.zappi_plug_status.last_changed)) / 60 %}
-            {% set min_connected_min = 10 %}
+            {% set min_connected_min = 6 %}
             {% set next_gap_hr = states('sensor.octopus_next_gap_duration') | float(0) %}
-            {% set min_gap_hr = 0.3 %}
+            {% set min_gap_hr = 0.25 %}
             {% set has_gap = next_gap_hr >= min_gap_hr %}
             {% set solar_threshold_raw = states('sensor.solar_export_threshold') %}
             {% set solar_threshold = (solar_threshold_raw | as_datetime | as_local)
@@ -225,8 +228,6 @@ solax_zappi_octopus_template_discharge_magic:
               {% set target_soc = states('sensor.battery_discharge_target_soc') | float(0) %}
               {% set soc_window = states('input_number.battery_discharge_soc_window_limit') | float(6) %}
               {{ target_soc | round(2) }}
-
-# need to check that ev_start_time isn't within 10 minuts of the discharge time
 
     ######################################################
     # Discharge can occur at a fixed time daily

@@ -1,0 +1,14 @@
+zappi_loads_powercalc:
+  powercalc:
+    sensors:
+      - entity_id: sensor.zappi_ct_grid_used_power
+        power_sensor_id: sensor.zappi_ct_grid_used_power
+        name: Zappi CT Grid Used Aggregated
+        fixed:
+          power: "{{states('sensor.zappi_ct_grid_used_power')}}"
+
+      - entity_id: sensor.zappi_ct_grid_export_power
+        power_sensor_id: sensor.zappi_ct_grid_export_power
+        name: Zappi CT Grid Export Aggregated
+        fixed:
+          power: "{{states('sensor.zappi_ct_grid_export_power')}}"

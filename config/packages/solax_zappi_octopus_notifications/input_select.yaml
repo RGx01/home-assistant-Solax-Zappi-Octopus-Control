@@ -1,0 +1,33 @@
+solax_zappi_octopus_notifications_input_select:
+  input_select:
+    solax_automation_notification_devices:
+      name: Notify Mobile Device
+      options:
+        - ' '
+      icon: mdi:cellphone-sound
+    solax_zappi_octopus_notification_list:
+      name: Notification to Exclude
+      options:
+        - ' '
+        - EV Charging Started
+        - Octopus Paused Charging.
+        - EV Connected - Waiting for Octopus schedule
+        - EV Finished Charging
+        - EV Disconnected
+        - Manual Battery Export Started
+        - Manual Battery Export Finished
+        - Daily Battery Export Started
+        - Daily Battery Export Finished
+        - Nightly Battery Export Started
+        - Nightly Battery Export Finished
+        - Battery Export in Dispatch Gap - Started
+        - Battery Export in Dispatch Gap - Finished
+        - Cheap Rate
+        - Peak Rate
+      icon: mdi:alert
+
+
+
+
+
+

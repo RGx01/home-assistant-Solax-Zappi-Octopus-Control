@@ -1,4 +1,4 @@
-solax_zappi_octopus_template_solax_extras:
+solax_loads_template_solax_extras:
   template:
     - sensor:
     ######################################################
@@ -43,11 +43,11 @@ solax_zappi_octopus_template_solax_extras:
           unique_id: solax_local_battery_cell_voltage
           state: >
             {# if state_attr('sensor.solax_local', 'Data')[0] not in ['unknown', 'unavailable','none'] #}
-            {% set val = state_attr('sensor.solax_local', 'Data')[14]|float(default=0.0) %}
+            {% set val = states('sensor.solax_local_battery_voltage')|float(3.0) %}
             {% if val > 0 %}
-              {{ val/100/(states('input_number.solax_battery_capacity')|int/3*32) if is_number(val) and (val|float > 0) else 0 }}
+              {{ val/(states('input_number.solax_battery_capacity')|int(12.3)/3*32) if is_number(val) and (val|float > 0) else 0 }}
             {% else%}
-              {{ states('sensor.solax_local_battery_cell_voltage')}}
+              {{ states('sensor.solax_local_battery_cell_voltage')|float(3)}}
             {% endif%}
           unit_of_measurement: "V"
           state_class: measurement
@@ -56,7 +56,7 @@ solax_zappi_octopus_template_solax_extras:
     # Estimated remaining energy       
         - name: "Solax Local Battery Remaining Energy"
           unique_id: solax_local_battery_kwh
-          state: "{{ (states('sensor.solax_local_battery_soc')|int - states('input_number.solax_default_discharge_limit_soc')|int) /100 * states('input_number.solax_battery_capacity')|float }}"
+          state: "{{ (states('sensor.solax_local_battery_soc')|int(100) - states('input_number.solax_default_discharge_limit_soc')|int(10)) /100 * states('input_number.solax_battery_capacity')|float(12.3) }}"
           unit_of_measurement: "kWh"
           device_class: "energy"
           state_class: total
@@ -66,8 +66,8 @@ solax_zappi_octopus_template_solax_extras:
           unique_id: solax_local_battery_use_in_from_grid
           state: >
             {% set gridPwr = states('sensor.solax_local_grid_used_power')|int(default=0) %}
-            {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,states('input_number.solax_inverter_capacity')|float*1000)|int (default=0) %}
-            {% set bat = states('sensor.solax_local_battery_power')|int - pvPwr|int  %}
+            {% set pvPwr = min(states('sensor.solax_local_pv_output')|float(0)*0.95,states('input_number.solax_inverter_capacity')|float(5.6)*1000)|int (default=0) %}
+            {% set bat = states('sensor.solax_local_battery_power')|int(0) - pvPwr|int  %}
             {{ bat if is_number(bat) and (bat|int > 0 and gridPwr > 0) else 0 }}
           unit_of_measurement: "W"
           state_class: measurement
@@ -79,8 +79,8 @@ solax_zappi_octopus_template_solax_extras:
           unique_id: solax_local_battery_in_from_solar
           state: >
             {% set grid = states('sensor.solax_local_battery_use_in_from_grid')|int (default = 0) %}
-            {% set bat = states('sensor.solax_local_battery_use_in')|int(default=0) - grid|int%}
-            {% set pvPwr = min(states('sensor.solax_local_pv_output')|float*0.95,states('input_number.solax_inverter_capacity')|float*1000)|int (default=0) %}
+            {% set bat = states('sensor.solax_local_battery_use_in')|int(0) - grid|int%}
+            {% set pvPwr = min(states('sensor.solax_local_pv_output')|float(0)*0.95,states('input_number.solax_inverter_capacity')|float(5.6)*1000)|int (default=0) %}
             {{ (bat) if  (pvPwr >0) else 0 }}
             {# (bat-grid) #}
           unit_of_measurement: "W"

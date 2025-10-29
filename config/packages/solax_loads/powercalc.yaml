@@ -1,7 +1,7 @@
 ########################################
 # v1.0 solax_additions_powercalc
 ########################################
-solax_zappi_octopus_powercalc:
+solax_loads_powercalc:
   powercalc:
     force_update_frequency: 00:01:00
     sensors:
