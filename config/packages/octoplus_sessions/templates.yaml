@@ -5,20 +5,7 @@ octoplus_sessions_templates:
   template:
     ######################################################
     # Octopus free/saving sensors
-    # V5.4.0 Tidy
-    # V5.2.0 Corrected Typo in octoplus sessions that may effect end time not being used correctly
-    # V5.0   Refactor
-    # v4.    Plannning to removed saving sessions because they are pointless
-    #.       Refined free sessions to new IOG tariff as of 4/8/2025
-    # v2.1.3 moved tariff switching for free electric to this package
-    # v2.1.2 Enhancements to Free Electric
-    #        Enhancements to saving sessions:
-    #        1. Automation 6003 is not required anymore
-    #        2. Automation 6002 Options to limit prep time and prep SoC
-    #        3. Automation 6002 Added checking during prep to turn off
-    #           charge period 2 once prep SoC is reached
-    #        4. Automation 6002 clean up and simplification
-    #
+    # V6.0   Refactor
     ######################################################
 
     ######################################################

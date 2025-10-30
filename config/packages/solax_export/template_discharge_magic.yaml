@@ -8,11 +8,11 @@ solax_export_template_discharge_magic:
     # How much Power to run the house
     ######################################################
     - sensor:
-      - name: "Typical House Power (Evening)"
-        unique_id: typical_house_power_evening
+      - name: "Typical House Power"
+        unique_id: typical_house_power
         unit_of_measurement: "kW"
         state: >
-          {{ states('input_number.typical_house_power_evening') }}
+          {{ states('input_number.typical_house_power') }}
         
     ######################################################
     # How much energy to run the house
@@ -22,7 +22,7 @@ solax_export_template_discharge_magic:
         unique_id: house_energy_needed_until_2330
         unit_of_measurement: "kWh"
         state: >
-          {% set avg_kw = states('sensor.typical_house_power_evening')| float(0) %}
+          {% set avg_kw = states('sensor.typical_house_power')| float(0) %}
           {% set cutoff = today_at('23:30')|as_datetime|as_local|as_timestamp %}
           {% set now_time = now()|as_local|as_timestamp %}
           {% set hours = ((cutoff - now_time) / 3600) | float(0) %}
@@ -36,7 +36,7 @@ solax_export_template_discharge_magic:
         unique_id: discharge_reserve_margin
         unit_of_measurement: "kWh"
         state: >
-          {{ states('input_number.hours_of_reserve_energy')|float(0) * states('sensor.typical_house_power_evening')|float(0) }}
+          {{ (states('input_number.hours_of_reserve_energy')|float(0) * states('sensor.typical_house_power')|float(0))|round(3) }}
 
 
     ######################################################

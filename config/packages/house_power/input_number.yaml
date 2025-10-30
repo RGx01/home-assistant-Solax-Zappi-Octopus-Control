@@ -1,0 +1,18 @@
+house_power_input_number:
+  input_number:
+    power_stat_avg_days:
+      name: "Number of Days"
+      initial: 10
+      min: 1
+      max: 10
+      step: 1
+      mode: box
+      icon: mdi:calendar
+    typical_house_power:
+      name: Typical House Power
+      min: 0.000
+      max: 2.000
+      step: 0.001
+      mode: box
+      icon: mdi:transmission-tower-import
+      unit_of_measurement: "kW" 

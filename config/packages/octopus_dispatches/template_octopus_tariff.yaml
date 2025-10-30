@@ -1,0 +1,14 @@
+octopus_dispatches_template_octopus_tariff:
+  template:
+    - sensor:
+      - name: Octopus Tariff State
+        unique_id: octopus_tariff_state
+        icon: mdi:list-status
+        state: >
+          {{ 'free' if states.binary_sensor.free_electricity_today is not none
+                    and state_attr('binary_sensor.free_electricity_today','session_start') is not none
+                    and state_attr('binary_sensor.free_electricity_today','session_end') is not none
+                    and now()|as_timestamp >= (state_attr('binary_sensor.free_electricity_today','session_start')|as_timestamp - 120)
+                    and now()|as_timestamp <= (state_attr('binary_sensor.free_electricity_today','session_end')|as_timestamp)
+            else 'offpeak' if (is_state('binary_sensor.octopus_energy_electricity_off_peak','on') or is_state('binary_sensor.octopus_intelligent_dispatching','on')) else 'peak'}}
+

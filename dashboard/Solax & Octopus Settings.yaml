@@ -1,4 +1,4 @@
-# v6.0.1
+# v6.1.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -255,11 +255,46 @@ sections:
               name: Dispatch Gap Export
           - type: conditional
             conditions:
+              - entity: binary_sensor.ev_gap_discharge_allowed
+                state: "on"
+            row:
+              entity: sensor.battery_discharge_target_soc
+              name: Target SoC
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.ev_gap_discharge_allowed
+                state: "on"
+            row:
+              entity: sensor.solax_local_battery_soc
+              name: Current SoC
+          - type: conditional
+            conditions:
               - entity: binary_sensor.daily_export_discharge_allowed
                 state: "on"
             row:
               entity: binary_sensor.daily_export_discharge_allowed
               name: Daily Export
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.daily_export_discharge_allowed
+                state: "on"
+            row:
+              entity: sensor.battery_discharge_target_soc
+              name: Target SoC
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.daily_export_discharge_allowed
+                state: "on"
+            row:
+              entity: sensor.solax_local_battery_soc
+              name: Current SoC
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.daily_export_discharge_allowed
+                state: "on"
+            row:
+              entity: input_boolean.export_battery_daily
+              name: STOP
           - type: conditional
             conditions:
               - entity: binary_sensor.jit_2330_discharge_allowed
@@ -269,10 +304,52 @@ sections:
               name: Nightly Export
           - type: conditional
             conditions:
+              - entity: binary_sensor.jit_2330_discharge_allowed
+                state: "on"
+            row:
+              entity: input_number.solax_default_discharge_limit_soc
+              name: Target SoC
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.jit_2330_discharge_allowed
+                state: "on"
+            row:
+              entity: sensor.solax_local_battery_soc
+              name: Current SoC
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.jit_2330_discharge_allowed
+                state: "on"
+            row:
+              entity: input_boolean.export_battery_nightly
+              name: STOP
+          - type: conditional
+            conditions:
               - entity: binary_sensor.manual_discharge_allowed
                 state: "on"
             row:
               entity: binary_sensor.manual_discharge_allowed
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.manual_discharge_allowed
+                state: "on"
+            row:
+              entity: input_number.solax_manual_forced_discharge_limit_soc
+              name: Target SoC
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.manual_discharge_allowed
+                state: "on"
+            row:
+              entity: sensor.solax_local_battery_soc
+              name: Current SoC
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.manual_discharge_allowed
+                state: "on"
+            row:
+              entity: input_button.solax_stop_discharge
+              name: STOP
           - type: conditional
             conditions:
               - entity: binary_sensor.free_electric_discharge_allowed
@@ -280,6 +357,20 @@ sections:
             row:
               entity: binary_sensor.free_electric_discharge_allowed
               name: Free Electric Battery Prep Export
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.free_electric_discharge_allowed
+                state: "on"
+            row:
+              entity: input_number.octopus_free_session_battery_prep_soc
+              name: Target SoC
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.free_electric_discharge_allowed
+                state: "on"
+            row:
+              entity: sensor.solax_local_battery_soc
+              name: Current SoC
         title: Battery Exporting Status
         visibility:
           - condition: or
@@ -302,6 +393,7 @@ sections:
               - condition: state
                 entity: binary_sensor.ev_gap_discharge_allowed
                 state: "on"
+        state_color: true
       - type: custom:power-flow-card-plus
         entities:
           battery:
@@ -366,14 +458,18 @@ sections:
             name: Inverter Off/On
             state_color: true
           - entity: input_select.solax_work_mode
-          - entity: input_boolean.solax_can_see_zappi_loads
           - entity: input_boolean.use_grid_during_octopus_dispatch
-            state_color: true
+          - type: section
+            label: Henley Block
+          - entity: input_boolean.solax_can_see_zappi_loads
           - entity: input_boolean.ev_solax_battery_drain
-            state_color: true
+          - type: section
+            label: Set the default Inverter Mode and Settings
           - entity: input_select.solax_default_mode
           - entity: input_number.solax_default_discharge_limit_soc
           - entity: input_number.solax_default_charge_to_limit_soc
+          - type: section
+            label: Battery & Inverter Size
           - entity: input_number.solax_battery_capacity
           - entity: input_number.solax_battery_soh_stored
           - entity: input_number.solax_inverter_capacity
@@ -642,6 +738,78 @@ sections:
       - type: entities
         entities:
           - entity: input_boolean.battery_reserve_show_hide
+          - type: section
+            label: ""
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.battery_discharge_target_soc
+              name: Required SoC to get to 23:30
+              type: attribute
+              attribute: Required_SoC_2330
+              suffix: "%"
+          - entity: sensor.battery_discharge_target_soc
+          - entity: sensor.battery_discharge_target_soc
+            name: Deficite (SoC below Target)
+            type: attribute
+            attribute: deficite
+            suffix: "%"
+          - type: section
+            label: >-
+              Reserves - Specify an additional % Reserve and/either/or number of
+              hours of typical house power. By setting these, the target SoC is
+              raised which any GAP or DAILY exports will respect
+          - entity: input_number.additional_reserve_soc
+          - entity: input_number.hours_of_reserve_energy
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.battery_discharge_target_soc
+              name: Hours of Reserve SoC
+              type: attribute
+              attribute: Requested_reserve_SoC
+              suffix: "%"
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.discharge_reserve_margin
+              name: Hours of Reserve kWh
+          - type: section
+            label: >-
+              Average kW Statistic - used to calculate the target SoC to ensure
+              you never run out of battery while using GAP or Daily Exports -
+              Updates Daily based on Days to use (not including today), Start
+              and End times.
+          - entity: input_number.typical_house_power
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: input_number.power_stat_avg_days
+              name: Days to use
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: input_datetime.power_stat_start_time
+              name: Start
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: input_datetime.power_stat_end_time
+              name: End
+          - type: section
+            label: Additional Details
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
@@ -684,26 +852,6 @@ sections:
               type: attribute
               attribute: Required_SoC_2330
               suffix: "%"
-          - entity: input_number.additional_reserve_soc
-          - entity: input_number.hours_of_reserve_energy
-          - type: conditional
-            conditions:
-              - entity: input_boolean.battery_reserve_show_hide
-                state: "on"
-            row:
-              entity: sensor.battery_discharge_target_soc
-              name: Hours of Reserve SoC
-              type: attribute
-              attribute: Requested_reserve_SoC
-              suffix: "%"
-          - type: conditional
-            conditions:
-              - entity: input_boolean.battery_reserve_show_hide
-                state: "on"
-            row:
-              entity: sensor.discharge_reserve_margin
-              name: Hours of Reserve kWh
-          - entity: input_number.typical_house_power_evening
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
@@ -1683,10 +1831,14 @@ sections:
         entities:
           - entity: sensor.solax_local_grid_used_aggregated_energy
             name: Grid Used
+          - entity: sensor.zappi_ct_grid_used_aggregated_energy
+            name: Grid Used (Zappi CT)
           - entity: sensor.zappi_charging
             name: Zappi
           - entity: sensor.solax_local_grid_export_aggregated_energy
             name: Total Export
+          - entity: sensor.zappi_ct_grid_export_aggregated_energy
+            name: Total Export (Zappi CT)
           - entity: sensor.solax_local_house_load_aggregated_energy
             name: House Load
         stat_types:
@@ -1702,10 +1854,14 @@ sections:
         entities:
           - entity: sensor.solax_local_grid_used_aggregated_energy
             name: Grid Used
+          - entity: sensor.zappi_ct_grid_used_aggregated_energy
+            name: Grid Used (Zappi CT)
           - entity: sensor.zappi_charging
             name: Zappi
           - entity: sensor.solax_local_grid_export_aggregated_energy
             name: Total Export
+          - entity: sensor.zappi_ct_grid_export_aggregated_energy
+            name: Total Export (Zappi CT)
           - entity: sensor.solax_local_house_load_aggregated_energy
             name: House Load
           - entity: sensor.solax_local_inverter_aggregated_energy
@@ -1774,4 +1930,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-

@@ -36,6 +36,7 @@ Main features:
     - must be configured
 * Uptime https://www.home-assistant.io/integrations/uptime/
 * Powercalc https://docs.powercalc.nl/quick-start/
+* Pyscript Python scripting https://github.com/custom-components/pyscript/wiki 
 * Power Flow Card Plus https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.2.0
 * Solcast https://github.com/BJReplay/ha-solcast-solar?tab=readme-ov-file#configuration
     - must be configured
@@ -50,24 +51,27 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
    - scripts
 2. Copy repo 'package' directory contents to your package directory (6 new directories each with yaml files)
 3. Copy repo 'script' contents to your script directory (two yaml files)
-4. .\config\packages\solax_realtime\secrets.yaml
+4. Copy repo 'pyscript' contents to your pyscript directory (pyscript must be added first via HACS and added as an integration first)
+5. .\config\packages\solax_realtime\secrets.yaml
      - Find and replace YYYYYYYYYY with your registration number (found on the devices page on the solax cloud)
      - Find http://192.168.xxx.xxx and replace with http://192.168.1.fixed_ip
-5. .\config\packages\solax_control\secrets.yaml
+6. .\config\packages\solax_control\secrets.yaml
      - Find and replace YYYYYYYYYY with your registration number (found on the devices page on the solax cloud)
      - Find http://192.168.xxx.xxx and replace with http://192.168.1.fixed_ip
-6. .\config\packages\octopus_renamed_entities\template.yaml
+7. .\config\packages\octopus_renamed_entities\template.yaml
      - Find and replace all METER_MPAN with your own
      - Find and replace all L_O_N_G_ZAPPIID with your own
-7. .\config\packages\solax_zappi_octopus\utility_meters.yaml
+8. .\config\packages\solax_loads\utility_meters.yaml
+    - Find and set the billing period offsets you require
+9. .\config\packages\zappi_loads\utility_meters.yaml
     - Find ev_charging_daily_vehicle and replace the vehicle names and set them as you wish
     - Find ev_charging_monthly_vehicle and replace the vehicle names and set them as you wish
-8. .\config\packages\octoplus_sessions\template.yaml
+10. .\config\packages\octoplus_sessions\template.yaml
     - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
-9. .\config\packages\zappi_renamed_entities\template.yaml
+11. .\config\packages\zappi_renamed_entities\template.yaml
     - Find and replace all zappi serial numbers zappi_XXXXXXXX with your own i.e. zappi_12345678
-10. Copy the contents of automations_5000-5005.yaml to the bottom of .\config automations.yaml
-11. Edit your configuration.yaml to pick up the new packages.
+12. Copy the contents of automations_5000-5005.yaml to the bottom of .\config automations.yaml
+13. Edit your configuration.yaml to pick up the new packages.
 
 Rather than putting all the config in the single '\config\configuration.yaml file, to keep things clean and tidy and more manageable, the package files can referenced like this in the configuration.yaml:
 In the example below see the use of the homeassistant: tag. The directory referenced under homeassistant: tag is the packages directory where we've already stored all the new config. You must also add the script directory. if you already have a scripts.yaml that should be moved to the scripts directory.
@@ -109,10 +113,15 @@ automation: !include automations.yaml
     - default min_soc
     - Solax Battery SoH Stored initial value to 100 (it will recalucate each time a full charge cycle 10-100%)
     - select Octopus schedule type
-    - EV registered battery size
+    - EV registered battery size 
     - EV ready time
     - EV charge %
-16. Done.
+16. Battery Reserves
+    - Set your initial typical average power in kW (eg 0.300)
+    - Set how much reserve you want in % and/or set how many hours of extra running you'd like to reserve
+      - This is used for the limit on where automatic discharges (GAP and Daily) will discharge too at any point in the day.
+      - Note that nightly discharges don't use this limit, they discharge to the default min soc. 
+17. Done.
 
 # Notification Management
 
@@ -147,5 +156,10 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v6.1.0|**30/10/25**|All| bug fixes and restructured yaml packages <br> new feature that calculates typical kW based on user input Days to Use and Start and End Time periods to average over. This enabales user to set the Target SoC (used by automatic GAPS and Daily Discharge) around their highest typical usage times. Uses pyscript.|
 | v6.0.2|**29/10/25**|All| bug fixes and restructured yaml packages|
 | v6.0.0|**21/10/25**|All| new architecture - ident-potent inverter/zappi control|
+
+# Known Issues
+1. Latest release of Octopus Energy (by bottlecapdave) V17 has a deprication notice for the free electric entities in May 2026
+    - This means new development required so that users can Prep the SoC for the upcoming session.

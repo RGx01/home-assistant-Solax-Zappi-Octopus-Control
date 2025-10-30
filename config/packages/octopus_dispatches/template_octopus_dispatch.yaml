@@ -94,7 +94,52 @@ octopus_dispatches_template_octopus_dispatch:
               {% endfor %}
 
               {{ ns.gaps }}
+            dispatches_dt: >
+              {% set planned = state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') or [] %}
+              {% set ns3 = namespace(members=[]) %}
+              {% for dispatch in planned %}
+                {% if dispatch.start is not none and dispatch.end is not none and as_datetime(dispatch.end) > now() %}
+                  {% set ns3.members = ns3.members + [{
+                    "start": as_local(as_datetime(dispatch.start)).isoformat(),
+                    "end": as_local(as_datetime(dispatch.end)).isoformat()
+                  }] %}
+                {% endif %}
+              {% endfor %}
+              {{ ns3.members }}
+            gaps_dt: >
+              {% set planned = state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') or [] %}
+              {% set now_t = now() %}
+              {% set ns = namespace(intervals=[], gaps=[], last_end=now_t.timestamp()) %}
 
+              {# Build dispatch intervals that are still relevant #}
+              {% for d in planned %}
+                {% if d.start is not none and d.end is not none and as_datetime(d.end) > now() %}
+                  {% set s_dt = as_local(as_datetime(d.start)) %}
+                  {% set e_dt = as_local(as_datetime(d.end)) %}
+                  {% if e_dt.timestamp() > now_t.timestamp() %}
+                    {% set s_ts = max(s_dt.timestamp(), now_t.timestamp()) %}
+                    {% set e_ts = e_dt.timestamp() %}
+                    {% if e_ts > s_ts %}
+                      {% set ns.intervals = ns.intervals + [(s_ts, e_ts)] %}
+                    {% endif %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+
+              {% set ns.intervals = ns.intervals | sort(attribute=0) %}
+
+              {# Compute gaps with full datetimes #}
+              {% for s, e in ns.intervals %}
+                {% if s > ns.last_end %}
+                  {% set ns.gaps = ns.gaps + [{
+                    "start": (ns.last_end | timestamp_custom("%Y-%m-%dT%H:%M:%S%z", true)),
+                    "end": (s | timestamp_custom("%Y-%m-%dT%H:%M:%S%z", true))
+                  }] %}
+                {% endif %}
+                {% set ns.last_end = max(ns.last_end, e) %}
+              {% endfor %}
+
+              {{ ns.gaps }}
 
 
 
@@ -224,59 +269,30 @@ octopus_dispatches_template_octopus_dispatch:
           icon: mdi:clock-outline
           state: >
             {% set min_gap_hr = 20 / 60 %}
-            {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps') %}
-            {% set dispatches = state_attr('sensor.octopus_total_planned_dispatch', 'dispatches') or [] %}
             {% set now_t = now() %}
             {% set cutoff = today_at("23:30") %}
-
-            {# Determine final dispatch end (last end time) #}
-            {% set nsf = namespace(final_end=None) %}
-            {% for d in dispatches %}
-              {% if 'dispatch' in d %}
-                {% set parts = d['dispatch'].split(' to ') %}
-                {% if parts | count == 2 %}
-                  {% set e = today_at(parts[1]) %}
-                  {% if nsf.final_end is none or e > nsf.final_end %}
-                    {% set nsf.final_end = e %}
-                  {% endif %}
-                {% endif %}
-              {% endif %}
-            {% endfor %}
-
+            {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps_dt') %}
             {% if gaps is not iterable %}
               0
             {% else %}
               {% set ns = namespace(found_gap=0) %}
               {% for gap in gaps %}
-                {% if 'gap' in gap %}
-                  {% set parts = gap['gap'].split(' to ') %}
-                  {% if parts | count == 2 %}
-                    {% set start = today_at(parts[0]) %}
-                    {% set end = today_at(parts[1]) %}
+                {% set start = as_datetime(gap.start) %}
+                {% set end = as_datetime(gap.end) %}
 
-                    {# Ignore gaps after hard cutoff #}
-                    {% if start > cutoff %}
-                      {% continue %}
-                    {% endif %}
+                {# Skip gaps that have already ended #}
+                {% if end <= now_t %}
+                  {% continue %}
+                {% endif %}
 
-                    {# Ignore after-midnight gaps before final dispatch end #}
-                    {% if nsf.final_end is not none and start.time() < nsf.final_end.time() and start.time() < now_t.time() %}
-                      {% continue %}
-                    {% endif %}
+                {# Clamp gap to now and cutoff #}
+                {% set effective_start = start if start > now_t else now_t %}
+                {% set effective_end = end if end < cutoff else cutoff %}
 
-                    {% if start < now_t %}
-                      {% set start = now_t %}
-                    {% endif %}
-                    {% if end > cutoff %}
-                      {% set end = cutoff %}
-                    {% endif %}
-
-                    {% set dur_hr = (end - start).total_seconds() / 3600 %}
-                    {% if dur_hr >= min_gap_hr %}
-                      {% set ns.found_gap = dur_hr %}
-                      {% break %}
-                    {% endif %}
-                  {% endif %}
+                {% set dur_hr = (effective_end - effective_start).total_seconds() / 3600 %}
+                {% if dur_hr >= min_gap_hr %}
+                  {% set ns.found_gap = dur_hr %}
+                  {% break %}
                 {% endif %}
               {% endfor %}
               {{ ns.found_gap | round(2) }}
@@ -285,206 +301,61 @@ octopus_dispatches_template_octopus_dispatch:
           attributes:
             next_gap_start: >
               {% set min_gap_hr = 20 / 60 %}
-              {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps') %}
-              {% set dispatches = state_attr('sensor.octopus_total_planned_dispatch', 'dispatches') or [] %}
               {% set now_t = now() %}
               {% set cutoff = today_at("23:30") %}
-
-              {% set nsf = namespace(final_end=None) %}
-              {% for d in dispatches %}
-                {% if 'dispatch' in d %}
-                  {% set parts = d['dispatch'].split(' to ') %}
-                  {% if parts|count == 2 %}
-                    {% set e = today_at(parts[1]) %}
-                    {% if nsf.final_end is none or e > nsf.final_end %}
-                      {% set nsf.final_end = e %}
-                    {% endif %}
-                  {% endif %}
-                {% endif %}
-              {% endfor %}
-
+              {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps_dt') %}
               {% if gaps is not iterable %}
-                ''
+                none
               {% else %}
-                {% set ns = namespace(start_time='') %}
+                {% set ns = namespace(start_time=none) %}
                 {% for gap in gaps %}
-                  {% if 'gap' in gap %}
-                    {% set parts = gap['gap'].split(' to ') %}
-                    {% if parts|count == 2 %}
-                      {% set start = today_at(parts[0]) %}
-                      {% set end = today_at(parts[1]) %}
+                  {% set start = as_datetime(gap.start) %}
+                  {% set end = as_datetime(gap.end) %}
 
-                      {% if start > cutoff %}
-                        {% continue %}
-                      {% endif %}
+                  {% if end <= now_t %}
+                    {% continue %}
+                  {% endif %}
 
-                      {% if nsf.final_end is not none and start.time() < nsf.final_end.time() and start.time() < now_t.time() %}
-                        {% continue %}
-                      {% endif %}
+                  {% set effective_start = start if start > now_t else now_t %}
+                  {% set effective_end = end if end < cutoff else cutoff %}
 
-                      {% if start < now_t %}
-                        {% set start = now_t %}
-                      {% endif %}
-                      {% if end > cutoff %}
-                        {% set end = cutoff %}
-                      {% endif %}
-
-                      {% set dur_hr = (end - start).total_seconds() / 3600 %}
-                      {% if dur_hr >= min_gap_hr %}
-                        {% set ns.start_time = start.isoformat() %}
-                        {% break %}
-                      {% endif %}
-                    {% endif %}
+                  {% set dur_hr = (effective_end - effective_start).total_seconds() / 3600 %}
+                  {% if dur_hr >= min_gap_hr %}
+                    {% set ns.start_time = effective_start.isoformat() %}
+                    {% break %}
                   {% endif %}
                 {% endfor %}
-                {{ ns.start_time }}
+                {{ ns.start_time or '' }}
               {% endif %}
 
             next_gap_end: >
               {% set min_gap_hr = 20 / 60 %}
-              {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps') %}
-              {% set dispatches = state_attr('sensor.octopus_total_planned_dispatch', 'dispatches') or [] %}
               {% set now_t = now() %}
               {% set cutoff = today_at("23:30") %}
-
-              {% set nsf = namespace(final_end=None) %}
-              {% for d in dispatches %}
-                {% if 'dispatch' in d %}
-                  {% set parts = d['dispatch'].split(' to ') %}
-                  {% if parts|count == 2 %}
-                    {% set e = today_at(parts[1]) %}
-                    {% if nsf.final_end is none or e > nsf.final_end %}
-                      {% set nsf.final_end = e %}
-                    {% endif %}
-                  {% endif %}
-                {% endif %}
-              {% endfor %}
-
+              {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps_dt') %}
               {% if gaps is not iterable %}
-                ''
+                none
               {% else %}
-                {% set ns = namespace(end_time='') %}
+                {% set ns = namespace(end_time=none) %}
                 {% for gap in gaps %}
-                  {% if 'gap' in gap %}
-                    {% set parts = gap['gap'].split(' to ') %}
-                    {% if parts|count == 2 %}
-                      {% set start = today_at(parts[0]) %}
-                      {% set end = today_at(parts[1]) %}
+                  {% set start = as_datetime(gap.start) %}
+                  {% set end = as_datetime(gap.end) %}
 
-                      {% if start > cutoff %}
-                        {% continue %}
-                      {% endif %}
+                  {% if end <= now_t %}
+                    {% continue %}
+                  {% endif %}
 
-                      {% if nsf.final_end is not none and start.time() < nsf.final_end.time() and start.time() < now_t.time() %}
-                        {% continue %}
-                      {% endif %}
+                  {% set effective_start = start if start > now_t else now_t %}
+                  {% set effective_end = end if end < cutoff else cutoff %}
 
-                      {% if start < now_t %}
-                        {% set start = now_t %}
-                      {% endif %}
-                      {% if end > cutoff %}
-                        {% set end = cutoff %}
-                      {% endif %}
-
-                      {% set dur_hr = (end - start).total_seconds() / 3600 %}
-                      {% if dur_hr >= min_gap_hr %}
-                        {% set ns.end_time = end.isoformat() %}
-                        {% break %}
-                      {% endif %}
-                    {% endif %}
+                  {% set dur_hr = (effective_end - effective_start).total_seconds() / 3600 %}
+                  {% if dur_hr >= min_gap_hr %}
+                    {% set ns.end_time = effective_end.isoformat() %}
+                    {% break %}
                   {% endif %}
                 {% endfor %}
-                {{ ns.end_time }}
+                {{ ns.end_time or '' }}
               {% endif %}
-
-
-
-    # - sensor:
-    #     - name: "Octopus Next Gap Duration"
-    #       unique_id: octopus_next_gap_duration
-    #       unit_of_measurement: "h"
-    #       icon: mdi:clock-outline
-    #       state: >
-    #         {% set min_gap_hr = 20 / 60 %}
-    #         {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps') %}
-    #         {% if gaps is not iterable %}
-    #           0
-    #         {% else %}
-    #           {% set ns = namespace(found_gap=0) %}
-    #           {% for gap in gaps %}
-    #             {% if 'gap' in gap %}
-    #               {% set parts = gap['gap'].split(' to ') %}
-    #               {% if parts | count == 2 %}
-    #                 {% set start = today_at(parts[0]) %}
-    #                 {% set end = today_at(parts[1]) %}
-    #                 {% if start < now() %}
-    #                   {% set start = now() %}
-    #                 {% endif %}
-    #                 {% set dur_hr = (end - start).total_seconds() / 3600 %}
-    #                 {% if dur_hr >= min_gap_hr %}
-    #                   {% set ns.found_gap = dur_hr %}
-    #                   {% break %}
-    #                 {% endif %}
-    #               {% endif %}
-    #             {% endif %}
-    #           {% endfor %}
-    #           {{ ns.found_gap | round(2) }}
-    #         {% endif %}
-
-    #       attributes:
-    #         next_gap_start: >
-    #           {% set min_gap_hr = 20 / 60 %}
-    #           {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps') %}
-    #           {% if gaps is not iterable %}
-    #             ''
-    #           {% else %}
-    #             {% set ns = namespace(start_time='') %}
-    #             {% for gap in gaps %}
-    #               {% if 'gap' in gap %}
-    #                 {% set parts = gap['gap'].split(' to ') %}
-    #                 {% if parts | count == 2 %}
-    #                   {% set start = today_at(parts[0]) %}
-    #                   {% set end = today_at(parts[1]) %}
-    #                   {% if start < now() %}
-    #                     {% set start = now() %}
-    #                   {% endif %}
-    #                   {% set dur_hr = (end - start).total_seconds() / 3600 %}
-    #                   {% if dur_hr >= min_gap_hr %}
-    #                     {% set ns.start_time = start.isoformat() %}
-    #                     {% break %}
-    #                   {% endif %}
-    #                 {% endif %}
-    #               {% endif %}
-    #             {% endfor %}
-    #             {{ ns.start_time }}
-    #           {% endif %}
-
-    #         next_gap_end: >
-    #           {% set min_gap_hr = 20 / 60 %}
-    #           {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps') %}
-    #           {% if gaps is not iterable %}
-    #             ''
-    #           {% else %}
-    #             {% set ns = namespace(end_time='') %}
-    #             {% for gap in gaps %}
-    #               {% if 'gap' in gap %}
-    #                 {% set parts = gap['gap'].split(' to ') %}
-    #                 {% if parts | count == 2 %}
-    #                   {% set start = today_at(parts[0]) %}
-    #                   {% set end = today_at(parts[1]) %}
-    #                   {% if start < now() %}
-    #                     {% set start = now() %}
-    #                   {% endif %}
-    #                   {% set dur_hr = (end - start).total_seconds() / 3600 %}
-    #                   {% if dur_hr >= min_gap_hr %}
-    #                     {% set ns.end_time = end.isoformat() %}
-    #                     {% break %}
-    #                   {% endif %}
-    #                 {% endif %}
-    #               {% endif %}
-    #             {% endfor %}
-    #             {{ ns.end_time }}
-    #           {% endif %}
 
 
     ######################################################

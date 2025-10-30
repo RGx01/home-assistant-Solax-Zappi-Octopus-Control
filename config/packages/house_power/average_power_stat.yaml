@@ -1,0 +1,19 @@
+house_power_average_power_stat:
+  template:
+    - trigger:
+        # Update daily at 00:10
+        - platform: time
+          at: "00:10:00"   
+        # Or whenever helpers change
+        - platform: state
+          entity_id:
+            - input_number.power_stat_avg_days
+            - input_datetime.power_stat_start_time
+            - input_datetime.power_stat_end_time
+      action:
+        - service: pyscript.energy_avg_query
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.typical_house_power
+          data:
+            value: "{{ states('sensor.average_house_power') | float(0) }}"
