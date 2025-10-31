@@ -580,6 +580,17 @@
       seconds: 0
     id: Inverter shouldn't be left in this mode
     to: Manual
+  - trigger: template
+    value_template: "{{state_attr('sensor.solax_local_settings', 'Data')[10]|int ==
+      0 and\nstates('sensor.solax_local_battery_soc')|int <= \n(state_attr('sensor.solax_local_settings',
+      'Data')[0]|int ,state_attr('sensor.solax_local_settings', 'Data')[12]|int)|max
+      }}\n\n"
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    id: Inverter shouldn't be left in this mode
+    alias: Inverter shouldn't be left in this mode
   - alias: Free Electric Prepare Solax Charge Period 2
     entity_id:
     - binary_sensor.free_electricity_today
@@ -967,6 +978,9 @@
       - condition: trigger
         id:
         - Discharge
+      - condition: state
+        entity_id: input_boolean.battery_discharge_now
+        state: 'on'
       sequence:
       - action: script.solax_set_mode_and_settings
         data:

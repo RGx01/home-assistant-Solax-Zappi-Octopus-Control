@@ -1,4 +1,4 @@
-# v6.1.0
+# v6.2.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -51,28 +51,38 @@ sections:
             above: 0
       - type: entities
         entities:
+          - type: section
+            label: >-
+              Automation controls the inverter, smart charge and zappi mode, it
+              responds to events such as car charging and Grid Supplier rate
+              changes.
           - entity: automation.solax_zappi_octopus_control
           - entity: input_number.delay_when_ev_connected
           - entity: switch.octopus_intelligent_smart_charge
           - entity: select.zappi_charge_mode
         show_header_toggle: false
         state_color: true
-        title: Device Status - 5001 Controlled
+        title: Automation 5001 Controlled
         visibility:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
             state: "on"
       - type: entities
         entities:
+          - type: section
+            label: Select when an octopus shedule can be requested.
           - entity: input_boolean.octopus_schedule_anytime
             state_color: true
+            name: Smart Charge On Plugin
           - entity: input_boolean.use_fixed_time
             state_color: true
+            name: Smart Charge at Fixed Time
           - entity: input_boolean.solar_export_priority
             state_color: true
+            name: Smart Charge after Sunset
         show_header_toggle: false
         state_color: true
-        title: Octopus Schedule Type
+        title: EV Schedule Type
         visibility:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
@@ -88,12 +98,13 @@ sections:
         card:
           type: entities
           entities:
+            - type: section
             - entity: sensor.octopus_schedule_time
               format: datetime
             - entity: input_number.sun_degrees_above_horizon
             - entity: number.octopus_intelligent_charge_target
             - entity: select.octopus_intelligent_target_time
-          title: Schedule After Sunset
+          title: Smart Charge After Sunset
       - type: conditional
         conditions:
           - condition: state
@@ -105,11 +116,12 @@ sections:
         card:
           type: entities
           entities:
+            - type: section
             - entity: sensor.octopus_schedule_time
               format: datetime
             - entity: number.octopus_intelligent_charge_target
             - entity: select.octopus_intelligent_target_time
-          title: Schedule Anytime
+          title: Smart Charge Anytime
       - type: conditional
         conditions:
           - condition: and
@@ -126,14 +138,16 @@ sections:
         card:
           type: entities
           entities:
+            - type: section
             - entity: sensor.octopus_schedule_time
               format: datetime
             - entity: input_datetime.don_t_charge_ev_before_time
             - entity: number.octopus_intelligent_charge_target
             - entity: select.octopus_intelligent_target_time
-          title: Schedule After Fixed Time
+          title: Smart Charge After Fixed Time
       - type: entities
         entities:
+          - type: section
           - entity: input_boolean.zappi_eco_always
           - entity: number.zappi_minimum_green_level
         show_header_toggle: false
@@ -147,6 +161,7 @@ sections:
         cards:
           - type: entities
             entities:
+              - type: section
               - entity: input_boolean.solax_zappi_octopus_control_notifications
                 name: Notifications
                 state_color: true
@@ -246,6 +261,7 @@ sections:
               - state
       - type: entities
         entities:
+          - type: section
           - type: conditional
             conditions:
               - entity: binary_sensor.ev_gap_discharge_allowed
@@ -372,6 +388,11 @@ sections:
               entity: sensor.solax_local_battery_soc
               name: Current SoC
         title: Battery Exporting Status
+        header:
+          type: graph
+          entity: sensor.solax_local_battery_dump_power
+          detail: 2
+          hours_to_show: 24
         visibility:
           - condition: or
             conditions:
@@ -394,6 +415,12 @@ sections:
                 entity: binary_sensor.ev_gap_discharge_allowed
                 state: "on"
         state_color: true
+      - type: entities
+        entities:
+          - type: section
+          - entity: sensor.solax_local_inverter_mode
+          - entity: sensor.solax_local_manual_mode_behaviour
+        title: Inverter Current Mode
       - type: custom:power-flow-card-plus
         entities:
           battery:
@@ -450,138 +477,203 @@ sections:
         grid_options:
           columns: 12
           rows: auto
-      - title: Solax Controls/Default Behaviours
-        type: entities
-        show_header_toggle: false
-        entities:
-          - entity: input_boolean.solax_system_enable
-            name: Inverter Off/On
-            state_color: true
-          - entity: input_select.solax_work_mode
-          - entity: input_boolean.use_grid_during_octopus_dispatch
-          - type: section
-            label: Henley Block
-          - entity: input_boolean.solax_can_see_zappi_loads
-          - entity: input_boolean.ev_solax_battery_drain
-          - type: section
-            label: Set the default Inverter Mode and Settings
-          - entity: input_select.solax_default_mode
-          - entity: input_number.solax_default_discharge_limit_soc
-          - entity: input_number.solax_default_charge_to_limit_soc
-          - type: section
-            label: Battery & Inverter Size
-          - entity: input_number.solax_battery_capacity
-          - entity: input_number.solax_battery_soh_stored
-          - entity: input_number.solax_inverter_capacity
-        grid_options:
-          columns: 15
-          rows: auto
-        state_color: true
-        visibility:
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
-      - title: Self Use Mode Settings
-        type: entities
-        show_header_toggle: false
-        entities:
-          - entity: input_number.solax_selfuse_battery_min_soc
-          - entity: input_number.solax_selfuse_charge_to_soc
-          - entity: input_datetime.solax_battery_start_discharge_time
-          - entity: input_datetime.solax_battery_stop_discharge_time
-          - entity: input_boolean.self_use_enable_charge_from_grid
-            state_color: true
-          - entity: input_datetime.solax_battery_start_charge_time
-          - entity: input_datetime.solax_battery_stop_charge_time
-          - entity: input_boolean.solaxchargeperiod2
-            state_color: true
-        state_color: true
-        visibility:
-          - condition: state
-            entity: input_select.solax_work_mode
-            state: Self Use
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
-      - title: Feed In Mode Settings
-        type: entities
-        entities:
-          - entity: input_number.solax_feed_in_battery_min_soc
-          - entity: input_number.solax_feed_in_charge_to_soc
-          - entity: input_datetime.solax_battery_start_discharge_time
-          - entity: input_datetime.solax_battery_stop_discharge_time
-          - entity: input_datetime.solax_battery_start_charge_time
-          - entity: input_datetime.solax_battery_stop_charge_time
-          - entity: input_boolean.solaxchargeperiod2
-            state_color: true
-        visibility:
-          - condition: state
-            entity: input_select.solax_work_mode
-            state: Feed In Priority
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
       - type: entities
-        show_header_toggle: false
         entities:
-          - entity: input_datetime.solax_start_charge_2
-          - entity: input_datetime.solax_stop_charge_2
-        visibility:
-          - condition: or
+          - type: section
+          - entity: input_boolean.inverter_modes_show_hide
+          - type: section
+          - type: conditional
             conditions:
-              - condition: state
-                entity: binary_sensor.free_electricity_today
+              - entity: input_boolean.inverter_modes_show_hide
                 state: "on"
-              - condition: state
-                entity: input_boolean.solaxchargeperiod2
+            row:
+              entity: input_select.solax_work_mode
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_modes_show_hide
                 state: "on"
-      - type: entities
-        show_header_toggle: false
-        entities:
-          - entity: sensor.solax_local_inverter_mode
-          - entity: sensor.solax_local_manual_mode_behaviour
-          - entity: input_select.solax_manual_modes
-        title: Manual Mode Settings
-        header:
-          type: graph
-          entity: sensor.solax_local_battery_dump_power
-          detail: 2
-          hours_to_show: 24
-        visibility:
-          - condition: state
-            entity: input_select.solax_work_mode
-            state: Manual
-      - title: Battery Heating (read-only)
-        type: entities
-        show_header_toggle: false
-        entities:
-          - entity: input_boolean.battery_heat_enable
-            state_color: true
-        grid_options:
-          columns: 15
-          rows: auto
+            row:
+              entity: input_boolean.solax_system_enable
+              name: Inverter Off/On
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_modes_show_hide
+                state: "on"
+            row:
+              entity: input_select.solax_manual_modes
+          - type: section
+          - entity: input_boolean.inverter_settings_show_hide
+          - type: section
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+              - entity: sensor.solax_local_inverter_mode
+                state: Self Use
+            row:
+              entity: input_number.solax_selfuse_battery_min_soc
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+              - entity: sensor.solax_local_inverter_mode
+                state: Self Use
+            row:
+              entity: input_number.solax_selfuse_charge_to_soc
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+              - entity: sensor.solax_local_inverter_mode
+                state: Feed in
+            row:
+              entity: input_number.solax_selfuse_battery_min_soc
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+              - entity: sensor.solax_local_inverter_mode
+                state: Feed in
+            row:
+              entity: input_number.solax_selfuse_charge_to_soc
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_datetime.solax_battery_start_discharge_time
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_datetime.solax_battery_stop_discharge_time
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+              - entity: sensor.solax_local_inverter_mode
+                state: Self Use
+            row:
+              entity: input_boolean.self_use_enable_charge_from_grid
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_datetime.solax_battery_start_charge_time
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_datetime.solax_battery_stop_charge_time
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_boolean.solaxchargeperiod2
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+              - entity: input_boolean.solaxchargeperiod2
+                state: "on"
+            row:
+              entity: input_datetime.solax_start_charge_2
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+              - entity: input_boolean.solaxchargeperiod2
+                state: "on"
+            row:
+              entity: input_datetime.solax_stop_charge_2
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_boolean.battery_heat_enable
+              name: Battery Heating (Read-Only)
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_select.solax_battery_heat_level
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_datetime.solax_battery_start_heat_time
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_datetime.solax_battery_stop_heat_time
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_datetime.solax_start_heat_2
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_settings_show_hide
+                state: "on"
+            row:
+              entity: input_datetime.solax_stop_heat_2
+          - type: section
+          - entity: input_boolean.inverter_default_behaviours_show_hide
+          - type: section
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_default_behaviours_show_hide
+                state: "on"
+            row:
+              entity: input_select.solax_default_mode
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_default_behaviours_show_hide
+                state: "on"
+            row:
+              entity: input_number.solax_default_discharge_limit_soc
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_default_behaviours_show_hide
+                state: "on"
+            row:
+              entity: input_number.solax_default_charge_to_limit_soc
+          - type: section
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_default_behaviours_show_hide
+                state: "on"
+            row:
+              entity: input_boolean.use_grid_during_octopus_dispatch
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_default_behaviours_show_hide
+                state: "on"
+            row:
+              entity: input_boolean.solax_can_see_zappi_loads
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_default_behaviours_show_hide
+                state: "on"
+            row:
+              entity: input_boolean.ev_solax_battery_drain
         visibility:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
             state: "on"
-      - type: entities
+        title: Inverter Controls and Behaviours
+        state_color: true
         show_header_toggle: false
-        entities:
-          - entity: input_select.solax_battery_heat_level
-          - entity: input_datetime.solax_battery_start_heat_time
-          - entity: input_datetime.solax_battery_stop_heat_time
-          - entity: input_datetime.solax_start_heat_2
-          - entity: input_datetime.solax_stop_heat_2
-        visibility:
-          - condition: state
-            entity: input_boolean.battery_heat_enable
-            state: "on"
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
-        grid_options:
-          columns: 15
-          rows: auto
     column_span: 1
   - type: grid
     cards:
@@ -635,6 +727,7 @@ sections:
           action: none
       - type: entities
         entities:
+          - type: section
           - entity: input_boolean.gap_export_show_hide
           - entity: input_boolean.battery_discharge_in_dispatch_gaps
           - type: conditional
@@ -661,15 +754,7 @@ sections:
                 state: "on"
             row:
               entity: input_number.battery_discharge_soc_window_limit
-        title: Export During Octopus Schedule
-        show_header_toggle: false
-        state_color: true
-        visibility:
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
-      - type: entities
-        entities:
+          - type: section
           - entity: input_boolean.daily_export_show_hide
           - entity: input_boolean.export_battery_daily
           - type: conditional
@@ -690,15 +775,7 @@ sections:
                 state: "on"
             row:
               entity: input_datetime.daily_battery_export_time
-        title: Daily Export
-        show_header_toggle: false
-        state_color: true
-        visibility:
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
-      - type: entities
-        entities:
+          - type: section
           - entity: input_boolean.nightly_export_show_hide
           - entity: input_boolean.export_battery_nightly
           - type: conditional
@@ -728,7 +805,11 @@ sections:
               name: Nightly Export
               type: attribute
               attribute: just_in_time_start_2330
-        title: JiT Nightly Exports
+          - type: section
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: input_button.solax_force_discharge
+          - entity: input_button.solax_stop_discharge
+        title: Exports
         show_header_toggle: false
         state_color: true
         visibility:
@@ -737,9 +818,8 @@ sections:
             state: "on"
       - type: entities
         entities:
-          - entity: input_boolean.battery_reserve_show_hide
           - type: section
-            label: ""
+          - entity: input_boolean.battery_reserve_show_hide
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
@@ -751,8 +831,9 @@ sections:
               attribute: Required_SoC_2330
               suffix: "%"
           - entity: sensor.battery_discharge_target_soc
+            name: Total Reserved
           - entity: sensor.battery_discharge_target_soc
-            name: Deficite (SoC below Target)
+            name: Deficite (SoC below Reserve)
             type: attribute
             attribute: deficite
             suffix: "%"
@@ -875,18 +956,6 @@ sections:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
             state: "on"
-      - type: entities
-        entities:
-          - entity: input_number.solax_manual_forced_discharge_limit_soc
-          - entity: input_button.solax_force_discharge
-          - entity: input_button.solax_stop_discharge
-        title: Force Discharge
-        show_header_toggle: false
-        state_color: true
-        visibility:
-          - condition: state
-            entity: input_boolean.solax_octopus_hide_settings
-            state: "on"
       - type: conditional
         conditions:
           - condition: or
@@ -912,6 +981,7 @@ sections:
         card:
           type: entities
           entities:
+            - type: section
             - entity: input_boolean.free_electric
             - entity: sensor.octopus_free_electricity_start
               format: datetime
@@ -923,6 +993,8 @@ sections:
             - entity: input_datetime.octopus_free_electricity_prep
             - entity: binary_sensor.free_electricity_today
           state_color: true
+          title: Free Electric Sessions
+          show_header_toggle: false
     column_span: 1
   - type: grid
     cards:

@@ -69,7 +69,7 @@ solax_zappi_octopus_ui_input_datetime:
 
     #Time that ev can start charge +/- wobble
     don_t_charge_ev_before_time:
-      name: Octopus Schedule After
+      name: Smart Charge After
       has_date: false
       has_time: true
 

@@ -64,6 +64,7 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
 8. .\config\packages\solax_loads\utility_meters.yaml
     - Find and set the billing period offsets you require
 9. .\config\packages\zappi_loads\utility_meters.yaml
+    - Find and set the billing period offsets you require
     - Find ev_charging_daily_vehicle and replace the vehicle names and set them as you wish
     - Find ev_charging_monthly_vehicle and replace the vehicle names and set them as you wish
 10. .\config\packages\octoplus_sessions\template.yaml
@@ -156,6 +157,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v6.2.0|**31/10/25**|All| Bug fixes <br> Updated Dashboard <br> Added protection for if inverter is left in manual mode for 5 minutes and not doing anything
 | v6.1.0|**30/10/25**|All| bug fixes and restructured yaml packages <br> new feature that calculates typical kW based on user input Days to Use and Start and End Time periods to average over. This enabales user to set the Target SoC (used by automatic GAPS and Daily Discharge) around their highest typical usage times. Uses pyscript.|
 | v6.0.2|**29/10/25**|All| bug fixes and restructured yaml packages|
 | v6.0.0|**21/10/25**|All| new architecture - ident-potent inverter/zappi control|

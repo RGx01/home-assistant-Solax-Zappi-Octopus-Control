@@ -11,16 +11,21 @@ zappi_loads_utilitymeter_tariff:
     #   between 05:30 and 23:30
     ######################################################
     - trigger:
-        - trigger: time
-          at: sensor.octopus_free_electricity_start
+        # - trigger: time
+        #   at: sensor.octopus_free_electricity_start
+        # - trigger: state
+        #   entity_id: binary_sensor.octopus_intelligent_dispatching
+        #   from: "off"
+        #   to: "on"
+        # - trigger: state
+        #   entity_id: binary_sensor.octopus_energy_electricity_off_peak
+        #   from: "off"
+        #   to: "on"
         - trigger: state
-          entity_id: binary_sensor.octopus_intelligent_dispatching
-          from: "off"
-          to: "on"
-        - trigger: state
-          entity_id: binary_sensor.octopus_energy_electricity_off_peak
-          from: "off"
-          to: "on"
+          entity_id: sensor.octopus_tariff_state
+          not_to:
+            - unavailable
+            - unknown
       action:
         - service: select.select_option
           data:
@@ -33,29 +38,34 @@ zappi_loads_utilitymeter_tariff:
             option: >
               {{ states('sensor.octopus_tariff_state') }}
 
-    - trigger:
-        - trigger: state
-          entity_id: binary_sensor.free_electricity_today
-          from: "on"
-          to: "off"
-          for:
-            minutes: 2
-        - trigger: state
-          entity_id: binary_sensor.octopus_intelligent_dispatching
-          from: "on"
-          to: "off"
-        - trigger: state
-          entity_id: binary_sensor.octopus_energy_electricity_off_peak
-          from: "on"
-          to: "off"
-      action:
-        - service: select.select_option
-          data:
-            entity_id: select.daily_grid_import_myenergi
-            option: >
-              {{ states('sensor.octopus_tariff_state') }}
-        - service: select.select_option
-          data:
-            entity_id: select.monthly_grid_import_myenergi
-            option: >
-              {{ states('sensor.octopus_tariff_state') }}
+    # - trigger:
+    #     # - trigger: state
+    #     #   entity_id: binary_sensor.free_electricity_today
+    #     #   from: "on"
+    #     #   to: "off"
+    #     #   for:
+    #     #     minutes: 2
+    #     # - trigger: state
+    #     #   entity_id: binary_sensor.octopus_intelligent_dispatching
+    #     #   from: "on"
+    #     #   to: "off"
+    #     # - trigger: state
+    #     #   entity_id: binary_sensor.octopus_energy_electricity_off_peak
+    #     #   from: "on"
+    #     #   to: "off"
+    #     - trigger: state
+    #       entity_id: sensor.octopus_tariff_state
+    #       not_to:
+    #         - unavailable
+    #         - unknown
+    #   action:
+    #     - service: select.select_option
+    #       data:
+    #         entity_id: select.daily_grid_import_myenergi
+    #         option: >
+    #           {{ states('sensor.octopus_tariff_state') }}
+    #     - service: select.select_option
+    #       data:
+    #         entity_id: select.monthly_grid_import_myenergi
+    #         option: >
+    #           {{ states('sensor.octopus_tariff_state') }}

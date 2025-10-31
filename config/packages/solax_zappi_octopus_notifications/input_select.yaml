@@ -22,7 +22,6 @@ solax_zappi_octopus_notifications_input_select:
         - Nightly Battery Export Finished
         - Battery Export in Dispatch Gap - Started
         - Battery Export in Dispatch Gap - Finished
-        - Cheap Rate
         - Peak Rate
       icon: mdi:alert
 

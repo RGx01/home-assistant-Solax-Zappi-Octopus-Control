@@ -103,7 +103,7 @@ octopus_dispatches_template_get_octopus_schedule:
             
 
     - sensor:
-        - name: "Octopus Schedule Time"
+        - name: "Smart Charge Time"
           unique_id: octopus_schedule_time
           device_class: timestamp
           state: >

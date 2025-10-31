@@ -20,14 +20,14 @@ solax_zappi_octopus_ui_input_boolean:
     #octopus schedule anytime switch if you switch this on automations will ignore other criteria like scheduled charge time and allow Octopus to create schedules during the day
     #Use this when you want to charge the car during the day when octopus has surplus.
     octopus_schedule_anytime:
-      name: Octopus Schedule at Anytime 
+      name: Smart Charge at Anytime 
       icon: mdi:ev-station
     use_fixed_time:
-      name: Octopus Schedule at Fixed Time
+      name: Smart Charge at Fixed Time
       icon: mdi:ev-station
     #Prevent EV charging before sunset
     solar_export_priority:
-      name: Octopus Schedule after Sun Elevation Threshold
+      name: Smart Charge after Sun Elevation Threshold
       icon: mdi:solar-power
     #Prevent EV discharging Solax Battery
     ev_solax_battery_drain:
@@ -106,15 +106,27 @@ solax_zappi_octopus_ui_input_boolean:
       name: Allow when connected if no EV schedule
       icon: mdi:transmission-tower-export
     battery_reserve_show_hide:
-      name: Show/Hide
+      name: Show/Hide Info
       icon: mdi:eye-off
     daily_export_show_hide:
-      name: Show/Hide
+      name: Daily Show/Hide
       icon: mdi:eye-off
     nightly_export_show_hide:
-      name: Show/Hide
+      name: Nightly Exports Show/Hide
       icon: mdi:eye-off
     gap_export_show_hide:
-      name: Show/Hide
+      name: Gap Exports Show/Hide
+      icon: mdi:eye-off
+    inverter_modes_show_hide:
+      name: Show/Hide Work Mode
+      icon: mdi:eye-off
+    inverter_settings_show_hide:
+      name: Show/Hide Settings
+      icon: mdi:eye-off
+    inverter_default_behaviours_show_hide:
+      name: Show/Hide Default Behaviours
+      icon: mdi:eye-off
+    inverter_and_battery_show_hide:
+      name: Show/Hide Inverter and Battery
       icon: mdi:eye-off
     ###########################################
