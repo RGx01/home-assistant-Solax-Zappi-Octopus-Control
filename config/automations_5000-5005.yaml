@@ -590,7 +590,7 @@
       minutes: 5
       seconds: 0
     id: Inverter shouldn't be left in this mode
-    alias: Inverter shouldn't be left in this mode
+    alias: Inverter Got Left in Manual Mode Catcher
   - alias: Free Electric Prepare Solax Charge Period 2
     entity_id:
     - binary_sensor.free_electricity_today
@@ -858,7 +858,7 @@
         event_data:
           message: EV paused charging @ {{now().strftime('%H:%M')}}. Zappi charge
             session {{states('sensor.zappi_charge_added_session')}}kWh.
-          title: Octopus Paused Charging.
+          title: EV Charging Paused
           class: normal
         enabled: true
       alias: EV Paused

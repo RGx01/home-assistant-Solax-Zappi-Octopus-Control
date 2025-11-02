@@ -10,7 +10,7 @@ solax_zappi_octopus_notifications_input_select:
       options:
         - ' '
         - EV Charging Started
-        - Octopus Paused Charging.
+        - EV Charging Paused
         - EV Connected - Waiting for Octopus schedule
         - EV Finished Charging
         - EV Disconnected

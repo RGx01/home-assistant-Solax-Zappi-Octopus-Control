@@ -15,7 +15,7 @@ zappi_loads_template_loads:
           unique_id: zappi_ct_grid_export_power
           state: >
             {% set val = states('sensor.zappi_power_ct_grid_load')|int(default=0) %}
-            {{ val if is_number(val) and (val|int > 0) else 0 }}
+            {{ (0 - val) if is_number(val) and (val|int < 0) else 0 }}
           unit_of_measurement: "W"
           device_class: "power"
           state_class: measurement

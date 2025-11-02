@@ -69,19 +69,29 @@ solax_export_template_discharge_magic:
         unit_of_measurement: "%"
         state: >
           {% set min_soc = states('input_number.solax_default_discharge_limit_soc') | float(10) %}
-          {% set reserve_pct = states('input_number.additional_reserve_soc')|int(0) %}
+          {% set reserve_pct = states('input_number.additional_reserve_soc') | int(0) %}
+          
+          {# Reuse sensors exactly as in original template #}
           {% set reserve_kwh = states('sensor.discharge_reserve_margin') | float(0.5) %}
           {% set house_kwh = states('sensor.house_energy_needed_until_2330') | float(0.5) %}
-          {% set batt_usable = state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10) %}
-
+          {% set batt_usable = state_attr('sensor.solax_discharge_capacity','usable_capacity') | float(10) %}
+          
           {# Convert kWh to % of usable battery #}
           {% set reserve_soc = (reserve_kwh / batt_usable * 100) if batt_usable > 0 else 0 %}
           {% set house_soc = (house_kwh / batt_usable * 100) if batt_usable > 0 else 0 %}
-
-          {# Final target SoC #}
-          {% set final_soc = min_soc + reserve_soc + reserve_pct + house_soc %}
+          
+          {# Only allow discharge target during 05:30–23:30 #}
+          {% set now_time = now().time() %}
+          {% if now_time < strptime('05:30','%H:%M').time() or now_time > strptime('23:30','%H:%M').time() %}
+            {% set final_soc = states('sensor.battery_discharge_target_soc') | float(0) %}
+          {% else %}
+            {% set final_soc = min_soc + reserve_pct + reserve_soc + house_soc %}
+          {% endif %}
+          
+          {# Clamp at 100% #}
           {% set final_soc = [final_soc, 100] | min %}
           {{ final_soc | round(0) }}
+
 
         attributes:
           Default_min_soc: "{{ states('input_number.solax_default_discharge_limit_soc') | float(10) }}"
