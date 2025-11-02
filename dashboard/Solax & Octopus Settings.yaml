@@ -1,4 +1,4 @@
-# v6.2.0
+# v6.2.1
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -1312,6 +1312,9 @@ sections:
         entities:
           - entity: sensor.solax_local_battery_soh
           - entity: sensor.solax_local_battery_temperature
+          - entity: sensor.solax_grid_stored_at_first_max_soc
+          - entity: sensor.solax_local_min_soc
+          - entity: sensor.solax_local_max_soc
         fit_y_data: false
         grid_options:
           columns: 36
@@ -2002,3 +2005,4 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
+
