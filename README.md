@@ -157,6 +157,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v6.2.2|**02/11/25**|All| Bug fix - error handling in trigger for solax_grid_stored_at_first_max_soc<br>Updated Dashboard <br> Automation 5001 updated with a differet trigger to detect Peak rate|
 | v6.2.1|**02/11/25**|All| Bug fix - incorrect export template for myenergi ct clamp <br> Bug fix - incorrect export template for myenergi ct clamp <br>Updated Dashboard <br> New entity for solax_grid_stored_at_first_max_soc with attributes to record max SoC and time of max SoC. This helps get a better read on SoH if charge windows ar large and battery heating is on <br> Automation 5001 updated with a new message title for when EV is paused <br> Ehancments to target SoC calculation|
 | v6.2.0|**31/10/25**|All| Bug fixes <br> Updated Dashboard <br> Added protection for if inverter is left in manual mode for 5 minutes and not doing anything|
 | v6.1.0|**30/10/25**|All| bug fixes and restructured yaml packages <br> new feature that calculates typical kW based on user input Days to Use and Start and End Time periods to average over. This enabales user to set the Target SoC (used by automatic GAPS and Daily Discharge) around their highest typical usage times. Uses pyscript.|
