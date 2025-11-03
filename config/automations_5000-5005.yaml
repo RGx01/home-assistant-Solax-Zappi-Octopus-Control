@@ -473,7 +473,7 @@
     alias: EV Paused
   - alias: Peak Rate
     entity_id:
-    - binary_sensor.octopus_intelligent_dispatching
+    - binary_sensor.octopus_energy_electricity_off_peak
     to: 'off'
     id: Peak Rate
     trigger: state

@@ -56,7 +56,6 @@ solax_loads_template_battery_soh:
             {% set last_date = (as_datetime(last_ts).date() if last_ts not in [None, '', 'unknown', 'unavailable'] else none) %}
             {% set today = now().date() %}
             {{ soc >= target and (last_date != today) }}
-
       sensor:
         - name: "Solax Grid Stored at First Max SoC"
           unique_id: solax_grid_stored_at_first_max_soc
