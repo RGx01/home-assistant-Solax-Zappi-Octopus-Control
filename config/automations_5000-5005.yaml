@@ -560,29 +560,10 @@
     - input_boolean.use_grid_during_octopus_dispatch
     id: Henley Block - Battery Usage Options
     alias: Henley Block
-  - trigger: state
-    entity_id:
-    - sensor.solax_local_manual_mode_behaviour
-    to: Do Nothing
-    for:
-      hours: 0
-      minutes: 3
-      seconds: 0
-    id: Inverter shouldn't be left in this mode
-    alias: Inverter Got Left in Manual Mode Catcher
   - alias: Inverter Got Left in Manual Mode Catcher
-    trigger: state
-    entity_id:
-    - sensor.solax_local_inverter_mode
-    for:
-      hours: 0
-      minutes: 3
-      seconds: 0
-    id: Inverter shouldn't be left in this mode
-    to: Manual
-  - trigger: template
+    trigger: template
     value_template: "{{state_attr('sensor.solax_local_settings', 'Data')[10]|int ==
-      0 and\nstates('sensor.solax_local_battery_soc')|int <= \n(state_attr('sensor.solax_local_settings',
+      3 and\nstates('sensor.solax_local_battery_soc')|int <= \n(state_attr('sensor.solax_local_settings',
       'Data')[0]|int ,state_attr('sensor.solax_local_settings', 'Data')[12]|int)|max
       }}\n\n"
     for:
@@ -590,7 +571,6 @@
       minutes: 5
       seconds: 0
     id: Inverter shouldn't be left in this mode
-    alias: Inverter Got Left in Manual Mode Catcher
   - alias: Free Electric Prepare Solax Charge Period 2
     entity_id:
     - binary_sensor.free_electricity_today
@@ -612,6 +592,25 @@
     at: sensor.solax_local_battery_setting_stop_charge_2
     id: Charge Period 2 End
     alias: Charge Period 2 - End
+  - alias: Check Settings
+    trigger: template
+    value_template: '{% set ev_charging = is_state(''sensor.zappi_plug_status'',''Charging'')%}
+
+      {% set return_to_min_soc = states(''sensor.solax_local_selfuse_battery_min_soc'')|int(default=15)
+      if states(''sensor.solax_default_operation_mode'') | int == 0 else states(''sensor.solax_local_selfuse_battery_min_soc'')|int(default=15)
+      | int %}
+
+      {% set soc = states(''sensor.solax_local_battery_soc'') | float(0) %}
+
+      {% set valid_hours = now() > today_at("05:30") and now() < today_at("23:30")%}
+
+
+      {{(not ev_charging) and soc <= return_to_min_soc and valid_hours}}  '
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    id: Check Settings
   conditions: []
   actions:
   - condition: template
@@ -1043,9 +1042,12 @@
         id:
         - Inverter shouldn't be left in this mode
       - condition: template
-        value_template: "{{(state_attr('sensor.solax_local_settings', 'Data')[10]
-          == 3) \nand (state_attr('sensor.solax_local_settings', 'Data')[11] == 0)
-          \n}}\n"
+        value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
+          == 3)
+
+          }}
+
+          '
       sequence:
       - action: script.solax_set_mode_and_settings
         data:
@@ -1124,6 +1126,23 @@
           target:
             entity_id: select.zappi_charge_mode
       alias: Free Electric End Charging
+    - conditions:
+      - condition: trigger
+        id:
+        - Check Settings
+      sequence:
+      - action: script.solax_set_mode_and_settings
+        data:
+          mode: '{{default_mode}}'
+          settings:
+            selfuse_battery_min_soc: '{{min_soc}}'
+            feedin_battery_min_soc: '{{min_soc}}'
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: Attempted recovery @ {{now().strftime('%H:%M')}}.
+          title: Check Settings
+          class: high
+        enabled: true
     enabled: true
   - action: input_boolean.turn_off
     metadata: {}
@@ -1660,7 +1679,7 @@
     Change log\nv6.0.0.0 added a check to see if settings need refresh from inverter\n"
   triggers:
   - trigger: time_pattern
-    minutes: /12
+    minutes: /6
   - trigger: state
     entity_id:
     - input_boolean.solax_automation_running
@@ -1697,7 +1716,7 @@
   - if:
     - condition: template
       value_template: '{{now()|as_timestamp-state_attr(''sensor.solax_local_settings'',''last_valid_update'')|as_timestamp
-        > 12*60}}'
+        > 5*60}}'
     then:
     - action: homeassistant.update_entity
       data:

@@ -1,5 +1,8 @@
 ###########################################
 # solax_set_mode_and_settings Script
+# v1.6.1 Deterministic verification using observed values + diagnostic logging
+# v1.5.0 Deterministic verification using observed values + diagnostic logging
+# v1.4.0 Added mode-specific setting filtering to skip irrelevant settings
 # v1.3.6 fixed the timeout check being in the wrong format
 # v1.3.5 Bug fix to prevent premature exit after 1 try if theres a failure setting settings or modes
 # v1.3.4 Bug fix with success and needs_update logic
@@ -7,15 +10,8 @@
 # v1.3.1 Fixed bug in for loops (forgot to add a namespace so, the answer wasn't really being checked after we force update of settings)
 # v1.3.0 Added constants dictionary for persistent timing/config values
 # v1.1.0 Improved testing of solax_local_settings in the event of failed api calls
-#        This only works with the updated sensor and template in package solax_control v1.3.0   
 # v1.0.0 Initial
 ###########################################
-# -----------------------------------------------------------------------------
-# VARIABLE SCOPING DIAGRAM — solax_set_mode_and_settings
-#
-# Sequence start:
-#   Variables declared here are in scope for the whole script:
-#
 #   constants:
 #     max_loops
 #     max_settings_retries
@@ -23,50 +19,6 @@
 #     settings_delay - gap between each setting being applied
 #     timeout_seconds - Time out for the whole script
 #     mode_delays - give the inverter time to switch between modes
-#
-#   mode_delay      ← calculated from constants.mode_delays[mode]
-#   start_time
-#   outer_loop
-#   outer_settings_retry_count
-#   inner_settings_retry_count
-#   success
-#   mode_names
-#   manual_mode_names
-#   mode_text
-#   manual_mode_text
-#   current_mode
-#   current_manual_mode
-#   idx_map
-#
-# ┌─────────────────────────────────────────────────────────────────────────────
-# │ Outer Repeat Loop ("until success or max loops or timeout"):
-# │   - Uses: outer_loop, success, start_time
-# │   - Modifies: outer_loop, success
-# │
-# │   ┌─── Inner "Mode / Settings" sequence ───────────────────────────────────
-# │       - Uses: mode, manual_mode, mode_delay, constants, mode_names,
-# │               manual_mode_names, current_mode, current_manual_mode, idx_map
-# │       - Modifies: success, outer_settings_retry_count, inner_settings_retry_count
-# │
-# │       Inner Retry Loop ("until not using_cache or max retries"):
-# │         - Uses: constants.refresh_delay, outer_settings_retry_count,
-# │                 state_attr('sensor.solax_local_settings','using_cache')
-# │         - Modifies: outer_settings_retry_count, inner_settings_retry_count
-# │
-# └─────────────────────────────────────────────────────────────────────────────
-#
-# All variable declarations above the loops ensure:
-# - Persistent scope across loops and retries
-# - Mode and settings logic unaffected by added constants
-# - No breakage in inner loop structure
-#
-# -----------------------------------------------------------------------------
-#'battery_heat_enable': {'index':14,'service':'solax_local_heat_enable','field':'enabled'},
-#'heat_start': {'index':15,'service':'solax_local_set_heat_start','field':'value'},
-#'heat_end': {'index':16,'service':'solax_local_set_heat_stop','field':'value'},
-#'heat_start2': {'index':17,'service':'solax_local_set_heat_start2','field':'value'},
-#'heat_end2': {'index':18,'service':'solax_local_set_heat_stop2','field':'value'},
-#'battery_heat_level': {'index':20,'service':'solax_local_set_battery_heat_level','field':'level'}
 solax_set_mode_and_settings:
   trace:
     stored_traces: 20
@@ -136,6 +88,34 @@ solax_set_mode_and_settings:
             'feedin_charge_battery_from_grid': {'index':13,'service':'solax_local_set_feedin_charge_battery_from_grid','field':'level'},
             'system_state': {'index':19,'service':'solax_local_set_system_state','field':'enabled'}
           } %}{{ m }}
+        # --- Mode-specific valid settings ---
+        mode_setting_map:
+          0: ["selfuse_battery_min_soc", "selfuse_charge_from_grid_enable", "selfuse_charge_battery_from_grid","forced_charge_start","forced_charge_end","allowed_discharge_start","allowed_discharge_end","period2_enabled","forced_charge_start2","forced_charge_end2"]
+          1: ["feedin_battery_min_soc", "feedin_charge_battery_from_grid","forced_charge_start","forced_charge_end","allowed_discharge_start","allowed_discharge_end","period2_enabled","forced_charge_start2","forced_charge_end2"]
+          3: []   # Manual: all general settings allowed
+
+        # --- Determine active mode for filtering ---
+        active_mode: >
+          {% if mode is defined and mode != '' %}
+            {{ mode | int }}
+          {% else %}
+            {{ state_attr('sensor.solax_local_settings','Data')[10] | int }}
+          {% endif %}
+
+        # --- Filter settings so only those valid for the chosen mode remain ---
+        filtered_settings: >
+          {% if settings is defined %}
+            {% set valid = mode_setting_map.get(active_mode, []) %}
+            {% set r = namespace(data={}) %}
+            {% for k, v in settings.items() %}
+              {% if k in valid or valid | length == 0 %}
+                {% set r.data = r.data | combine({k: v}) %}
+              {% endif %}
+            {% endfor %}
+            {{ dict(r.data) }}
+          {% else %}
+            {}
+          {% endif %}
 
     - repeat:
         until:
@@ -167,24 +147,64 @@ solax_set_mode_and_settings:
                       outer_settings_retry_count: "{{ constants.max_settings_retries + 1 }}"
                       outer_loop: "{{ constants.max_loops + 1 }}"
                       success: false
+
     - variables:
         needs_update: >
-          {% set mismatches = namespace(found=false) %}
-          {% if settings is defined %}
-            {% for key, val in settings.items() %}
-              {% if (state_attr('sensor.solax_local_settings','Data')[idx_map[key].index] | int) != (val | int) %}
-                {% set mismatches.found = true %}
+          {% set cm = state_attr('sensor.solax_local_settings','Data')[10] | int %}
+          {% set cm_manual = state_attr('sensor.solax_local_settings','Data')[11] | int %}
+          {% set ns = namespace(all_settings_ok=true) %}
+
+          {# --- Determine active mode for filtering --- #}
+          {% set active_mode_for_check = cm %}
+          {% set valid = mode_setting_map.get(active_mode_for_check, []) %}
+          {% set filtered_settings_post_mode = {} %}
+          {% if filtered_settings is defined and filtered_settings | length > 0 %}
+            {% for k, v in filtered_settings.items() %}
+              {% if k in valid or valid | length == 0 %}
+                {% set filtered_settings_post_mode = filtered_settings_post_mode | combine({k: v}) %}
               {% endif %}
             {% endfor %}
           {% endif %}
-          {% set settings_ok = not mismatches.found %}
-          {% set mode_ok = (mode is not defined)
-                            or (mode | int != 3 and current_mode == mode | int and current_manual_mode == 0)
-                            or (mode | int == 3 and current_mode == 3 and (manual_mode is not defined or current_manual_mode == manual_mode | int)) %}
-          {% set result = not (settings_ok and mode_ok) %}
-          {{ result | bool }}
+
+          {# --- Check only relevant settings --- #}
+          {% for key, val in filtered_settings_post_mode.items() %}
+            {% if state_attr('sensor.solax_local_settings','Data')[idx_map[key].index] | int != val | int %}
+              {% set ns.all_settings_ok = false %}
+            {% endif %}
+          {% endfor %}
+
+          {# --- Determine mode success --- #}
+          {% if mode is defined %}
+            {% if mode | int != 3 %}
+              {% set mode_ok = (cm == mode | int and cm_manual == 0) %}
+            {% else %}
+              {% set mode_ok = (cm == 3 and (manual_mode is not defined or cm_manual == manual_mode | int)) %}
+            {% endif %}
+          {% else %}
+            {% set mode_ok = true %}  {# No mode change requested #}
+          {% endif %}
+
+          {# --- Combine mode & filtered settings --- #}
+          {% if filtered_settings_post_mode | length > 0 %}
+            {{ not (mode_ok and ns.all_settings_ok) }}
+          {% else %}
+            {{ not mode_ok }}
+          {% endif %}
         outer_settings_retry_count: 0  
         inner_settings_retry_count: 0  
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ not needs_update }}"
+          sequence:
+            - variables:
+                success: true
+            - action: logbook.log
+              data:
+                name: Solax Set Mode and Settings
+                message: >-
+                  No changes required. Mode="{{ mode_text }}", Manual="{{ manual_mode_text }}",
+                  Settings="{% if filtered_settings | length > 0 %}{{ filtered_settings.keys() }}{% else %}None{% endif %}"
     - choose:
         - conditions:
             - condition: template
@@ -204,16 +224,6 @@ solax_set_mode_and_settings:
                           - condition: template
                             value_template: "{{ mode is defined }}"
                         sequence:
-                          - choose:
-                              - conditions:
-                                  - condition: template
-                                    value_template: "{{ mode | int != 3 and current_manual_mode != 0 }}"
-                                sequence:
-                                  - data:
-                                      value: 0
-                                    action: rest_command.solax_local_set_manual_mode_behaviour
-                                  - delay:
-                                      seconds: "{{ mode_delay }}"
                           - data:
                               value: "{{ mode | int }}"
                             action: rest_command.solax_local_set_inverter_mode
@@ -233,10 +243,10 @@ solax_set_mode_and_settings:
                   - choose:
                       - conditions:
                           - condition: template
-                            value_template: "{{ settings is defined }}"
+                            value_template: "{{ filtered_settings is defined and filtered_settings | length > 0 }}"
                         sequence:
                           - repeat:
-                              for_each: "{{ settings.items() | list }}"
+                              for_each: "{{ filtered_settings.items() | list }}"
                               sequence:
                                 - choose:
                                     - conditions:
@@ -283,48 +293,51 @@ solax_set_mode_and_settings:
                         {% set cm = state_attr('sensor.solax_local_settings','Data')[10] | int %}
                         {% set cm_manual = state_attr('sensor.solax_local_settings','Data')[11] | int %}
                         {% set ns = namespace(all_settings_ok=true) %}
-                        {% if settings is defined %}
-                          {% for key, val in settings.items() %}
-                            {% if state_attr('sensor.solax_local_settings','Data')[idx_map[key].index] | int != val | int %}
-                              {% set ns.all_settings_ok = false %}
+
+                        {# --- Determine current mode and filter settings for this mode --- #}
+                        {% set active_mode_for_check = cm %}
+                        {% set valid = mode_setting_map.get(active_mode_for_check, []) %}
+                        {% set filtered_settings_post_mode = {} %}
+                        {% if filtered_settings is defined and filtered_settings | length > 0 %}
+                          {% for k, v in filtered_settings.items() %}
+                            {% if k in valid or valid | length == 0 %}
+                              {% set filtered_settings_post_mode = filtered_settings_post_mode | combine({k: v}) %}
                             {% endif %}
                           {% endfor %}
                         {% endif %}
 
+                        {# --- Check only relevant settings --- #}
+                        {% for key, val in filtered_settings_post_mode.items() %}
+                          {% if state_attr('sensor.solax_local_settings','Data')[idx_map[key].index] | int != val | int %}
+                            {% set ns.all_settings_ok = false %}
+                          {% endif %}
+                        {% endfor %}
+
+                        {# --- Determine mode success --- #}
                         {% if mode is defined %}
-                          {% if mode | int != 3 %}
-                            {% set result = (cm == mode | int and cm_manual == 0 and ns.all_settings_ok) %}
-                          {% else %}
-                            {% if manual_mode is defined %}
-                              {% set result = (cm == 3 and cm_manual == manual_mode | int and ns.all_settings_ok) %}
-                            {% else %}
-                              {% set result = (cm == 3 and ns.all_settings_ok) %}
-                            {% endif %}
+                          {% set mode_ok = cm == mode | int %}
+                          {% if mode | int == 3 and manual_mode is defined %}
+                            {% set mode_ok = mode_ok and cm_manual == manual_mode | int %}
                           {% endif %}
                         {% else %}
-                          {% set result = ns.all_settings_ok %}
+                          {% set mode_ok = true %}  {# No mode change requested #}
                         {% endif %}
 
-                        {{ result | bool }}
-            - choose:
-                - conditions:
-                    - condition: template
-                      value_template: "{{ not success }}"
-                  sequence:
-                    - event: Solax Control
-                      event_data:
-                        message: >-
-                          Mode/settings not fully set after {{ outer_loop }} retries or timeout.
-                          Mode="{{ mode_text }}", Manual="{{ manual_mode_text }}",
-                          Settings="{{ settings.keys() if settings is defined else 'None' }}"
-                        title: Solax Set Failure - Action required!
-                        class: high
-      default:
-        - action: logbook.log
-          data:
-            name: Solax Set Mode and Settings
-            message: >-
-              No changes required. Mode="{{ mode_text }}", Manual="{{ manual_mode_text }}",
-              Settings="{% if settings is defined %}{{ settings.keys() }}{% else %}None{% endif %}"
-            entity_id: sensor.solax_local_settings
+                        {# --- Combine mode & filtered settings --- #}
+                        {% if filtered_settings_post_mode | length > 0 %}
+                          {{ mode_ok and ns.all_settings_ok }}
+                        {% else %}
+                          {{ mode_ok }}
+                        {% endif %}
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ not success }}"
+          sequence:
+            - event: Solax Control
+              event_data:
+                message: Solax mode/settings update failed after max retries
+                title: Solax Set Failure
+                class: high
 

@@ -37,7 +37,8 @@ octopus_dispatches_template_octopus_dispatch:
             {% set ns2 = namespace(total_dispatch=0.0) %}
             {% for dispatch in planned %}
               {% if dispatch.start is not none and dispatch.end is not none and as_datetime(dispatch.end) > now() %}
-                {% set ns2.total_dispatch = ns2.total_dispatch + ((dispatch.end|as_timestamp - dispatch.start|as_timestamp)/3600*6.9) %}
+                {# set ns2.total_dispatch = ns2.total_dispatch + ((dispatch.end|as_timestamp - dispatch.start|as_timestamp)/3600*6.9) #}
+                {% set ns2.total_dispatch = ns2.total_dispatch + (((dispatch.charge_in_kwh)|float(0))*-1) %}
               {% endif %}
             {% endfor %}
             {{ ns2.total_dispatch }}
@@ -140,44 +141,6 @@ octopus_dispatches_template_octopus_dispatch:
               {% endfor %}
 
               {{ ns.gaps }}
-
-
-
-    ######################################################
-    # Octopus dispatch kWh
-    ######################################################
-    # - sensor:
-    #     - name: "Octopus Total Planned Dispatch"
-    #       unique_id: octopus_total_planned_dispatch
-    #       icon: mdi:ev-station
-    #       unit_of_measurement: "kWh"
-    #       device_class: "energy"
-    #       state_class: total
-    #       state: >
-    #         {%- set ns2 = namespace( total_dispatch = 0 ) -%}
-    #         {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
-    #           {%- for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') -%}
-    #             {%- set ns2.total_dispatch = ns2.total_dispatch|float + dispatch.charge_in_kwh|float%}
-    #           {%- endfor -%}
-    #         {%- endif  -%}
-    #         {{ns2.total_dispatch|float (default=0.0)}}
-    #       attributes:
-    #         total_dispatches: >
-    #           {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
-    #             {{state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches')|list|count}}
-    #           {%- else -%}
-    #             {{0}}
-    #           {%- endif  %}
-    #         dispatches: >
-    #           {% set ns3= namespace(members=[]) %}
-    #           {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') | length > 0 and state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') != None) -%}
-    #             {% for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') -%}
-    #               {% set ns3.members = ns3.members + [{ "dispatch":(dispatch.start|as_datetime|as_local).strftime('%H:%M') + " to " + (dispatch.end | as_datetime | as_local).strftime('%H:%M') }] %}
-    #             {%- endfor -%}
-    #             {{ns3.members}}
-    #           {%- else -%}
-    #             {{None}}
-    #           {%- endif  %}
 
     ###############################################
     # Total Dispatch for this session

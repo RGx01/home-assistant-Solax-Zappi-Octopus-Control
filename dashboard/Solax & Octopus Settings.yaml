@@ -1,4 +1,4 @@
-# v6.2.1
+# v6.2.3
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -648,6 +648,12 @@ sections:
                 state: "on"
             row:
               entity: input_number.solax_default_charge_to_limit_soc
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_default_behaviours_show_hide
+                state: "on"
+            row:
+              entity: input_number.solax_battery_soh_stored
           - type: section
           - type: conditional
             conditions:
@@ -2005,4 +2011,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-

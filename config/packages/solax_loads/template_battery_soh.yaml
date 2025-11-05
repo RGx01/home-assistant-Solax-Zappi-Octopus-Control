@@ -53,7 +53,8 @@ solax_loads_template_battery_soh:
             {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
             {% set target = states('input_number.solax_default_charge_to_limit_soc') | float(95) - 0.5 %}
             {% set last_ts = state_attr('sensor.solax_grid_stored_at_first_max_soc', 'timestamp') %}
-            {% set last_date = (as_datetime(last_ts).date() if last_ts not in [None, '', 'unknown', 'unavailable'] else none) %}
+            {% set parsed = as_datetime(last_ts) if last_ts not in [None, '', 'unknown', 'unavailable'] else none %}
+            {% set last_date = parsed.date() if parsed is not none else none %}
             {% set today = now().date() %}
             {{ soc >= target and (last_date != today) }}
       sensor:
@@ -100,35 +101,38 @@ solax_loads_template_battery_soh:
           state_class: measurement
           icon: mdi:battery
           state: >
-            {# Read min/max SoC snapshots #}
             {% set min_soc = states('sensor.solax_local_min_soc') | int(0) %}
-            {% set max_soc = state_attr('sensor.solax_grid_stored_at_max_soc','max_soc') | int(0) %}
+            {% set max_soc = state_attr('sensor.solax_grid_stored_at_first_max_soc','max_soc') | int(0) %}
             {% set delta_soc = max_soc - min_soc %}
 
             {# Read battery capacity and grid-stored energy #}
             {% set capacity = states('input_number.solax_battery_capacity') | float(0) %}
-            {% set grid_stored = states('sensor.solax_grid_stored_at_max_soc') | float(0) %}
-            {% set stored = states('input_number.solax_battery_soh_stored') | float(0) %}
+            {% set grid_stored = states('sensor.solax_grid_stored_at_first_max_soc') | float(0) %}
+            {% set stored = states('input_number.solax_battery_soh_stored') | float(100.0) %}
 
             {# Calculate SoH if charge window is meaningful, else use persisted value #}
             {% if delta_soc >= 85 and capacity > 0 and grid_stored > 0 %}
               {{ [ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1), 100 ] | min }}
             {% else %}
-              {{ stored }}
+              {{ stored|float }}
             {% endif %}
       action:
         - variables:
             new_soh: >
               {% set min_soc = states('sensor.solax_local_min_soc') | int(0) %}
-              {% set max_soc = states('sensor.solax_local_max_soc') | int(0) %}
+              {% set max_soc = state_attr('sensor.solax_grid_stored_at_first_max_soc','max_soc') | int(0) %}
               {% set delta_soc = max_soc - min_soc %}
+
+              {# Read battery capacity and grid-stored energy #}
               {% set capacity = states('input_number.solax_battery_capacity') | float(0) %}
-              {% set grid_stored = states('sensor.solax_grid_stored_at_max_soc') | float(0) %}
-              {% set stored = states('input_number.solax_battery_soh_stored') | float(0) %}
+              {% set grid_stored = states('sensor.solax_grid_stored_at_first_max_soc') | float(0) %}
+              {% set stored = states('input_number.solax_battery_soh_stored') | float(100.0) %}
+
+              {# Calculate SoH if charge window is meaningful, else use persisted value #}
               {% if delta_soc >= 85 and capacity > 0 and grid_stored > 0 %}
                 {{ [ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1), 100 ] | min }}
               {% else %}
-                {{ stored }}
+                {{ stored|float }}
               {% endif %}
         - service: input_number.set_value
           target:
