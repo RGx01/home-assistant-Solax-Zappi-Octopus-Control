@@ -157,6 +157,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v6.2.4|**06/11/25**|script\solax_set_mode_and_settings.yaml<br>solax_loads\template_solax_extras.yaml| Critical Bug fix - solax_set_mode_and_settings forgot a namespace wich causes settings to be ignored when no mode is changed|
 | v6.2.3|**05/11/25**|All| Bug fix - solax_grid_stored_at_first_max_soc<br>Updated Dashboard <br> Automation 5001 updated with new trigger to try and detect/protect from out of sync issues with the invertere<br> fixed latching issue with manual discharge<br>improved script efficiency for solax_set_mode_and_settings|
 | v6.2.2|**02/11/25**|All| Bug fix - error handling in trigger for solax_grid_stored_at_first_max_soc<br>Updated Dashboard <br> Automation 5001 updated with a differet trigger to detect Peak rate|
 | v6.2.1|**02/11/25**|All| Bug fix - incorrect export template for myenergi ct clamp <br> Bug fix - incorrect export template for myenergi ct clamp <br>Updated Dashboard <br> New entity for solax_grid_stored_at_first_max_soc with attributes to record max SoC and time of max SoC. This helps get a better read on SoH if charge windows ar large and battery heating is on <br> Automation 5001 updated with a new message title for when EV is paused <br> Ehancments to target SoC calculation|

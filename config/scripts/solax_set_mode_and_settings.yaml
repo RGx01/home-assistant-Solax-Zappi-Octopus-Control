@@ -1,5 +1,6 @@
 ###########################################
 # solax_set_mode_and_settings Script
+# v1.6.2 Forgot a namespace
 # v1.6.1 Deterministic verification using observed values + diagnostic logging
 # v1.5.0 Deterministic verification using observed values + diagnostic logging
 # v1.4.0 Added mode-specific setting filtering to skip irrelevant settings
@@ -157,14 +158,15 @@ solax_set_mode_and_settings:
           {# --- Determine active mode for filtering --- #}
           {% set active_mode_for_check = cm %}
           {% set valid = mode_setting_map.get(active_mode_for_check, []) %}
-          {% set filtered_settings_post_mode = {} %}
+          {% set _fs = namespace(data={}) %}
           {% if filtered_settings is defined and filtered_settings | length > 0 %}
             {% for k, v in filtered_settings.items() %}
               {% if k in valid or valid | length == 0 %}
-                {% set filtered_settings_post_mode = filtered_settings_post_mode | combine({k: v}) %}
+                {% set _fs.data = _fs.data | combine({k: v}) %}
               {% endif %}
             {% endfor %}
           {% endif %}
+          {% set filtered_settings_post_mode = _fs.data %}
 
           {# --- Check only relevant settings --- #}
           {% for key, val in filtered_settings_post_mode.items() %}
@@ -297,14 +299,15 @@ solax_set_mode_and_settings:
                         {# --- Determine current mode and filter settings for this mode --- #}
                         {% set active_mode_for_check = cm %}
                         {% set valid = mode_setting_map.get(active_mode_for_check, []) %}
-                        {% set filtered_settings_post_mode = {} %}
+                        {% set _fs = namespace(data={}) %}
                         {% if filtered_settings is defined and filtered_settings | length > 0 %}
                           {% for k, v in filtered_settings.items() %}
                             {% if k in valid or valid | length == 0 %}
-                              {% set filtered_settings_post_mode = filtered_settings_post_mode | combine({k: v}) %}
+                              {% set _fs.data = _fs.data | combine({k: v}) %}
                             {% endif %}
                           {% endfor %}
                         {% endif %}
+                        {% set filtered_settings_post_mode = _fs.data %}
 
                         {# --- Check only relevant settings --- #}
                         {% for key, val in filtered_settings_post_mode.items() %}

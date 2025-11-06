@@ -295,9 +295,21 @@ solax_loads_template_solax_extras:
         unit_of_measurement: "kWh"
         device_class: "energy"
         state: >
-          {% set battery_soh = (states('sensor.solax_local_battery_soh')|float (default=100)/100)|float%} 
-          {% set capacity_left = [(states('sensor.solax_local_battery_soc')|int (default=100)- states('input_number.solax_default_discharge_limit_soc')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2) * battery_soh,0|float]|max%}
-          {{capacity_left|float (default=0.0)}}
+          {% set soc = states('sensor.solax_local_battery_soc') %}
+          {% set limit = states('input_number.solax_default_discharge_limit_soc') %}
+          {% set capacity = states('input_number.solax_battery_capacity') %}
+          {% set soh = states('sensor.solax_local_battery_soh') %}
+          
+          {% if soc in ['unknown', 'unavailable', 'none']
+                or limit in ['unknown', 'unavailable', 'none']
+                or capacity in ['unknown', 'unavailable', 'none']
+                or soh in ['unknown', 'unavailable', 'none'] %}
+            {{ none }}
+          {% else %}
+            {% set battery_soh = (soh | float(100) / 100) %}
+            {% set capacity_left = ((soc | int - limit | int) / 100) * (capacity | float) * battery_soh %}
+            {{ [capacity_left, 0] | max | round(3) }}
+          {% endif %}
         attributes:
           usable_capacity: >
             {% set battery_soh = (states('sensor.solax_local_battery_soh')|float (default=100)/100)|float%} 
