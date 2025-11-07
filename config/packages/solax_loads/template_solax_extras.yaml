@@ -42,13 +42,26 @@ solax_loads_template_solax_extras:
         - name: "Solax Local Battery Cell Voltage"
           unique_id: solax_local_battery_cell_voltage
           state: >
-            {# if state_attr('sensor.solax_local', 'Data')[0] not in ['unknown', 'unavailable','none'] #}
-            {% set val = states('sensor.solax_local_battery_voltage')|float(0.0) %}
-            {% if val > 0 and is_number(val) %}
-              {{ val/(states('input_number.solax_battery_capacity')|int/3*32) if is_number(val) and (val|float > 0) else 0 }}
-            {% else%}
-              {{ states('sensor.solax_local_battery_cell_voltage')}}
-            {% endif%}
+            {% set v = states('sensor.solax_local_battery_voltage') %}
+            {% set c = states('input_number.solax_battery_capacity') %}
+            {% set old = states('sensor.solax_local_battery_cell_voltage') | float(none) %}
+
+            {% if v not in ['unknown', 'unavailable', 'none']
+                  and c not in ['unknown', 'unavailable', 'none'] %}
+              {% set voltage = v | float(default=none) %}
+              {% set capacity = c | float(default=none) %}
+              {% if voltage is not none and capacity is not none and capacity > 0 %}
+                {{ (voltage / (capacity|int / 3 * 31)) | round(3) }}
+              {% elif old is not none %}
+                {{ old }}
+              {% else %}
+                {{ none }}
+              {% endif %}
+            {% elif old is not none %}
+              {{ old }}
+            {% else %}
+              {{ none }}
+            {% endif %}
           unit_of_measurement: "V"
           state_class: measurement
           device_class: "voltage"
@@ -142,8 +155,8 @@ solax_loads_template_solax_extras:
             {% endif %}
 
             {# ---- Main logic ---- #}
-            {% if states('sensor.solax_local_inverter_mode') != 'Manual' 
-                  and states('sensor.solax_local_manual_mode_behaviour') != 'Force Discharge' %}
+            {% if states('sensor.solax_local_inverter_mode') != 'Manual' %}
+            {# and states('sensor.solax_local_manual_mode_behaviour') != 'Force Discharge' #}
                 {{ (0 - batAdj) if batAdj < 0 else 0 }}
             {% elif states('sensor.solax_local_inverter_mode') == 'Manual' 
                     and states('sensor.solax_local_manual_mode_behaviour') == 'Force Discharge' %}

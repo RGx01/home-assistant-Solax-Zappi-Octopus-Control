@@ -177,10 +177,12 @@ solax_set_mode_and_settings:
 
           {# --- Determine mode success --- #}
           {% if mode is defined %}
-            {% if mode | int != 3 %}
-              {% set mode_ok = (cm == mode | int and cm_manual == 0) %}
-            {% else %}
+            {% if mode | int == 3 %}
+              {# Manual mode — must match both mode and manual_mode if provided #}
               {% set mode_ok = (cm == 3 and (manual_mode is not defined or cm_manual == manual_mode | int)) %}
+            {% else %}
+              {# Normal mode — only mode must match; manual_mode can be anything (0–2) #}
+              {% set mode_ok = (cm == mode | int) %}
             {% endif %}
           {% else %}
             {% set mode_ok = true %}  {# No mode change requested #}
@@ -318,9 +320,12 @@ solax_set_mode_and_settings:
 
                         {# --- Determine mode success --- #}
                         {% if mode is defined %}
-                          {% set mode_ok = cm == mode | int %}
-                          {% if mode | int == 3 and manual_mode is defined %}
-                            {% set mode_ok = mode_ok and cm_manual == manual_mode | int %}
+                          {% if mode | int == 3 %}
+                            {# Manual mode — must match both mode and manual_mode if provided #}
+                            {% set mode_ok = (cm == 3 and (manual_mode is not defined or cm_manual == manual_mode | int)) %}
+                          {% else %}
+                            {# Normal mode — only mode must match; manual_mode can be anything (0–2) #}
+                            {% set mode_ok = (cm == mode | int) %}
                           {% endif %}
                         {% else %}
                           {% set mode_ok = true %}  {# No mode change requested #}

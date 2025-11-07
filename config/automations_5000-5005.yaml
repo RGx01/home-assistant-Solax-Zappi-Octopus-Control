@@ -562,9 +562,9 @@
     alias: Henley Block
   - alias: Inverter Got Left in Manual Mode Catcher
     trigger: template
-    value_template: "{{state_attr('sensor.solax_local_settings', 'Data')[10]|int ==
-      3 and\nstates('sensor.solax_local_battery_soc')|int <= \n(state_attr('sensor.solax_local_settings',
-      'Data')[0]|int ,state_attr('sensor.solax_local_settings', 'Data')[12]|int)|max
+    value_template: "{{state_attr('sensor.solax_local_settings', 'Data')[10]|int(0)
+      == 3 and\nstates('sensor.solax_local_battery_soc')|int <= \n(state_attr('sensor.solax_local_settings',
+      'Data')[0]|int(10) ,state_attr('sensor.solax_local_settings', 'Data')[12]|int(10))|max
       }}\n\n"
     for:
       hours: 0
@@ -597,7 +597,7 @@
     value_template: '{% set ev_charging = is_state(''sensor.zappi_plug_status'',''Charging'')%}
 
       {% set return_to_min_soc = states(''sensor.solax_local_selfuse_battery_min_soc'')|int(default=15)
-      if states(''sensor.solax_default_operation_mode'') | int == 0 else states(''sensor.solax_local_selfuse_battery_min_soc'')|int(default=15)
+      if states(''sensor.solax_default_operation_mode'') | int(0) == 0 else states(''sensor.solax_local_selfuse_battery_min_soc'')|int(default=15)
       | int %}
 
       {% set soc = states(''sensor.solax_local_battery_soc'') | float(0) %}
@@ -920,6 +920,9 @@
       - action: script.solax_set_mode_and_settings
         data:
           mode: '{{default_mode}}'
+          settings:
+            selfuse_battery_min_soc: '{{min_soc}}'
+            feedin_battery_min_soc: '{{min_soc}}'
       alias: Set Charge Battery Mode
     - conditions:
       - condition: trigger
@@ -1008,9 +1011,10 @@
         id:
         - Henley Block - Battery Usage Options
       - condition: template
-        value_template: "{{ (state_attr('sensor.solax_local_settings', 'Data')[0]
+        value_template: "{{ ((state_attr('sensor.solax_local_settings', 'Data')[0]
           != min_soc) \nor (state_attr('sensor.solax_local_settings', 'Data')[12]
-          != min_soc)}}"
+          != min_soc))\nor (state_attr('sensor.solax_local_settings', 'Data')[10]
+          != 3)}}"
       sequence:
       - action: script.solax_set_mode_and_settings
         data:

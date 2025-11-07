@@ -555,7 +555,7 @@ solax_export_template_discharge_magic:
               and ev_status != 'Charging'
               and (
                 (prev_state and soc > lower_threshold)
-                or (not prev_state and soc > upper_threshold)
+                or (not prev_state and soc >= upper_threshold)
               )
             }}
 
