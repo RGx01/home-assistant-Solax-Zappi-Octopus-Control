@@ -40,7 +40,7 @@ solax_control_sensor:
         Cache-Control: "no-cache"
       name: "solax_rest_local_settings"
       force_update: true
-      timeout: 9 # this must be carefully balanced or be less than refresh_delay in the solax_set_mode_and_settings script.
+      timeout: 10 # this must be carefully balanced or be less than refresh_delay in the solax_set_mode_and_settings script.
       # Unfortunately settings are not returned as a JSON document but an array of numbers, so having to pick just the relevant to avoid the max 255 chars limit
       # 0 - Self Use Min SOC %
       # 1 - Self Use Charge from grid (0 for disabled, 1 for enabled)

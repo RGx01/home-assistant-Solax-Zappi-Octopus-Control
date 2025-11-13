@@ -3,6 +3,14 @@
 # Template to estimate remaining energy required to survive the day
 ########################################
 solax_export_template_discharge_magic:
+  # sensor:
+  #   - platform: derivative
+  #     source: sensor.solax_discharge_capacity
+  #     name: Solax Discharge Rate
+  #     unit_time: h
+  #     time_window: "00:02"  # use a 2-minute window for fast detection
+  #     round: 3
+
   template:
     ######################################################
     # How much Power to run the house
@@ -226,7 +234,7 @@ solax_export_template_discharge_magic:
               and ev_status == 'EV Connected'
               and connected_for_min >= min_connected_min
               and has_gap
-              and exportable_kwh > 0
+              and exportable_kwh > (0 if target_soc > 15 else 0.280)
               and (solar_threshold is none or now_time >= solar_threshold)
               and (
                 (prev_state and soc > lower_threshold)

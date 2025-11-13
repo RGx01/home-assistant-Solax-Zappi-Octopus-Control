@@ -381,7 +381,7 @@
     - conditions:
       - condition: trigger
         id:
-        - Discharge Nightly End
+        - Discharge Gap End
       sequence:
       - event: Solax Zappi Octopus Control
         event_data:
@@ -532,6 +532,12 @@
       offset: '-300'
     id: Charge Solax
     alias: Set Charge Battery Mode
+  - alias: Set Charge Battery Mode
+    trigger: time
+    at:
+      entity_id: input_datetime.solax_battery_stop_charge_time
+      offset: '-60'
+    id: Charge Solax
   - trigger: state
     entity_id:
     - binary_sensor.solax_local_battery_charging_period
@@ -566,6 +572,21 @@
       == 3 and\nstates('sensor.solax_local_battery_soc')|int <= \n(state_attr('sensor.solax_local_settings',
       'Data')[0]|int(10) ,state_attr('sensor.solax_local_settings', 'Data')[12]|int(10))|max
       }}\n\n"
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    id: Inverter shouldn't be left in this mode
+  - alias: Inverter Got Left in Manual Mode Catcher
+    trigger: template
+    value_template: '{{state_attr(''sensor.solax_local_settings'', ''Data'')[11]|int(0)
+      != 0 and state_attr(''sensor.solax_local_settings'', ''Data'')[10]|int(0) in
+      [0,1]
+
+      }}
+
+
+      '
     for:
       hours: 0
       minutes: 5
@@ -1052,6 +1073,7 @@
           }}
 
           '
+        enabled: false
       sequence:
       - action: script.solax_set_mode_and_settings
         data:

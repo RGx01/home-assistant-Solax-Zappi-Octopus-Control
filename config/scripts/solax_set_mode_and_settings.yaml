@@ -1,5 +1,6 @@
 ###########################################
 # solax_set_mode_and_settings Script
+# v1.7.0 Added return to 'do nothing' after discharge
 # v1.6.2 Forgot a namespace
 # v1.6.1 Deterministic verification using observed values + diagnostic logging
 # v1.5.0 Deterministic verification using observed values + diagnostic logging
@@ -45,8 +46,8 @@ solax_set_mode_and_settings:
         constants:
           max_loops: 5
           max_settings_retries: 5
-          refresh_delay: 10 
-          settings_delay: 11 
+          refresh_delay: 13 
+          settings_delay: 15 
           timeout_seconds: 300 
           mode_delays:
             0: 20
@@ -175,24 +176,25 @@ solax_set_mode_and_settings:
             {% endif %}
           {% endfor %}
 
-          {# --- Determine mode success --- #}
+          {# --- Determine mode and manual_mode success --- #}
           {% if mode is defined %}
-            {% if mode | int == 3 %}
-              {# Manual mode — must match both mode and manual_mode if provided #}
-              {% set mode_ok = (cm == 3 and (manual_mode is not defined or cm_manual == manual_mode | int)) %}
-            {% else %}
-              {# Normal mode — only mode must match; manual_mode can be anything (0–2) #}
-              {% set mode_ok = (cm == mode | int) %}
-            {% endif %}
+            {% set mode_ok = (cm == mode | int) %}
           {% else %}
             {% set mode_ok = true %}  {# No mode change requested #}
           {% endif %}
 
-          {# --- Combine mode & filtered settings --- #}
-          {% if filtered_settings_post_mode | length > 0 %}
-            {{ not (mode_ok and ns.all_settings_ok) }}
+          {# --- Check manual_mode success separately --- #}
+          {% if manual_mode is defined %}
+            {% set manual_ok = (cm_manual == manual_mode | int) %}
           {% else %}
-            {{ not mode_ok }}
+            {% set manual_ok = true %}
+          {% endif %}
+
+          {# --- Combine mode, manual_mode & filtered settings --- #}
+          {% if filtered_settings_post_mode | length > 0 %}
+            {{ not (mode_ok and manual_ok and ns.all_settings_ok) }}
+          {% else %}
+            {{ not (mode_ok and manual_ok) }}
           {% endif %}
         outer_settings_retry_count: 0  
         inner_settings_retry_count: 0  
@@ -228,22 +230,35 @@ solax_set_mode_and_settings:
                           - condition: template
                             value_template: "{{ mode is defined }}"
                         sequence:
+                          - choose:
+                              - conditions:
+                                  - condition: template
+                                    value_template: >-
+                                      {{ (state_attr('sensor.solax_local_settings','Data')[10] | int) == 3 and mode is defined and mode | int in [0,1] }}
+                                sequence:
+                                  - data:
+                                      value: 0
+                                    action: rest_command.solax_local_set_manual_mode_behaviour
+                                  - delay:
+                                      seconds: "{{ constants.mode_delays[3] }}"
                           - data:
                               value: "{{ mode | int }}"
                             action: rest_command.solax_local_set_inverter_mode
                           - delay:
                               seconds: "{{ mode_delay }}"
+                          # --- Apply manual mode if requested and actually needed ---
                           - choose:
                               - conditions:
                                   - condition: template
                                     value_template: >-
-                                      {{ mode | int == 3 and manual_mode is defined }}
+                                      {{ manual_mode is defined and (state_attr('sensor.solax_local_settings','Data')[11] | int) != (manual_mode | int) }}
                                 sequence:
                                   - data:
                                       value: "{{ manual_mode | int }}"
                                     action: rest_command.solax_local_set_manual_mode_behaviour
                                   - delay:
-                                      seconds: "{{ mode_delay }}"
+                                      seconds: "{{ constants.mode_delays[3] if mode is defined and mode | int == 3 else constants.refresh_delay }}"
+
                   - choose:
                       - conditions:
                           - condition: template
@@ -320,23 +335,25 @@ solax_set_mode_and_settings:
 
                         {# --- Determine mode success --- #}
                         {% if mode is defined %}
-                          {% if mode | int == 3 %}
-                            {# Manual mode — must match both mode and manual_mode if provided #}
-                            {% set mode_ok = (cm == 3 and (manual_mode is not defined or cm_manual == manual_mode | int)) %}
-                          {% else %}
-                            {# Normal mode — only mode must match; manual_mode can be anything (0–2) #}
-                            {% set mode_ok = (cm == mode | int) %}
-                          {% endif %}
+                          {% set mode_ok = (cm == mode | int) %}
                         {% else %}
-                          {% set mode_ok = true %}  {# No mode change requested #}
+                          {% set mode_ok = true %}
                         {% endif %}
 
-                        {# --- Combine mode & filtered settings --- #}
-                        {% if filtered_settings_post_mode | length > 0 %}
-                          {{ mode_ok and ns.all_settings_ok }}
+                        {# --- Determine manual mode success --- #}
+                        {% if manual_mode is defined %}
+                          {% set manual_ok = (cm_manual == manual_mode | int) %}
                         {% else %}
-                          {{ mode_ok }}
+                          {% set manual_ok = true %}
                         {% endif %}
+
+                        {# --- Combine all checks --- #}
+                        {% if filtered_settings_post_mode | length > 0 %}
+                          {{ mode_ok and manual_ok and ns.all_settings_ok }}
+                        {% else %}
+                          {{ mode_ok and manual_ok }}
+                        {% endif %}
+
 
     - choose:
         - conditions:
