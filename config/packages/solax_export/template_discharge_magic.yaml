@@ -3,14 +3,6 @@
 # Template to estimate remaining energy required to survive the day
 ########################################
 solax_export_template_discharge_magic:
-  # sensor:
-  #   - platform: derivative
-  #     source: sensor.solax_discharge_capacity
-  #     name: Solax Discharge Rate
-  #     unit_time: h
-  #     time_window: "00:02"  # use a 2-minute window for fast detection
-  #     round: 3
-
   template:
     ######################################################
     # How much Power to run the house
@@ -151,29 +143,17 @@ solax_export_template_discharge_magic:
     - trigger:
         - platform: state
           entity_id: binary_sensor.battery_discharge_now
-          from:
-            - "on"
-            - "off"
           to:
             - "on"
             - "off"
-      action:
-        - choose:
-            - conditions: "{{ trigger.to_state.state == 'on' }}"
-              sequence:
-                - service: input_boolean.turn_on
-                  target:
-                    entity_id: input_boolean.battery_discharge_now
-            - conditions: "{{ trigger.to_state.state == 'off' }}"
-              sequence:
-                - service: input_boolean.turn_off
-                  target:
-                    entity_id: input_boolean.battery_discharge_now
-
-    ######################################################
-    # Single flag to indicate if discharge can occur
-    ######################################################
-    - binary_sensor:
+        - platform: template
+          value_template: >
+            {{ is_state('binary_sensor.ev_gap_discharge_allowed','on')
+              or is_state('binary_sensor.daily_export_discharge_allowed','on')
+              or is_state('binary_sensor.jit_2330_discharge_allowed','on') 
+              or is_state('binary_sensor.manual_discharge_allowed','on')
+              or is_state('binary_sensor.free_electric_discharge_allowed','on')}}
+      binary_sensor:
         - name: "Battery Discharge Now"
           unique_id: battery_discharge_now
           device_class: power
@@ -189,7 +169,60 @@ solax_export_template_discharge_magic:
             jit_2330_discharge: "{{ is_state('binary_sensor.jit_2330_discharge_allowed','on') }}"
             manual_discharge: "{{ is_state('binary_sensor.manual_discharge_allowed','on') }}"
             free_discharge: "{{ is_state('binary_sensor.free_electric_discharge_allowed','on') }}"
+      action:
+        - choose:
+            - conditions: "{{ trigger.to_state.state == 'on' }}"
+              sequence:
+                - service: input_boolean.turn_on
+                  target:
+                    entity_id: input_boolean.battery_discharge_now
+            - conditions: "{{ trigger.to_state.state == 'off' }}"
+              sequence:
+                - service: input_boolean.turn_off
+                  target:
+                    entity_id: input_boolean.battery_discharge_now
 
+    # ######################################################
+    # # Safe Single flag to indicate if discharge can occur
+    # ######################################################
+    # - trigger:
+    #     - platform: state
+    #       entity_id: binary_sensor.battery_discharge_now
+    #       to:
+    #         - "on"
+    #         - "off"
+    #   action:
+    #     - choose:
+    #         - conditions: "{{ trigger.to_state.state == 'on' }}"
+    #           sequence:
+    #             - service: input_boolean.turn_on
+    #               target:
+    #                 entity_id: input_boolean.battery_discharge_now
+    #         - conditions: "{{ trigger.to_state.state == 'off' }}"
+    #           sequence:
+    #             - service: input_boolean.turn_off
+    #               target:
+    #                 entity_id: input_boolean.battery_discharge_now
+
+    # ######################################################
+    # # Single flag to indicate if discharge can occur
+    # ######################################################
+    # - binary_sensor:
+    #     - name: "Battery Discharge Now"
+    #       unique_id: battery_discharge_now
+    #       device_class: power
+    #       state: >
+    #         {{ is_state('binary_sensor.ev_gap_discharge_allowed','on')
+    #           or is_state('binary_sensor.daily_export_discharge_allowed','on')
+    #           or is_state('binary_sensor.jit_2330_discharge_allowed','on') 
+    #           or is_state('binary_sensor.manual_discharge_allowed','on')
+    #           or is_state('binary_sensor.free_electric_discharge_allowed','on')}}
+    #       attributes:
+    #         ev_gap_discharge: "{{ is_state('binary_sensor.ev_gap_discharge_allowed','on') }}"
+    #         daily_export_discharge: "{{ is_state('binary_sensor.daily_export_discharge_allowed','on') }}"
+    #         jit_2330_discharge: "{{ is_state('binary_sensor.jit_2330_discharge_allowed','on') }}"
+    #         manual_discharge: "{{ is_state('binary_sensor.manual_discharge_allowed','on') }}"
+    #         free_discharge: "{{ is_state('binary_sensor.free_electric_discharge_allowed','on') }}"
 
     ######################################################
     # Discharge can occur in octopus Gaps
@@ -234,7 +267,7 @@ solax_export_template_discharge_magic:
               and ev_status == 'EV Connected'
               and connected_for_min >= min_connected_min
               and has_gap
-              and exportable_kwh > (0 if target_soc > 15 else 0.280)
+              and exportable_kwh > (0 if target_soc > 15 else 0.350)
               and (solar_threshold is none or now_time >= solar_threshold)
               and (
                 (prev_state and soc > lower_threshold)
@@ -344,7 +377,7 @@ solax_export_template_discharge_magic:
 
             {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
 
-            {%set return_to_min_soc = states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) if states('sensor.solax_default_operation_mode') | int == 0 else states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) | int %}
+            {% set return_to_min_soc = states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) if states('sensor.solax_default_operation_mode') | int == 0 else states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) | int %}
 
             {% set min_soc = [
               return_to_min_soc,
@@ -385,6 +418,7 @@ solax_export_template_discharge_magic:
             {% set was_on = is_state('binary_sensor.jit_2330_discharge_allowed', 'on') %}
             {% set turn_on = soc >= upper_threshold %}
             {% set keep_on = was_on and soc > lower_threshold %}
+            {% set exportable_kwh = states('sensor.battery_exportable_allowance_kwh') | float(0) %}
 
             {{ is_state('input_boolean.export_battery_nightly','on')
               and (
@@ -394,6 +428,7 @@ solax_export_template_discharge_magic:
               and remaining_kwh_to_min > 0
               and now_ts >= just_in_time_start_ts
               and (turn_on or keep_on)
+              and exportable_kwh > 0.350
             }}
 
           attributes:
@@ -567,30 +602,30 @@ solax_export_template_discharge_magic:
               )
             }}
 
-    ######################################################
-    # Reset the manual discharge flag
-    ######################################################
-    - trigger:
-        - platform: state
-          entity_id:
-            - input_boolean.export_battery_manual
-            - binary_sensor.manual_discharge_allowed
-          for:
-            seconds: 10
-      action:
-        # If user turned on manual discharge, but sensor can't be true, revert boolean
-        - if:
-            - condition: template
-              value_template: >
-                {{ is_state('input_boolean.export_battery_manual', 'on')
-                  and not (
-                    is_state('binary_sensor.manual_discharge_allowed', 'on')
-                  )
-                }}
-          then:
-            - service: input_boolean.turn_off
-              target:
-                entity_id: input_boolean.export_battery_manual
+    # ######################################################
+    # # Reset the manual discharge flag
+    # ######################################################
+    # - trigger:
+    #     - platform: state
+    #       entity_id:
+    #         - input_boolean.export_battery_manual
+    #         - binary_sensor.manual_discharge_allowed
+    #       for:
+    #         seconds: 10
+    #   action:
+    #     # If user turned on manual discharge, but sensor can't be true, revert boolean
+    #     - if:
+    #         - condition: template
+    #           value_template: >
+    #             {{ is_state('input_boolean.export_battery_manual', 'on')
+    #               and not (
+    #                 is_state('binary_sensor.manual_discharge_allowed', 'on')
+    #               )
+    #             }}
+    #       then:
+    #         - service: input_boolean.turn_off
+    #           target:
+    #             entity_id: input_boolean.export_battery_manual
 
 
 

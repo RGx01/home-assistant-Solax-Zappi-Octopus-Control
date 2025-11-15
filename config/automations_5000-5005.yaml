@@ -130,6 +130,86 @@
     id: Discharge Gap End
     from: 'on'
     alias: Discharge Gap - End
+  - trigger: state
+    entity_id:
+    - sensor.octopus_tariff_state
+    to:
+    - offpeak
+    - peak
+    - free
+    id: Set Tariff
+    alias: Set Tariff
+  - trigger: state
+    entity_id:
+    - input_boolean.export_battery_manual
+    - binary_sensor.manual_discharge_allowed
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    id: Reset the manual discharge flag
+    alias: Reset Manual Discharge Flag
+  - trigger: homeassistant
+    event: start
+    id: HA Start
+    alias: HA Start
+  - trigger: state
+    entity_id:
+    - sensor.solax_zappi_octopus_device_list
+    attribute: mobile_devices
+    id: Get Mobile Device List
+    alias: Get Mobile Device List
+  - trigger: state
+    entity_id:
+    - sensor.solax_rest_local_settings
+    to:
+    - unknown
+    - unavailable
+    - None
+    id: Alert when Solax settings are empty
+    alias: Sensor Failed
+  - alias: House Power Stat
+    trigger: state
+    entity_id:
+    - input_number.power_stat_avg_days
+    - input_datetime.power_stat_start_time
+    - input_datetime.power_stat_end_time
+    - input_select.slot_end
+    - input_select.slot_interval
+    - input_select.slot_start
+    id: house_power_average_power_stat
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+  - trigger: time
+    at: 00:01:00
+    id: house_power_average_power_stat
+    alias: House Power Stat
+  - alias: New Octopus Dispatch
+    trigger: state
+    entity_id:
+    - sensor.octopus_total_planned_dispatch
+    - number.octopus_intelligent_charge_target
+    id: Dispatch for this session
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+  - trigger: state
+    entity_id:
+    - switch.octopus_intelligent_smart_charge
+    id: Dispatch for this session
+    to:
+    - 'off'
+    alias: New Octopus Dispatch
+  - trigger: state
+    entity_id:
+    - sensor.octopus_total_planned_dispatch
+    from:
+    - '0'
+    id: New Octopus Dispatch Notification
+    alias: New Octopus Dispatch Notification
   conditions: []
   actions:
   - choose:
@@ -390,11 +470,161 @@
           class: normal
         enabled: true
       alias: Discharge Gap - End
+    - conditions:
+      - condition: trigger
+        id:
+        - Set Tariff
+      sequence:
+      - action: select.select_option
+        metadata: {}
+        data:
+          option: '{{ states(''sensor.octopus_tariff_state'') }}'
+        target:
+          entity_id:
+          - select.daily_grid_import
+          - select.monthly_grid_import
+          - select.daily_grid_import_myenergi
+          - select.monthly_grid_import_myenergi
+      alias: Set Tariff
+    - conditions:
+      - condition: trigger
+        id:
+        - Reset the manual discharge flag
+      sequence:
+      - if:
+        - condition: template
+          value_template: "{{ is_state('input_boolean.export_battery_manual', 'on')\n
+            \                 and not (\n                    is_state('binary_sensor.manual_discharge_allowed',
+            'on')\n                  )\n                }}"
+        then:
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.export_battery_manual
+          data: {}
+      alias: Reset Manual Discharge Flag
+    - conditions:
+      - condition: trigger
+        id:
+        - HA Start
+        - Get Mobile Device List
+      sequence:
+      - action: input_select.set_options
+        metadata: {}
+        data:
+          options: '{% set opts = (state_attr(''sensor.solax_zappi_octopus_device_list'',''mobile_devices''))
+            | map(attribute=''device'') | list %}     {{ opts if opts else [''Default'']
+            }} '
+        target:
+          entity_id: input_select.solax_automation_notification_devices
+      alias: Get Mobile Device List
+    - conditions:
+      - condition: trigger
+        id:
+        - Alert when Solax settings are empty
+      sequence:
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: solax_rest_local_settings became unavailable @ {{now().strftime('%H:%M')}}.  {{states('sensor.solax_rest_local_settings')}}
+          title: Sensor Failed
+          class: high
+      alias: Sensor Failed
+    - conditions:
+      - condition: trigger
+        id:
+        - house_power_average_power_stat
+        - HA Start
+      sequence:
+      - action: pyscript.energy_avg_query
+        metadata: {}
+        data: {}
+      - action: pyscript.battery_budget_schedule
+        metadata: {}
+        data: {}
+        enabled: false
+      - action: input_number.set_value
+        metadata: {}
+        data:
+          value: '{{ states(''sensor.average_house_power'') | float(0) }}'
+        target:
+          entity_id: input_number.typical_house_power
+      alias: House Power Stat
+    - conditions:
+      - condition: trigger
+        id:
+        - Dispatch for this session
+      sequence:
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{{\n                  trigger.entity_id == 'sensor.octopus_total_planned_dispatch'\n
+              \                 and trigger.from_state is not none\n                  and
+              (trigger.from_state.state | float(0)) == 0\n                  and (trigger.to_state.state
+              | float(0)) != 0\n                  and (\n                    (states('input_number.octopus_intelligent_total_dispatch')
+              | float(0)) == 0\n                    or (\n                      states['number.octopus_intelligent_charge_target']
+              is not none\n                      and (as_timestamp(states['number.octopus_intelligent_charge_target'].last_changed)\n
+              \                         >= (as_timestamp(trigger.to_state.last_changed)
+              - 60))\n                    )\n                  )\n                }}"
+          sequence:
+          - action: input_number.set_value
+            metadata: {}
+            data:
+              value: '{{ states(''sensor.octopus_total_planned_dispatch'') | float(0)
+                }}
+
+                '
+            target:
+              entity_id: input_number.octopus_intelligent_total_dispatch
+        - conditions:
+          - condition: template
+            value_template: "{{\n                  trigger.entity_id == 'number.octopus_intelligent_charge_target'\n
+              \                 and (states('input_number.octopus_intelligent_total_dispatch')
+              | float(0)) != 0\n                }}"
+          sequence:
+          - action: input_number.set_value
+            metadata: {}
+            data:
+              value: '{{ states(''sensor.octopus_total_planned_dispatch'') | float(0)
+                }}
+
+                '
+            target:
+              entity_id: input_number.octopus_intelligent_total_dispatch
+        - conditions:
+          - condition: template
+            value_template: '{{ trigger.entity_id == ''switch.octopus_intelligent_smart_charge''
+              and trigger.to_state.state == ''off'' }}'
+          sequence:
+          - action: input_number.set_value
+            metadata: {}
+            data:
+              value: '0
+
+                '
+            target:
+              entity_id: input_number.octopus_intelligent_total_dispatch
+      alias: New Octopus Dispatch
+    - conditions:
+      - condition: trigger
+        id:
+        - New Octopus Dispatch Notification
+      - condition: not
+        conditions:
+        - condition: state
+          entity_id: sensor.octopus_total_planned_dispatch
+          state:
+          - unavailable
+          - unknown
+      sequence:
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: Octopus Planned Dispatch @ {{now().strftime('%H:%M')}}.  {{states('sensor.octopus_total_planned_dispatch')}}kWh.
+          title: Octopus Dispatch
+          class: normal
     enabled: true
-  mode: queued
+  mode: parallel
   trace:
     stored_traces: 20
-  max: 4
+  max: 20
 - id: '5001'
   alias: 5001 - Solax Zappi Octopus Control
   description: "# 5001 - Solax Zappi Octopus Control\n---\n- v1.0.2 Minor bug fix
@@ -609,10 +839,12 @@
     trigger: time
     enabled: true
     alias: Free Electric End - Stop EV Charging
-  - trigger: time
-    at: sensor.solax_local_battery_setting_stop_charge_2
+  - alias: Charge Period 2 - End
+    trigger: time
+    at:
+      entity_id: input_datetime.solax_stop_charge_2
+      offset: '-60'
     id: Charge Period 2 End
-    alias: Charge Period 2 - End
   - alias: Check Settings
     trigger: template
     value_template: '{% set ev_charging = is_state(''sensor.zappi_plug_status'',''Charging'')%}
@@ -663,23 +895,47 @@
         %}    {% set current_soc = states('sensor.solax_local_battery_soc')|int %}
         \  {% set smart_charge = is_state('switch.octopus_intelligent_smart_charge','on')
         %}  {% set discharging = is_state('binary_sensor.battery_discharge_now', 'on')
-        %}\n\n{# --- Special triggers override everything. --- #}   {% if trigger.id
-        in ['2330'] %}\n    {% if discharging %}\n      {{ default_soc }}\n    {%
-        elif prevent_ev_drain and (not ev_charging or use_grid) %}\n      {{ current_soc
-        }}\n    {% else %}\n      {{ default_soc }}\n    {% endif %}\n\n{# --- Local
-        battery charging period → always allow discharge --- #}  {% elif is_state('binary_sensor.solax_local_battery_charging_period','on')
-        %}\n  {{ default_soc }}\n\n{# --- Daytime Charging→Disconnected transition
-        → allow discharge --- #}  {% elif trigger.id in ['Charging to Disconnected','Connected
-        to Disconnected'] and now() > today_at(\"05:30\") and now() < today_at(\"23:30\")
-        %}\n  {{ default_soc }}\n\n{# --- NEW: Daytime dispatch, ev chargin OFF →
-        force default discharge ---#}  {% elif dispatch_on and not ev_charging and
-        now() > today_at(\"05:30\") and now() < today_at(\"23:30\") %}\n  {{ default_soc
-        }}\n\n\n{# --- Normal conditions --- #}  {% else %}\n  {% if ev_charging %}\n
-        \   {% if prevent_ev_drain or use_grid %}\n      {{ current_soc }}\n    {%
-        else %}\n      {{ default_soc }}\n    {% endif %}\n  {% else %}\n    {% if
-        dispatch_on and prevent_ev_drain and use_grid %}\n      {{ current_soc }}\n
-        \   {% else %}\n      {{ default_soc }}\n    {% endif %}\n  {% endif %}\n{%
-        endif %}\n"
+        %} {# --- PRECOMPUTE STOP TIMES + FINAL WINDOW (works across midnight) ---
+        #}\n{% set stop1_raw = states('input_datetime.solax_battery_stop_charge_time')
+        %} {% set stop1 = today_at(stop1_raw) %} {% if stop1 < now() %}\n  {% set
+        stop1 = stop1 + timedelta(days=1) %}\n{% endif %}\n{% if is_state('input_boolean.solaxchargeperiod2',
+        'on') %}\n    {% set stop2_raw = states('input_datetime.solax_stop_charge_2')
+        %}\n    {% set stop2 = today_at(stop2_raw) %}\n    {% if stop2 < now() %}\n
+        \     {% set stop2 = stop2 + timedelta(days=1) %}\n    {% endif %}\n{% else
+        %}\n    {# If period2 is OFF, ignore stop2 by making it \"far in future\"
+        #}\n    {% set stop2 = stop1 + timedelta(days=9999) %}\n{% endif %}\n{# Determine
+        which stop is next #} {% if stop1 <= stop2 %}\n    {% set stop_time = stop1
+        %}\n{% else %}\n    {% set stop_time = stop2 %}\n{% endif %}\n{# Are we in
+        the final 2-minute window before the upcoming stop? #} {% set final_window
+        = now() >= (stop_time - timedelta(minutes=2)) and now() < stop_time %}\n\n{#
+        --- Special triggers override everything. --- #}   {% if trigger.id in ['2330']
+        %}\n  {% if discharging %}\n    {{ default_soc }}\n  \n  {% elif use_grid
+        %}\n    {{ current_soc }}\n  \n  {% elif prevent_ev_drain and ev_charging
+        %}\n    {{ current_soc }}\n  \n  {% else %}\n    {{ default_soc }}\n  {% endif
+        %}\n\n\n{# --- Local battery charging period OR final 2 minutes before stop
+        --- #} {% elif is_state('binary_sensor.solax_local_battery_charging_period','on')
+        or final_window %}\n\n  {% set target_time = states('sensor.octopus_intelligent_target_time')
+        | as_datetime %}\n  {% set today_0530 = now().replace(hour=5, minute=30, second=0,
+        microsecond=0) %}\n\n  {% if final_window and target_time.timestamp() > today_0530.timestamp()
+        %}\n      {# Use normal EV logic during final 2 minutes when target_time >
+        05:30 #}\n      {% if ev_charging %}\n          {% if prevent_ev_drain or
+        use_grid %}\n              {{ current_soc }}\n          {% else %}\n              {{
+        default_soc }}\n          {% endif %}\n      {% else %}\n          {% if dispatch_on
+        and prevent_ev_drain and use_grid %}\n              {{ current_soc }}\n          {%
+        else %}\n              {{ default_soc }}\n          {% endif %}\n      {%
+        endif %}\n\n  {% else %}\n      {# Earlier in charging period OR target_time
+        <= 05:30 #}\n      {{ default_soc }}\n  {% endif %}\n\n\n  \n\n{# --- Daytime
+        Charging→Disconnected transition → allow discharge --- #}  {% elif trigger.id
+        in ['Charging to Disconnected','Connected to Disconnected'] and now() >= today_at(\"05:30\")
+        and now() <= today_at(\"23:30\") %}\n  {{ default_soc }}\n\n{# --- NEW: Daytime
+        dispatch, ev chargin OFF → force default discharge ---#}  {% elif dispatch_on
+        and not ev_charging and now() >= today_at(\"05:30\") and now() <= today_at(\"23:30\")
+        %}\n  {{ default_soc }}\n\n\n{# --- Normal conditions --- #}  {% else %}\n
+        \ {% if ev_charging %}\n    {% if prevent_ev_drain or use_grid %}\n      {{
+        current_soc }}\n    {% else %}\n      {{ default_soc }}\n    {% endif %}\n
+        \ {% else %}\n    {% if dispatch_on and prevent_ev_drain and use_grid %}\n
+        \     {{ current_soc }}\n    {% else %}\n      {{ default_soc }}\n    {% endif
+        %}\n  {% endif %}\n{% endif %}\n"
   - action: input_boolean.turn_on
     metadata: {}
     data: {}

@@ -7,21 +7,23 @@ octopus_dispatches_template_octopus_dispatch:
     ######################################################
     # Generate an event when theres a new dispatch
     ######################################################
-    - trigger:
-        - trigger: state
-          entity_id: sensor.octopus_total_planned_dispatch
-          from: "0"
-          not_to:
-            - unavailable
-      action:
-        - event: Solax Zappi Octopus Control
-          event_data:
-            message: >-
-              Octopus Planned Dispatch @
-              {{now().strftime('%H:%M')}}. 
-              {{states('sensor.octopus_total_planned_dispatch')}}kWh.
-            title: Octopus Dispatch
-            class: normal
+    # Moved to 5000 to be compliant with 2026.5
+    # - trigger:
+    #     - trigger: state
+    #       entity_id: sensor.octopus_total_planned_dispatch
+    #       from: "0"
+    #       not_to:
+    #         - unavailable
+    #   action:
+    #     - event: Solax Zappi Octopus Control
+    #       event_data:
+    #         message: >-
+    #           Octopus Planned Dispatch @
+    #           {{now().strftime('%H:%M')}}. 
+    #           {{states('sensor.octopus_total_planned_dispatch')}}kWh.
+    #         title: Octopus Dispatch
+    #         class: normal
+
     ######################################################
     # Octopus dispatch kWh
     ######################################################
@@ -149,65 +151,65 @@ octopus_dispatches_template_octopus_dispatch:
     # then remaining energy required won't get updated. ATM
     # it is a one time deal to be set before dispatch is calculated
     ###############################################
+    # Moved to 5000 to be compliant with 2026.5
 
+    # - trigger:
+    #     - trigger: state
+    #       entity_id: sensor.octopus_total_planned_dispatch
+    #     - trigger: state
+    #       entity_id: number.octopus_intelligent_charge_target
+    #     - trigger: state
+    #       entity_id: switch.octopus_intelligent_smart_charge
+    #       to: "off"
 
-    - trigger:
-        - trigger: state
-          entity_id: sensor.octopus_total_planned_dispatch
-        - trigger: state
-          entity_id: number.octopus_intelligent_charge_target
-        - trigger: state
-          entity_id: switch.octopus_intelligent_smart_charge
-          to: "off"
+    #   action:
+    #     - choose:
+    #         # CASE A: sensor changed 0 -> non-zero: update only if helper is still 0
+    #         #         OR the charge_target was changed very recently (race window)
+    #         - conditions: >
+    #             {{
+    #               trigger.entity_id == 'sensor.octopus_total_planned_dispatch'
+    #               and trigger.from_state is not none
+    #               and (trigger.from_state.state | float(0)) == 0
+    #               and (trigger.to_state.state | float(0)) != 0
+    #               and (
+    #                 (states('input_number.octopus_intelligent_total_dispatch') | float(0)) == 0
+    #                 or (
+    #                   states['number.octopus_intelligent_charge_target'] is not none
+    #                   and (as_timestamp(states['number.octopus_intelligent_charge_target'].last_changed)
+    #                       >= (as_timestamp(trigger.to_state.last_changed) - 60))
+    #                 )
+    #               )
+    #             }}
+    #           sequence:
+    #             - service: input_number.set_value
+    #               target:
+    #                 entity_id: input_number.octopus_intelligent_total_dispatch
+    #               data:
+    #                 value: "{{ states('sensor.octopus_total_planned_dispatch') | float(0) }}"
 
-      action:
-        - choose:
-            # CASE A: sensor changed 0 -> non-zero: update only if helper is still 0
-            #         OR the charge_target was changed very recently (race window)
-            - conditions: >
-                {{
-                  trigger.entity_id == 'sensor.octopus_total_planned_dispatch'
-                  and trigger.from_state is not none
-                  and (trigger.from_state.state | float(0)) == 0
-                  and (trigger.to_state.state | float(0)) != 0
-                  and (
-                    (states('input_number.octopus_intelligent_total_dispatch') | float(0)) == 0
-                    or (
-                      states['number.octopus_intelligent_charge_target'] is not none
-                      and (as_timestamp(states['number.octopus_intelligent_charge_target'].last_changed)
-                          >= (as_timestamp(trigger.to_state.last_changed) - 60))
-                    )
-                  )
-                }}
-              sequence:
-                - service: input_number.set_value
-                  target:
-                    entity_id: input_number.octopus_intelligent_total_dispatch
-                  data:
-                    value: "{{ states('sensor.octopus_total_planned_dispatch') | float(0) }}"
-
-            # CASE B: user changed the charge target while helper is already non-zero:
-            #         allow user change to force an update to the helper.
-            - conditions: >
-                {{
-                  trigger.entity_id == 'number.octopus_intelligent_charge_target'
-                  and (states('input_number.octopus_intelligent_total_dispatch') | float(0)) != 0
-                }}
-              sequence:
-                - service: input_number.set_value
-                  target:
-                    entity_id: input_number.octopus_intelligent_total_dispatch
-                  data:
-                    value: "{{ states('sensor.octopus_total_planned_dispatch') | float(0) }}"
-            # CASE C: Smart Charge switch turned off → reset helper
-            - conditions: >
-                {{ trigger.entity_id == 'switch.octopus_intelligent_smart_charge' and trigger.to_state.state == 'off' }}
-              sequence:
-                - service: input_number.set_value
-                  target:
-                    entity_id: input_number.octopus_intelligent_total_dispatch
-                  data:
-                    value: 0
+    #         # CASE B: user changed the charge target while helper is already non-zero:
+    #         #         allow user change to force an update to the helper.
+    #         - conditions: >
+    #             {{
+    #               trigger.entity_id == 'number.octopus_intelligent_charge_target'
+    #               and (states('input_number.octopus_intelligent_total_dispatch') | float(0)) != 0
+    #             }}
+    #           sequence:
+    #             - service: input_number.set_value
+    #               target:
+    #                 entity_id: input_number.octopus_intelligent_total_dispatch
+    #               data:
+    #                 value: "{{ states('sensor.octopus_total_planned_dispatch') | float(0) }}"
+    #         # CASE C: Smart Charge switch turned off → reset helper
+    #         - conditions: >
+    #             {{ trigger.entity_id == 'switch.octopus_intelligent_smart_charge' and trigger.to_state.state == 'off' }}
+    #           sequence:
+    #             - service: input_number.set_value
+    #               target:
+    #                 entity_id: input_number.octopus_intelligent_total_dispatch
+    #               data:
+    #                 value: 0
 
     ###############################################
     # Remaining Dispatch for this session

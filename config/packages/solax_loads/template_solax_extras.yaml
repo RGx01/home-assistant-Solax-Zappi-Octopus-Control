@@ -183,29 +183,30 @@ solax_loads_template_solax_extras:
 
     ######################################################
     # Generate an event if solax_rest_local_settings becomes unavailable
+    # Moved to 5000. don't like the way things are going for 2026.5
     ######################################################
-    - trigger:
-        - trigger: state
-          entity_id: sensor.solax_rest_local_settings
-          to: unavailable
-        - trigger: state
-          entity_id: sensor.solax_rest_local_settings
-          to: unknown
-        - trigger: state
-          entity_id: sensor.solax_rest_local_settings
-          to: none
-        - trigger: state
-          entity_id: sensor.solax_rest_local_settings
-          to: None
-      action:
-        - event: Solax Zappi Octopus Control
-          event_data:
-            message: >-
-              solax_rest_local_settings became unavailable @
-              {{now().strftime('%H:%M')}}. 
-              {{states('sensor.solax_rest_local_settings')}}
-            title: Sensor Failed
-            class: high
+    # - trigger:
+    #     - trigger: state
+    #       entity_id: sensor.solax_rest_local_settings
+    #       to: unavailable
+    #     - trigger: state
+    #       entity_id: sensor.solax_rest_local_settings
+    #       to: unknown
+    #     - trigger: state
+    #       entity_id: sensor.solax_rest_local_settings
+    #       to: none
+    #     - trigger: state
+    #       entity_id: sensor.solax_rest_local_settings
+    #       to: None
+    #   action:
+    #     - event: Solax Zappi Octopus Control
+    #       event_data:
+    #         message: >-
+    #           solax_rest_local_settings became unavailable @
+    #           {{now().strftime('%H:%M')}}. 
+    #           {{states('sensor.solax_rest_local_settings')}}
+    #         title: Sensor Failed
+    #         class: high
 
     ######################################################
     # Binary sensor for when house battery is supposed to be charging

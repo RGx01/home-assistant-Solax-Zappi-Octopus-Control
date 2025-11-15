@@ -192,6 +192,14 @@ octoplus_sessions_templates:
         #  ensures input_datetimes always sync with attributes)
         - trigger: time_pattern
           minutes: "/1"
+      binary_sensor:
+        - name: "Free Electric Helper"
+          unique_id: free_electric_helper
+          state: >
+            true
+          attributes:
+            description: >
+              "nonsence sensor required by HA2026.5. Essentially you can't have something that is essentially an automation in a template without defining a sensor. I'll sort it out someday"
 
       action:
         # Update input_datetime for session start

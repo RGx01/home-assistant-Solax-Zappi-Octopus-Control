@@ -157,6 +157,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v6.4.0|**15/11/25**|All templates<br>automations_5000-5005.yaml| Bug Fixes and HA2026.5 template compliance requires automations in templates require a domain sensor so I've moved them into automation 5000|
 | v6.3.0|**13/11/25**|script\solax_set_mode_and_settings.yaml<br>solax_exports\template_discharge_magic.yaml<br>solax_control\sensor.yaml<br>automations_5000-5005.yaml| Efficency updates and automation improvements|
 | v6.2.4|**06/11/25**|script\solax_set_mode_and_settings.yaml<br>solax_loads\template_solax_extras.yaml| Critical Bug fix - solax_set_mode_and_settings forgot a namespace wich causes settings to be ignored when no mode is changed|
 | v6.2.3|**05/11/25**|All| Bug fix - solax_grid_stored_at_first_max_soc<br>Updated Dashboard <br> Automation 5001 updated with new trigger to try and detect/protect from out of sync issues with the invertere<br> fixed latching issue with manual discharge<br>improved script efficiency for solax_set_mode_and_settings|
