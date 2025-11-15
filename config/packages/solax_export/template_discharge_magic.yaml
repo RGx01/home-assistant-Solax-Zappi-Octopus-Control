@@ -140,47 +140,47 @@ solax_export_template_discharge_magic:
     ######################################################
     # Safe Single flag to indicate if discharge can occur
     ######################################################
-    - trigger:
-        - platform: state
-          entity_id: binary_sensor.battery_discharge_now
-          to:
-            - "on"
-            - "off"
-        - platform: template
-          value_template: >
-            {{ is_state('binary_sensor.ev_gap_discharge_allowed','on')
-              or is_state('binary_sensor.daily_export_discharge_allowed','on')
-              or is_state('binary_sensor.jit_2330_discharge_allowed','on') 
-              or is_state('binary_sensor.manual_discharge_allowed','on')
-              or is_state('binary_sensor.free_electric_discharge_allowed','on')}}
-      binary_sensor:
-        - name: "Battery Discharge Now"
-          unique_id: battery_discharge_now
-          device_class: power
-          state: >
-            {{ is_state('binary_sensor.ev_gap_discharge_allowed','on')
-              or is_state('binary_sensor.daily_export_discharge_allowed','on')
-              or is_state('binary_sensor.jit_2330_discharge_allowed','on') 
-              or is_state('binary_sensor.manual_discharge_allowed','on')
-              or is_state('binary_sensor.free_electric_discharge_allowed','on')}}
-          attributes:
-            ev_gap_discharge: "{{ is_state('binary_sensor.ev_gap_discharge_allowed','on') }}"
-            daily_export_discharge: "{{ is_state('binary_sensor.daily_export_discharge_allowed','on') }}"
-            jit_2330_discharge: "{{ is_state('binary_sensor.jit_2330_discharge_allowed','on') }}"
-            manual_discharge: "{{ is_state('binary_sensor.manual_discharge_allowed','on') }}"
-            free_discharge: "{{ is_state('binary_sensor.free_electric_discharge_allowed','on') }}"
-      action:
-        - choose:
-            - conditions: "{{ trigger.to_state.state == 'on' }}"
-              sequence:
-                - service: input_boolean.turn_on
-                  target:
-                    entity_id: input_boolean.battery_discharge_now
-            - conditions: "{{ trigger.to_state.state == 'off' }}"
-              sequence:
-                - service: input_boolean.turn_off
-                  target:
-                    entity_id: input_boolean.battery_discharge_now
+    # - trigger:
+    #     - platform: state
+    #       entity_id: binary_sensor.battery_discharge_now
+    #       to:
+    #         - "on"
+    #         - "off"
+    #     - platform: template
+    #       value_template: >
+    #         {{ is_state('binary_sensor.ev_gap_discharge_allowed','on')
+    #           or is_state('binary_sensor.daily_export_discharge_allowed','on')
+    #           or is_state('binary_sensor.jit_2330_discharge_allowed','on') 
+    #           or is_state('binary_sensor.manual_discharge_allowed','on')
+    #           or is_state('binary_sensor.free_electric_discharge_allowed','on')}}
+    #   binary_sensor:
+    #     - name: "Battery Discharge Now"
+    #       unique_id: battery_discharge_now
+    #       device_class: power
+    #       state: >
+    #         {{ is_state('binary_sensor.ev_gap_discharge_allowed','on')
+    #           or is_state('binary_sensor.daily_export_discharge_allowed','on')
+    #           or is_state('binary_sensor.jit_2330_discharge_allowed','on') 
+    #           or is_state('binary_sensor.manual_discharge_allowed','on')
+    #           or is_state('binary_sensor.free_electric_discharge_allowed','on')}}
+    #       attributes:
+    #         ev_gap_discharge: "{{ is_state('binary_sensor.ev_gap_discharge_allowed','on') }}"
+    #         daily_export_discharge: "{{ is_state('binary_sensor.daily_export_discharge_allowed','on') }}"
+    #         jit_2330_discharge: "{{ is_state('binary_sensor.jit_2330_discharge_allowed','on') }}"
+    #         manual_discharge: "{{ is_state('binary_sensor.manual_discharge_allowed','on') }}"
+    #         free_discharge: "{{ is_state('binary_sensor.free_electric_discharge_allowed','on') }}"
+    #   action:
+    #     - choose:
+    #         - conditions: "{{ trigger.to_state.state == 'on' }}"
+    #           sequence:
+    #             - service: input_boolean.turn_on
+    #               target:
+    #                 entity_id: input_boolean.battery_discharge_now
+    #         - conditions: "{{ trigger.to_state.state == 'off' }}"
+    #           sequence:
+    #             - service: input_boolean.turn_off
+    #               target:
+    #                 entity_id: input_boolean.battery_discharge_now
 
     # ######################################################
     # # Safe Single flag to indicate if discharge can occur
@@ -204,25 +204,25 @@ solax_export_template_discharge_magic:
     #               target:
     #                 entity_id: input_boolean.battery_discharge_now
 
-    # ######################################################
-    # # Single flag to indicate if discharge can occur
-    # ######################################################
-    # - binary_sensor:
-    #     - name: "Battery Discharge Now"
-    #       unique_id: battery_discharge_now
-    #       device_class: power
-    #       state: >
-    #         {{ is_state('binary_sensor.ev_gap_discharge_allowed','on')
-    #           or is_state('binary_sensor.daily_export_discharge_allowed','on')
-    #           or is_state('binary_sensor.jit_2330_discharge_allowed','on') 
-    #           or is_state('binary_sensor.manual_discharge_allowed','on')
-    #           or is_state('binary_sensor.free_electric_discharge_allowed','on')}}
-    #       attributes:
-    #         ev_gap_discharge: "{{ is_state('binary_sensor.ev_gap_discharge_allowed','on') }}"
-    #         daily_export_discharge: "{{ is_state('binary_sensor.daily_export_discharge_allowed','on') }}"
-    #         jit_2330_discharge: "{{ is_state('binary_sensor.jit_2330_discharge_allowed','on') }}"
-    #         manual_discharge: "{{ is_state('binary_sensor.manual_discharge_allowed','on') }}"
-    #         free_discharge: "{{ is_state('binary_sensor.free_electric_discharge_allowed','on') }}"
+    ######################################################
+    # Single flag to indicate if discharge can occur
+    ######################################################
+    - binary_sensor:
+        - name: "Battery Discharge Now"
+          unique_id: battery_discharge_now
+          device_class: power
+          state: >
+            {{ is_state('binary_sensor.ev_gap_discharge_allowed','on')
+              or is_state('binary_sensor.daily_export_discharge_allowed','on')
+              or is_state('binary_sensor.jit_2330_discharge_allowed','on') 
+              or is_state('binary_sensor.manual_discharge_allowed','on')
+              or is_state('binary_sensor.free_electric_discharge_allowed','on')}}
+          attributes:
+            ev_gap_discharge: "{{ is_state('binary_sensor.ev_gap_discharge_allowed','on') }}"
+            daily_export_discharge: "{{ is_state('binary_sensor.daily_export_discharge_allowed','on') }}"
+            jit_2330_discharge: "{{ is_state('binary_sensor.jit_2330_discharge_allowed','on') }}"
+            manual_discharge: "{{ is_state('binary_sensor.manual_discharge_allowed','on') }}"
+            free_discharge: "{{ is_state('binary_sensor.free_electric_discharge_allowed','on') }}"
 
     ######################################################
     # Discharge can occur in octopus Gaps

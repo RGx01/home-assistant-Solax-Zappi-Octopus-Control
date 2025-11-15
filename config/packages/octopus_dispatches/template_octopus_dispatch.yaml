@@ -43,7 +43,7 @@ octopus_dispatches_template_octopus_dispatch:
                 {% set ns2.total_dispatch = ns2.total_dispatch + (((dispatch.charge_in_kwh)|float(0))*-1) %}
               {% endif %}
             {% endfor %}
-            {{ ns2.total_dispatch }}
+            {{ 0 if ns2.total_dispatch < 0.5 else ns2.total_dispatch }}
 
           attributes:
             total_dispatches: >
