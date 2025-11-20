@@ -1,7 +1,7 @@
 - id: '5000'
   alias: 5000 - Solax Zappi Octopus Control - House Keeping
-  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n* v1.0.0 Initial
-    \nSee documentation in repo"
+  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v7.0.0
+    New function Battery Budget\n---\n- v1.0.0 Initial \nSee documentation in repo"
   triggers:
   - trigger: state
     entity_id:
@@ -153,6 +153,10 @@
     event: start
     id: HA Start
     alias: HA Start
+  - trigger: homeassistant
+    event: start
+    id: HA Start pyscript
+    alias: HA Start Pyscript
   - trigger: state
     entity_id:
     - sensor.solax_zappi_octopus_device_list
@@ -172,8 +176,6 @@
     trigger: state
     entity_id:
     - input_number.power_stat_avg_days
-    - input_datetime.power_stat_start_time
-    - input_datetime.power_stat_end_time
     - input_select.slot_end
     - input_select.slot_interval
     - input_select.slot_start
@@ -182,10 +184,10 @@
       hours: 0
       minutes: 0
       seconds: 10
-  - trigger: time
-    at: 00:01:00
+  - alias: House Power Stat
+    trigger: time
+    at: 00:00:01
     id: house_power_average_power_stat
-    alias: House Power Stat
   - alias: New Octopus Dispatch
     trigger: state
     entity_id:
@@ -539,20 +541,36 @@
     - conditions:
       - condition: trigger
         id:
-        - house_power_average_power_stat
-        - HA Start
+        - HA Start pyscript
       sequence:
-      - action: pyscript.energy_avg_query
-        metadata: {}
-        data: {}
       - action: pyscript.battery_budget_schedule
         metadata: {}
         data: {}
-        enabled: false
+        enabled: true
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 20
+          milliseconds: 0
+      - action: pyscript.battery_budget_allocator
+        metadata: {}
+        data: {}
+        enabled: true
+      alias: House Power Stat
+    - conditions:
+      - condition: trigger
+        id:
+        - house_power_average_power_stat
+      sequence:
+      - action: pyscript.battery_budget_schedule
+        metadata: {}
+        data: {}
+        enabled: true
       - action: input_number.set_value
         metadata: {}
         data:
-          value: '{{ states(''sensor.average_house_power'') | float(0) }}'
+          value: '{{state_attr(''sensor.battery_budget_reserve'',''daily_average_kw'')
+            | float(0.5) }}'
         target:
           entity_id: input_number.typical_house_power
       alias: House Power Stat
@@ -564,13 +582,15 @@
       - choose:
         - conditions:
           - condition: template
-            value_template: "{{ trigger.entity_id == 'sensor.octopus_total_planned_dispatch'
-              and trigger.from_state is not none and (trigger.from_state.state | float(0))
-              == 0 and (trigger.to_state.state | float(0)) != 0 and (\n  (states('input_number.octopus_intelligent_total_dispatch')
-              | float(0)) == 0\n  or (\n    states['number.octopus_intelligent_charge_target']
-              is not none\n    and (as_timestamp(states['number.octopus_intelligent_charge_target'].last_changed)\n
-              \       >= (as_timestamp(trigger.to_state.last_changed) - 60))\n  )\n)
-              }}\n"
+            value_template: "{{ \n  trigger.entity_id == 'sensor.octopus_total_planned_dispatch'\n
+              \ and trigger.from_state is not none\n  and (trigger.from_state.state
+              | float(0)) == 0\n  and (trigger.to_state.state | float(0)) != 0\n  and
+              ((trigger.from_state.state | float) != (trigger.to_state.state | float))\n
+              \ and (\n        (states('input_number.octopus_intelligent_total_dispatch')
+              | float(0)) == 0 or (\n          states['number.octopus_intelligent_charge_target']
+              is not none\n          and (\n            as_timestamp(states['number.octopus_intelligent_charge_target'].last_changed)\n
+              \           >= (as_timestamp(trigger.to_state.last_changed) - 60)\n
+              \         )\n        )\n      )\n}}\n"
           sequence:
           - action: input_number.set_value
             metadata: {}
@@ -664,10 +684,10 @@
   max: 20
 - id: '5001'
   alias: 5001 - Solax Zappi Octopus Control
-  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v1.0.2 Minor bug fix
-    to stop 'Finished Charge Message' when smart charge switch was off to begin with\n---\n-
-    \ v1.0.0 \n + Indent-potent handling of inverter mode and settings\n + Zappi and
-    Octopus handling\n---\n\n"
+  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v7.0.0 New function Battery
+    Budget\n---\n- v1.0.2 Minor bug fix to stop 'Finished Charge Message' when smart
+    charge switch was off to begin with\n---\n-  v1.0.0 \n + Indent-potent handling
+    of inverter mode and settings\n + Zappi and Octopus handling\n---\n\n"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -753,8 +773,8 @@
     at:
       entity_id: sensor.octopus_intelligent_target_time
       offset: '-60'
-    id: Dispatch Finished
-    alias: Dispatch Finished
+    id: EV Ready
+    alias: EV Ready
   - at: '23:30:00'
     id: '2330'
     enabled: true
@@ -958,7 +978,7 @@
         05:30 #}\n      {% if ev_charging %}\n          {% if prevent_ev_drain or
         use_grid %}\n              {{ current_soc }}\n          {% else %}\n              {{
         default_soc }}\n          {% endif %}\n      {% else %}\n          {% if dispatch_on
-        and prevent_ev_drain and use_grid %}\n              {{ current_soc }}\n          {%
+        and prevent_ev_drain and use_grid %}\n              {{ default_soc }}\n          {%
         else %}\n              {{ default_soc }}\n          {% endif %}\n      {%
         endif %}\n\n  {% else %}\n      {# Earlier in charging period OR target_time
         <= 05:30 #}\n      {{ default_soc }}\n  {% endif %}\n\n\n  \n\n{# --- Daytime
@@ -1094,7 +1114,7 @@
     - conditions:
       - condition: trigger
         id:
-        - Dispatch Finished
+        - EV Ready
       - condition: state
         entity_id: switch.octopus_intelligent_smart_charge
         state: 'on'
@@ -1130,7 +1150,7 @@
           message: EV Finished @ {{now().strftime('%H:%M')}}
           title: EV Finished Charging
           class: normal
-      alias: Dispatch Finished
+      alias: EV Ready
     - conditions:
       - condition: trigger
         id:

@@ -1,4 +1,4 @@
-# v6.2.3
+# v7.0.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -274,7 +274,7 @@ sections:
               - entity: binary_sensor.ev_gap_discharge_allowed
                 state: "on"
             row:
-              entity: sensor.battery_discharge_target_soc
+              entity: sensor.battery_budget_reserve_soc
               name: Target SoC
           - type: conditional
             conditions:
@@ -283,6 +283,13 @@ sections:
             row:
               entity: sensor.solax_local_battery_soc
               name: Current SoC
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.ev_gap_discharge_allowed
+                state: "on"
+            row:
+              entity: input_boolean.battery_discharge_in_dispatch_gaps
+              name: STOP
           - type: conditional
             conditions:
               - entity: binary_sensor.daily_export_discharge_allowed
@@ -295,7 +302,7 @@ sections:
               - entity: binary_sensor.daily_export_discharge_allowed
                 state: "on"
             row:
-              entity: sensor.battery_discharge_target_soc
+              entity: sensor.battery_budget_reserve_soc
               name: Target SoC
           - type: conditional
             conditions:
@@ -392,7 +399,7 @@ sections:
           type: graph
           entity: sensor.solax_local_battery_dump_power
           detail: 2
-          hours_to_show: 24
+          hours_to_show: 10
         visibility:
           - condition: or
             conditions:
@@ -421,10 +428,22 @@ sections:
           - entity: sensor.solax_local_inverter_mode
           - entity: sensor.solax_local_manual_mode_behaviour
         title: Inverter Current Mode
+      - type: history-graph
+        hours_to_show: 15
+        show_names: false
+        entities:
+          - entity: sensor.solax_local_selfuse_battery_min_soc
+          - entity: sensor.solax_local_feed_in_battery_min_soc
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: sensor.solax_local_battery_soc
+          - entity: sensor.battery_budget_reserve_soc
+        grid_options:
+          columns: 12
+          rows: 3
       - type: custom:power-flow-card-plus
         entities:
           battery:
-            entity: sensor.solax_local_battery_power
+            entity: sensor.solax_local_battery_power_adjusted
             state_of_charge: sensor.solax_local_battery_soc
             invert_state: true
           grid:
@@ -474,9 +493,6 @@ sections:
         watt_threshold: 1000
         transparency_zero_lines: 0
         max_flow_rate: 10
-        grid_options:
-          columns: 12
-          rows: auto
       - type: entities
         entities:
           - type: section
@@ -578,15 +594,11 @@ sections:
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
-              - entity: input_boolean.solaxchargeperiod2
-                state: "on"
             row:
               entity: input_datetime.solax_start_charge_2
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
-                state: "on"
-              - entity: input_boolean.solaxchargeperiod2
                 state: "on"
             row:
               entity: input_datetime.solax_stop_charge_2
@@ -740,6 +752,10 @@ sections:
             conditions:
               - entity: input_boolean.gap_export_show_hide
                 state: "on"
+              - entity: sensor.octopus_next_gap_duration
+                type: attribute
+                attribute: next_gap_start
+                state_not: ""
             row:
               entity: sensor.octopus_next_gap_duration
               name: Next Gap Start
@@ -749,6 +765,10 @@ sections:
             conditions:
               - entity: input_boolean.gap_export_show_hide
                 state: "on"
+              - entity: sensor.octopus_next_gap_duration
+                type: attribute
+                attribute: next_gap_end
+                state_not: ""
             row:
               entity: sensor.octopus_next_gap_duration
               name: Next Gap End
@@ -831,14 +851,14 @@ sections:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: sensor.battery_discharge_target_soc
-              name: Required SoC to get to 23:30
+              entity: sensor.battery_budget_reserve_soc
+              name: Required SoC to get to E.O.D
               type: attribute
-              attribute: Required_SoC_2330
+              attribute: reserve_soc
               suffix: "%"
-          - entity: sensor.battery_discharge_target_soc
+          - entity: sensor.battery_budget_reserve_soc
             name: Total Reserved
-          - entity: sensor.battery_discharge_target_soc
+          - entity: sensor.battery_budget_reserve_soc
             name: Deficite (SoC below Reserve)
             type: attribute
             attribute: deficite
@@ -855,25 +875,29 @@ sections:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: sensor.battery_discharge_target_soc
-              name: Hours of Reserve SoC
+              entity: sensor.battery_budget_reserve_soc
+              name: Additional Reserve SoC
               type: attribute
-              attribute: Requested_reserve_SoC
+              attribute: additional_reserve_soc
               suffix: "%"
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: sensor.discharge_reserve_margin
-              name: Hours of Reserve kWh
+              entity: sensor.battery_budget_reserve_kwh
+              type: attribute
+              attribute: additional_reserve_kwh
+              name: Additional Reserve kWh
+              suffix: kWh
           - type: section
             label: >-
-              Average kW Statistic - used to calculate the target SoC to ensure
-              you never run out of battery while using GAP or Daily Exports -
-              Updates Daily based on Days to use (not including today), Start
-              and End times.
-          - entity: input_number.typical_house_power
+              The battery reserve is calculated from historical home usage (+ a
+              small cost for running the inverter). Enter the number of days you
+              wish to use and the time range you run on battery. This calculates
+              the minimum battery level you need to survive until the end of the
+              day. It requires at least 1 complete day of data to work but
+              suggest you use at least 8 days. 
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
@@ -886,15 +910,22 @@ sections:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: input_datetime.power_stat_start_time
+              entity: input_select.slot_start
               name: Start
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: input_datetime.power_stat_end_time
+              entity: input_select.slot_end
               name: End
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: input_select.slot_interval
+              name: Interval
           - type: section
             label: Additional Details
           - type: conditional
@@ -908,20 +939,17 @@ sections:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: sensor.battery_discharge_target_soc
+              entity: sensor.battery_budget_reserve_kwh
               name: Total Reserved
-              type: attribute
-              attribute: Total_reserved_kWh
-              suffix: kWh
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: sensor.battery_discharge_target_soc
-              name: Required kWh to get to 23:30
+              entity: sensor.battery_budget_reserve_kwh
+              name: Required kWh to get to E.O.D
               type: attribute
-              attribute: Required_kWh_2330
+              attribute: reserve_kwh
               suffix: kWh
           - type: conditional
             conditions:
@@ -934,20 +962,20 @@ sections:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: sensor.battery_discharge_target_soc
-              name: Required SoC to get to 23:30
+              entity: sensor.battery_budget_reserve_soc
+              name: Required SoC to get to E.O.D
               type: attribute
-              attribute: Required_SoC_2330
+              attribute: reserve_soc
               suffix: "%"
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: sensor.battery_discharge_target_soc
+              entity: sensor.battery_budget_reserve_soc
               name: Default Min SoC
               type: attribute
-              attribute: Default_min_soc
+              attribute: min_soc
               suffix: "%"
           - type: conditional
             conditions:
@@ -1104,6 +1132,31 @@ sections:
         grid_options:
           columns: 36
           rows: auto
+      - title: SoC
+        type: history-graph
+        hours_to_show: 36
+        entities:
+          - entity: sensor.solax_local_battery_soc
+          - entity: sensor.battery_budget_reserve_soc
+          - entity: sensor.solax_local_selfuse_battery_min_soc
+          - entity: sensor.solax_local_feed_in_battery_min_soc
+          - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to
+          - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
+          - entity: input_number.solax_default_charge_to_limit_soc
+          - entity: input_number.solax_default_discharge_limit_soc
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
+        grid_options:
+          columns: 36
+          rows: auto
+      - type: history-graph
+        entities:
+          - entity: select.daily_grid_import
+            name: Log
+        fit_y_data: true
+        hours_to_show: 36
+        grid_options:
+          columns: 36
+          rows: auto
       - title: Solax Energy
         type: history-graph
         hours_to_show: 36
@@ -1118,19 +1171,11 @@ sections:
           - entity: sensor.export_daily
           - entity: sensor.solax_discharge_capacity
           - entity: sensor.solcast_pv_forecast_forecast_remaining_today
+          - entity: sensor.battery_budget_reserve_kwh
         grid_options:
           columns: 36
           rows: auto
         fit_y_data: true
-      - type: history-graph
-        entities:
-          - entity: select.daily_grid_import
-            name: Log
-        fit_y_data: true
-        hours_to_show: 36
-        grid_options:
-          columns: 36
-          rows: auto
     column_span: 3
     visibility:
       - condition: state
@@ -1221,6 +1266,15 @@ sections:
               action: more-info
             name: Grid Power
         heading: Power Sensors
+      - type: history-graph
+        entities:
+          - entity: select.daily_grid_import
+            name: Log
+        fit_y_data: true
+        hours_to_show: 36
+        grid_options:
+          columns: 36
+          rows: auto
       - title: Solax Power
         type: history-graph
         hours_to_show: 36
@@ -1246,31 +1300,6 @@ sections:
         grid_options:
           columns: 36
           rows: auto
-      - title: SoC
-        type: history-graph
-        hours_to_show: 36
-        entities:
-          - entity: sensor.solax_local_selfuse_battery_min_soc
-          - entity: sensor.solax_local_feed_in_battery_min_soc
-          - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to
-          - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
-          - entity: input_number.solax_default_charge_to_limit_soc
-          - entity: input_number.solax_default_discharge_limit_soc
-          - entity: input_number.solax_manual_forced_discharge_limit_soc
-          - entity: sensor.solax_local_battery_soc
-          - entity: sensor.battery_discharge_target_soc
-        grid_options:
-          columns: 36
-          rows: auto
-      - type: history-graph
-        entities:
-          - entity: select.daily_grid_import
-            name: Log
-        fit_y_data: true
-        hours_to_show: 36
-        grid_options:
-          columns: 36
-          rows: auto
       - type: history-graph
         entities:
           - entity: sensor.solax_local_load_power
@@ -1281,6 +1310,7 @@ sections:
           - entity: sensor.solax_local_pv_output_string_2
           - entity: sensor.solcast_pv_forecast_power_now
           - entity: sensor.zappi_power_ct_internal_load
+          - entity: sensor.zappi_power_ct_grid_load
         grid_options:
           columns: 36
           rows: auto
@@ -1316,11 +1346,20 @@ sections:
         type: history-graph
         hours_to_show: 1500
         entities:
-          - entity: sensor.solax_local_battery_soh
-          - entity: sensor.solax_local_battery_temperature
           - entity: sensor.solax_grid_stored_at_first_max_soc
+        fit_y_data: false
+        grid_options:
+          columns: 36
+          rows: auto
+        min_y_axis: 9
+      - title: " Grid Stored/Theoretical Grid Stored= Capacity SoH"
+        type: history-graph
+        hours_to_show: 1500
+        entities:
+          - entity: sensor.solax_local_battery_soh
           - entity: sensor.solax_local_min_soc
           - entity: sensor.solax_local_max_soc
+          - entity: sensor.solax_local_battery_temperature
         fit_y_data: false
         grid_options:
           columns: 36
@@ -2011,3 +2050,4 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
+

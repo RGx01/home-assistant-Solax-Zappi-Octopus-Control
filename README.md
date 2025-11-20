@@ -1,15 +1,17 @@
 # Solax-Zappi-Octopus-Control
 Written specifically for IOG Zappi and Solax X1-G4 Inverter
 Main features:
-1. Control Inverter settings locally with REST.
-2. Option - Daily discharge to a Target SoC based on typical usage
-3. Option - Just in Time discharge to 10% by 23:30
-4. Option - Discharge between gaps in Octopus Dispatch (aim for Target SoC based on typical usage)
-5. Handling of CT clamps in different positions on the Henley block.
-6. User notifications to mobile devices.
-7. Handles Free Electric Sessions from Octoplus.
-8. ~~Handles Saving Sessions~~. Removed
-9. Calculates Capacity SoH on each full recharge.
+1. Control inverter settings locally with REST.
+2. Read realtime inverter data locally.
+3. Option - Daily discharge to a Reserve SoC based on your typical usage (Battery Budget enhancements from 7.0.0)
+4. Option - Just in Time discharge to 10% by 23:30
+5. Option - Discharge between gaps in Octopus Dispatch (aim for Target SoC based on typical usage)
+6. Handling of CT clamps in different positions on the Henley block.
+7. Create statistics.
+8. User notifications to mobile devices.
+9. Handles Free Electric Sessions from Octoplus. <-- needs an update to calendar events in May 2026
+10. ~~Handles Saving Sessions~~. Removed
+11. Calculates Capacity SoH on each full recharge.
 
 ![delme](https://github.com/user-attachments/assets/c2eb91f9-8c83-4f31-8a76-75df950f1d05)
 
@@ -118,8 +120,11 @@ automation: !include automations.yaml
     - EV ready time
     - EV charge %
 16. Battery Reserves
-    - Set your initial typical average power in kW (eg 0.300)
-    - Set how much reserve you want in % and/or set how many hours of extra running you'd like to reserve
+    - In the Battery Reserve Section of the dashboard select:
+       - Start Slot (time you start using your battery - e.g. 05:30)
+       - End Slot (time you stop using your battery - e.g. 23:30)
+       - Interval (15 min interval are possible in short term statistics table)
+    - Set how much addition reserve you want in % and/or set how many hours of extra running you'd like to reserve
       - This is used for the limit on where automatic discharges (GAP and Daily) will discharge too at any point in the day.
       - Note that nightly discharges don't use this limit, they discharge to the default min soc. 
 17. Done.
@@ -157,6 +162,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v7.0.0|**20/11/25**|All| New Feature Battery Budget Reserve |
 | v6.4.1|**15/11/25**|All templates<br>automations_5000-5005.yaml| Bug Fixes|
 | v6.4.0|**15/11/25**|All templates<br>automations_5000-5005.yaml| Bug Fixes and HA2026.5 template compliance requires automations in templates require a domain sensor so I've moved them into automation 5000|
 | v6.3.0|**13/11/25**|script\solax_set_mode_and_settings.yaml<br>solax_exports\template_discharge_magic.yaml<br>solax_control\sensor.yaml<br>automations_5000-5005.yaml| Efficency updates and automation improvements|

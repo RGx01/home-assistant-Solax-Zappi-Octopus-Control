@@ -93,13 +93,18 @@ solax_loads_template_battery_soh:
     - trigger:
         - platform: template
           value_template: >
-            {{ now().timestamp() >= (as_timestamp(today_at(states('input_datetime.solax_battery_stop_charge_time')))+ 5) }}
+            {% set ts = state_attr('sensor.solax_grid_stored_at_first_max_soc','timestamp') %}
+            {% if ts in [None, '', 'unknown', 'unavailable'] %}
+              false
+            {% else %}
+              {{ now().timestamp() >= (as_timestamp(ts) + 5) }}
+            {% endif %}
       sensor:
         - name: Solax Local Battery SoH
           unique_id: solax_local_battery_soh
           unit_of_measurement: "%"
           state_class: measurement
-          icon: mdi:battery
+          icon: mdi:skull-crossbones
           state: >
             {% set min_soc = states('sensor.solax_local_min_soc') | int(0) %}
             {% set max_soc = state_attr('sensor.solax_grid_stored_at_first_max_soc','max_soc') | int(0) %}

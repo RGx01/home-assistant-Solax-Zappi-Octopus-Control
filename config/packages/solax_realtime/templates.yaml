@@ -1,6 +1,7 @@
     ######################################################
     # Change log - this may only work for X1 hybrid g4
     ######################################################
+    # v1.2.1     Changed Device Class to Battery for SoC
     # v1.2.0     Increased reliabilty
     # v1.1.0     Further Refactoring/tidy
     # v1.0.0     Refactored into package
@@ -246,6 +247,7 @@ solax_realtime_templates:
           state: "{{ state_attr('sensor.solax_local', 'Data')[18] | int(default=0) }}"
           unit_of_measurement: "%"
           state_class: measurement
+          device_class: "battery"
           icon: >
             {% set b_soc = state_attr('sensor.solax_local', 'Data')[18] %}
             {% if b_soc > 95 %}mdi:battery

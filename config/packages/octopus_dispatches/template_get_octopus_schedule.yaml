@@ -100,7 +100,7 @@ octopus_dispatches_template_get_octopus_schedule:
             {% set local_sunset_time = now().replace(hour=sunset_hour, minute=sunset_minute, second=sunset_second, microsecond=0)|as_datetime|as_local -%}
             {% set local_sunset_time2 = sunset_hour|string +':'+ sunset_minute|string  -%}
             {{ local_sunset_time.isoformat() if local_sunset_time else (now() + timedelta(days=10)) | as_local | isoformat }}
-            
+
 
     - sensor:
         - name: "Smart Charge Time"
@@ -122,37 +122,93 @@ octopus_dispatches_template_get_octopus_schedule:
             {% set disc    = states('sensor.zappi_last_disconnected') %}
             {% set delay   = states('input_number.delay_when_ev_connected') | float(0) %}
 
-            {# --- Step 1: Determine base start time --- #}
-            {% if free_p and free not in ['unknown','unavailable','none'] %}
-              {% set base_time = free | as_datetime | as_local %}
-            {% elif not anyt and solar_p and not fixed_p and solar not in ['unknown','unavailable','none'] %}
-              {% set base_time = solar | as_datetime | as_local %}
-            {% elif not anyt and not solar_p and fixed_p and fixed not in ['unknown','unavailable','none'] %}
-              {% set base_time = fixed | as_datetime | as_local %}
-            {% elif anyt and not solar_p and not fixed_p and conn not in ['unknown','unavailable','none'] %}
-              {% set base_time = conn | as_datetime | as_local %}
+            {# Use local time ALWAYS #}
+            {% set now_local = now() | as_local %}
+
+            {# Load existing timestamp (freeze/clamp mechanism) #}
+            {% set current = states('sensor.octopus_schedule_time') %}
+            {% set current_dt = current | as_datetime | as_local
+                if current not in ['unknown','unavailable','none']
+                else None %}
+
+            {# Parse connection/disconnection datetimes if available #}
+            {% set conn_dt = conn | as_datetime | as_local if conn not in ['unknown','unavailable','none'] else None %}
+            {% set disc_dt = disc | as_datetime | as_local if disc not in ['unknown','unavailable','none'] else None %}
+
+            {# Is the EV currently connected? (last connected AFTER last disconnected) #}
+            {% if conn_dt is not none and disc_dt is not none %}
+              {% set is_connected = conn_dt > disc_dt %}
+            {% elif conn_dt is not none and disc_dt is none %}
+              {# If we have a conn time but no disc time, treat as connected if conn_dt is recent #}
+              {% set is_connected = conn_dt >= now_local - timedelta(days=1) %}
             {% else %}
-              {% set base_time = (now() + timedelta(days=10)) | as_local %}
+              {% set is_connected = false %}
             {% endif %}
 
-            {# --- Step 2: Adjust for connection timing --- #}
-            {% if conn not in ['unknown','unavailable','none']
-                  and disc not in ['unknown','unavailable','none'] %}
-              {% set conn_dt = conn | as_datetime | as_local %}
-              {% set disc_dt = disc | as_datetime | as_local %}
+            {# ------------------------------- #
+              STEP 1 — Determine base time
+              (including ANYTIME logic)
+              ------------------------------- #}
 
+            {% if free_p and free not in ['unknown','unavailable','none'] %}
+              {% set base_time = free | as_datetime | as_local %}
+
+            {% elif not anyt and solar_p and not fixed_p and solar not in ['unknown','unavailable','none'] %}
+              {% set base_time = solar | as_datetime | as_local %}
+
+            {% elif not anyt and not solar_p and fixed_p and fixed not in ['unknown','unavailable','none'] %}
+              {% set base_time = fixed | as_datetime | as_local %}
+
+            {% elif anyt and not solar_p and not fixed_p %}
+              {# -------- ANYTIME MODE (improved) -------- #}
+
+              {# previously-frozen valid timestamp (keep if <24h ahead) #}
+              {% if current_dt is not none
+                    and current_dt >= now_local
+                    and (current_dt - now_local).total_seconds() < 86400 %}
+                {% set base_time = current_dt %}
+
+              {# If we have a conn_dt, compute planned_from_conn = conn_dt + delay #}
+              {% elif conn_dt is not none %}
+                {% set planned_from_conn = conn_dt + timedelta(minutes=delay) %}
+
+                {# If planned_from_conn is still in the future -> use it (stable fixed time) #}
+                {% if planned_from_conn > now_local %}
+                  {% set base_time = planned_from_conn %}
+
+                {# planned_from_conn already passed -> car connected some time ago -> use now+delay #}
+                {% elif is_connected %}
+                  {% set base_time = now_local + timedelta(minutes=delay) %}
+
+                {# otherwise (not connected now) but we still have a last_connected -> use planned_from_conn (may be past) #}
+                {% else %}
+                  {% set base_time = planned_from_conn %}
+                {% endif %}
+
+              {% else %}
+                {# ANYTIME selected but no connection data → disable #}
+                {% set base_time = now_local + timedelta(days=10) %}
+              {% endif %}
+            {% endif %} 
+
+
+            {# ------------------------------- #
+              STEP 2 — Non-anytime connection adjustment
+              ------------------------------- #}
+            {% if not anyt
+                  and conn_dt is not none
+                  and disc_dt is not none %}
               {% if conn_dt > disc_dt %}
                 {% if conn_dt > base_time %}
-                  {# EV connected *after* base time → new schedule = connection + delay #}
                   {% set base_time = conn_dt + timedelta(minutes=delay) %}
                 {% else %}
-                  {# EV connected before base time → keep base time but apply delay #}
                   {% set base_time = base_time + timedelta(minutes=delay) %}
                 {% endif %}
               {% endif %}
             {% endif %}
 
-            {{ base_time | as_datetime | as_local }}
+            {{ base_time }}
+
           availability: >
             {{
               free not in ['unknown','unavailable','none']
@@ -162,7 +218,102 @@ octopus_dispatches_template_get_octopus_schedule:
                   and disc not in ['unknown','unavailable','none'])
             }}
 
+    # - sensor:
+    #     - name: "Smart Charge Time"
+    #       unique_id: octopus_schedule_time
+    #       device_class: timestamp
+    #       state: >
+    #         {% set free    = states('sensor.octopus_free_electricity_start') %}
+    #         {% set free_p  = is_state('binary_sensor.free_electricity_today', 'on') %}
 
+    #         {% set solar   = states('sensor.solar_export_threshold') %}
+    #         {% set solar_p = is_state('input_boolean.solar_export_priority', 'on') %}
+
+    #         {% set fixed   = states('sensor.don_t_charge_ev_before_time_wobble') %}
+    #         {% set fixed_p = is_state('input_boolean.use_fixed_time','on') %}
+
+    #         {% set anyt    = is_state('input_boolean.octopus_schedule_anytime', 'on') %}
+
+    #         {% set conn    = states('sensor.zappi_last_connected') %}
+    #         {% set disc    = states('sensor.zappi_last_disconnected') %}
+    #         {% set delay   = states('input_number.delay_when_ev_connected') | float(0) %}
+
+    #         {# Use local time ALWAYS #}
+    #         {% set now_local = now() | as_local %}
+
+    #         {# Load existing timestamp (freeze/clamp mechanism) #}
+    #         {% set current = states('sensor.octopus_schedule_time') %}
+    #         {% set current_dt = current | as_datetime | as_local
+    #             if current not in ['unknown','unavailable','none']
+    #             else None %}
+
+    #         {# ------------------------------- #
+    #           STEP 1 — Determine base time
+    #           (including ANYTIME logic)
+    #           ------------------------------- #}
+
+    #         {% if free_p and free not in ['unknown','unavailable','none'] %}
+    #           {% set base_time = free | as_datetime | as_local %}
+
+    #         {% elif not anyt and solar_p and not fixed_p and solar not in ['unknown','unavailable','none'] %}
+    #           {% set base_time = solar | as_datetime | as_local %}
+
+    #         {% elif not anyt and not solar_p and fixed_p and fixed not in ['unknown','unavailable','none'] %}
+    #           {% set base_time = fixed | as_datetime | as_local %}
+
+    #         {% elif anyt and not solar_p and not fixed_p and conn not in ['unknown','unavailable','none'] %}
+    #           {# -------- ANYTIME MODE -------- #}
+
+    #           {% set conn_dt = conn | as_datetime | as_local %}
+
+    #           {% if current_dt is not none
+    #                 and current_dt >= now_local
+    #                 and (current_dt - now_local).total_seconds() < 86400 %}
+    #             {# Freeze previous timestamp if < 24h in future #}
+    #             {% set base_time = current_dt %}
+
+    #           {% elif conn_dt < now_local %}
+    #             {# Switch to anytime AFTER connection → clamp to now + delay #}
+    #             {% set base_time = now_local + timedelta(minutes=delay) %}
+
+    #           {% else %}
+    #             {# EV not yet connected; future connection #}
+    #             {% set base_time = conn_dt + timedelta(minutes=delay) %}
+    #           {% endif %}
+
+    #         {% else %}
+    #           {# Fallback — no mode selected → far-future timestamp to disable #}
+    #           {% set base_time = now_local + timedelta(days=10) %}
+    #         {% endif %}
+
+    #         {# ------------------------------- #
+    #           STEP 2 — Non-anytime connection adjustment
+    #           ------------------------------- #}
+    #         {% if not anyt
+    #               and conn not in ['unknown','unavailable','none']
+    #               and disc not in ['unknown','unavailable','none'] %}
+    #           {% set conn_dt = conn | as_datetime | as_local %}
+    #           {% set disc_dt = disc | as_datetime | as_local %}
+
+    #           {% if conn_dt > disc_dt %}
+    #             {% if conn_dt > base_time %}
+    #               {% set base_time = conn_dt + timedelta(minutes=delay) %}
+    #             {% else %}
+    #               {% set base_time = base_time + timedelta(minutes=delay) %}
+    #             {% endif %}
+    #           {% endif %}
+    #         {% endif %}
+
+    #         {{ base_time }}
+
+    #       availability: >
+    #         {{
+    #           free not in ['unknown','unavailable','none']
+    #           or solar not in ['unknown','unavailable','none']
+    #           or fixed not in ['unknown','unavailable','none']
+    #           or (conn not in ['unknown','unavailable','none']
+    #               and disc not in ['unknown','unavailable','none'])
+    #         }}
 
 
 
