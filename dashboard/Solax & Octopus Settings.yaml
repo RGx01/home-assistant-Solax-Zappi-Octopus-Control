@@ -665,6 +665,18 @@ sections:
               - entity: input_boolean.inverter_default_behaviours_show_hide
                 state: "on"
             row:
+              entity: input_number.solax_inverter_capacity
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_default_behaviours_show_hide
+                state: "on"
+            row:
+              entity: input_number.solax_battery_capacity
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_default_behaviours_show_hide
+                state: "on"
+            row:
               entity: input_number.solax_battery_soh_stored
           - type: section
           - type: conditional
@@ -2050,4 +2062,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-
