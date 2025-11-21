@@ -162,6 +162,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v7.1.0|**21/11/25**|packages\solax_exports\template_discharge_magic.yaml| Added new trigger for JIT Nightly exports |
 | v7.0.0|**20/11/25**|All| New Feature Battery Budget Reserve |
 | v6.4.1|**15/11/25**|All templates<br>automations_5000-5005.yaml| Bug Fixes|
 | v6.4.0|**15/11/25**|All templates<br>automations_5000-5005.yaml| Bug Fixes and HA2026.5 template compliance requires automations in templates require a domain sensor so I've moved them into automation 5000|

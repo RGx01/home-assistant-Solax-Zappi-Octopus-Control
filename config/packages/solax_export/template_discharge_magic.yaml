@@ -189,6 +189,8 @@ solax_export_template_discharge_magic:
     # clip start to 23:29 or it all goes wrong
     ######################################################
     - trigger:
+        - platform: time_pattern
+          minutes: "/1"
         - platform: state
           entity_id:
             - sensor.solax_local_battery_soc
@@ -238,9 +240,9 @@ solax_export_template_discharge_magic:
               {% set adjusted = adjusted + timedelta(days=1) %}
             {% endif %}
             {% set target_ts = adjusted.timestamp() %}
-            {% set calc_start_ts = target_ts - discharge_time_sec %}
+            {% set calc_start_ts = (target_ts - discharge_time_sec)|float %}
             {# --- Clip start time so it never exceeds 23:25 --- #}
-            {% set clip_cutoff = today_at('23:25:00').timestamp() %}
+            {% set clip_cutoff = today_at('23:25:00').timestamp()|float %}
             {% set calc_start_ts = [calc_start_ts, clip_cutoff] | min %}
             {###### need to clip the start to 23:29 ##########}
             {# --- Use previously locked timestamp if present --- #}
@@ -280,9 +282,9 @@ solax_export_template_discharge_magic:
                 {% set adjusted = adjusted + timedelta(days=1) %}
               {% endif %}
               {% set target_ts = adjusted.timestamp() %}
-              {% set calc_start_ts = target_ts - discharge_time_sec %}
+              {% set calc_start_ts = (target_ts - discharge_time_sec)|float %}
               {# --- Clip start time so it never exceeds 23:25 --- #}
-              {% set clip_cutoff = today_at('23:25:00').timestamp() %}
+              {% set clip_cutoff = today_at('23:25:00').timestamp()|float %}
               {% set calc_start_ts = [calc_start_ts, clip_cutoff] | min %}
 
               {% set prev_ts = state_attr('binary_sensor.jit_2330_discharge_allowed','locked_start') | float(0) %}
@@ -310,9 +312,9 @@ solax_export_template_discharge_magic:
                   {% set adjusted = adjusted + timedelta(days=1) %}
                 {% endif %}
                 {% set target_ts = adjusted.timestamp() %}
-                {% set calc_start_ts = target_ts - discharge_time_sec %}
+                {% set calc_start_ts = (target_ts - discharge_time_sec)|float %}
                 {# --- Clip start time so it never exceeds 23:25 --- #}
-                {% set clip_cutoff = today_at('23:25:00').timestamp() %}
+                {% set clip_cutoff = today_at('23:25:00').timestamp()|float %}
                 {% set calc_start_ts = [calc_start_ts, clip_cutoff] | min %}
                 {{calc_start_ts|as_datetime|as_local}}
               {% endif %}
