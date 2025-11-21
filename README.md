@@ -108,6 +108,7 @@ automation: !include automations.yaml
     - Replace the contents with your prepared yaml
     - Click Save
     - Click Done
+# Configuring
 15. On the dashboard select/set:
     - solax battery size,
     - solax inverter size,
@@ -115,19 +116,28 @@ automation: !include automations.yaml
     - default charge to level
     - default min_soc
     - Solax Battery SoH Stored initial value to 100 (it will recalucate each time a full charge cycle 10-100%)
+<img width="468" height="477" alt="Screenshot 2025-11-21 at 13 01 20" src="https://github.com/user-attachments/assets/18159443-f912-4622-ae40-0ed0ebff5422" />  
+
+16. On the dashboard select/set:
     - select Octopus schedule type
-    - EV registered battery size 
     - EV ready time
     - EV charge %
-16. Battery Reserves
+<img width="461" height="555" alt="Screenshot 2025-11-21 at 13 03 47" src="https://github.com/user-attachments/assets/4d88a31e-6d0c-492d-9390-cf3526036ce4" />
+
+17. Battery Reserves
     - In the Battery Reserve Section of the dashboard select:
        - Start Slot (time you start using your battery - e.g. 05:30)
        - End Slot (time you stop using your battery - e.g. 23:30)
        - Interval (15 min interval are possible in short term statistics table)
     - Set how much addition reserve you want in % and/or set how many hours of extra running you'd like to reserve
       - This is used for the limit on where automatic discharges (GAP and Daily) will discharge too at any point in the day.
-      - Note that nightly discharges don't use this limit, they discharge to the default min soc. 
-17. Done.
+      - Note that nightly discharges don't use this limit, they discharge to the default min soc.
+    <img width="398" height="1498" alt="Screenshot 2025-11-21 at 13 06 12" src="https://github.com/user-attachments/assets/19f806c5-19a9-41b2-9553-3e14339c1598" />
+ 	<img width="1222" height="741" alt="Screenshot 2025-11-21 at 13 12 26" src="https://github.com/user-attachments/assets/3e2f5a50-50a0-4b70-ba92-8437021f772d" />
+	<img width="1223" height="742" alt="Screenshot 2025-11-21 at 13 20 49" src="https://github.com/user-attachments/assets/aaae398c-23a8-4de2-8192-109c38fa3309" />
+
+    
+18. Done.
 
 # Notification Management
 
@@ -139,6 +149,7 @@ automation: !include automations.yaml
 	<li>Reset Notification Exclusions - After pressing this, all notifications will notified on.</li>
 	<li>Summary of which devices and which notifications are excluded.</li>
 </ol>
+<img width="394" height="581" alt="Screenshot 2025-11-21 at 13 08 21" src="https://github.com/user-attachments/assets/7e0df8f8-097f-43db-af13-be29a8f1aa31" />
 
 # Equipment Used During Development
 <ol>
