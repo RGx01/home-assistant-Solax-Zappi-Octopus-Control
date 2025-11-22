@@ -94,10 +94,18 @@ solax_loads_template_battery_soh:
         - platform: template
           value_template: >
             {% set ts = state_attr('sensor.solax_grid_stored_at_first_max_soc','timestamp') %}
+            {# Reject all bad values early #}
             {% if ts in [None, '', 'unknown', 'unavailable'] %}
               false
             {% else %}
-              {{ now().timestamp() >= (as_timestamp(ts) + 5) }}
+              {# Convert safely — never errors #}
+              {% set dt = as_datetime(ts) %}
+              {# If conversion fails, do NOT trigger #}
+              {% if dt is none %}
+                false
+              {% else %}
+                {{ now() >= dt + timedelta(seconds=5) }}
+              {% endif %}
             {% endif %}
       sensor:
         - name: Solax Local Battery SoH
