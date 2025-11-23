@@ -1,4 +1,4 @@
-# v7.0.0
+# v7.2.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -495,6 +495,7 @@ sections:
         max_flow_rate: 10
       - type: entities
         entities:
+          - entity: input_button.solax_submit_settings
           - type: section
           - entity: input_boolean.inverter_modes_show_hide
           - type: section
