@@ -24,3 +24,7 @@ solax_zappi_octopus_ui_input_button:
     solax_zappi_octopus_reset_device_list:
       name: Reset Device List
       icon: mdi:button-pointer
+
+    solax_submit_settings:
+      name: "Apply Solax Settings"
+      icon: mdi:button-pointer
