@@ -103,125 +103,139 @@ octopus_dispatches_template_get_octopus_schedule:
 
 
     - sensor:
-      - name: "Smart Charge Time"
-        unique_id: octopus_schedule_time
-        device_class: timestamp
-        state: >
-          {# ------------------------------ #
-            LOAD INPUTS
-            (raw HA states)
-          # ------------------------------ #}
+        - name: "Smart Charge Time"
+          unique_id: octopus_schedule_time
+          device_class: timestamp
 
-          {% set free    = states('sensor.octopus_free_electricity_start') %}
-          {% set free_p  = is_state('binary_sensor.free_electricity_today', 'on') %}
+          state: >
+            {% set free    = states('sensor.octopus_free_electricity_start') %}
+            {% set free_p  = is_state('binary_sensor.free_electricity_today', 'on') %}
 
-          {% set solar   = states('sensor.solar_export_threshold') %}
-          {% set solar_p = is_state('input_boolean.solar_export_priority', 'on') %}
+            {% set solar   = states('sensor.solar_export_threshold') %}
+            {% set solar_p = is_state('input_boolean.solar_export_priority', 'on') %}
 
-          {% set fixed   = states('sensor.don_t_charge_ev_before_time_wobble') %}
-          {% set fixed_p = is_state('input_boolean.use_fixed_time','on') %}
+            {% set fixed   = states('sensor.don_t_charge_ev_before_time_wobble') %}
+            {% set fixed_p = is_state('input_boolean.use_fixed_time','on') %}
 
-          {% set anyt    = is_state('input_boolean.octopus_schedule_anytime', 'on') %}
+            {% set anyt    = is_state('input_boolean.octopus_schedule_anytime', 'on') %}
 
-          {% set conn    = states('sensor.zappi_last_connected') %}
-          {% set disc    = states('sensor.zappi_last_disconnected') %}
-          {% set delay   = states('input_number.delay_when_ev_connected') | float(0) %}
+            {% set conn    = states('sensor.zappi_last_connected') %}
+            {% set disc    = states('sensor.zappi_last_disconnected') %}
+            {% set delay   = states('input_number.delay_when_ev_connected') | float(0) %}
 
-          {% set now_local = now() | as_local %}
-          {% set current = states('sensor.octopus_schedule_time') %}
-          {% set current_dt = current | as_datetime | as_local
-              if current not in ['unknown','unavailable','none']
-              else None %}
+            {% set now_local = now() | as_local %}
 
-          {% set conn_dt = conn | as_datetime | as_local if conn not in ['unknown','unavailable','none'] else None %}
-          {% set disc_dt = disc | as_datetime | as_local if disc not in ['unknown','unavailable','none'] else None %}
+            {# Parse datetimes #}
+            {% set conn_dt = conn | as_datetime | as_local
+                  if conn not in ['unknown','unavailable','none'] else None %}
+            {% set disc_dt = disc | as_datetime | as_local
+                  if disc not in ['unknown','unavailable','none'] else None %}
 
-          {% if conn_dt is not none and disc_dt is not none %}
-            {% set is_connected = conn_dt > disc_dt %}
-          {% else %}
-            {% set is_connected = false %}
-          {% endif %}
+            {# Connection state #}
+            {% set is_connected =
+                conn_dt is not none and
+                (disc_dt is none or conn_dt > disc_dt)
+            %}
 
-          {# ------------------------------ #
-            BUILD SNAPSHOT STRING (NEW)
-          # ------------------------------ #}
+            {# Load previous timestamp (for freeze) #}
+            {% set prev = states('sensor.octopus_schedule_time') %}
+            {% set prev_dt = prev | as_datetime | as_local
+                if prev not in ['unknown','unavailable','none'] else None %}
 
-          {% set snapshot_current = {
-            "anyt": anyt,
-            "solar_p": solar_p,
-            "fixed_p": fixed_p,
-            "free": free,
-            "solar": solar,
-            "fixed": fixed,
-            "conn": conn,
-            "disc": disc,
-            "delay": delay
-          } | tojson %}
+            {# Load snapshot attribute #}
+            {% set snap_raw = state_attr('sensor.octopus_schedule_time','anytime_snapshot') %}
+            {% if snap_raw is string %}
+              {% set snapshot = snap_raw | from_json %}
+            {% else %}
+              {% set snapshot = snap_raw %}
+            {% endif %}
 
-          {# ------------------------------ #
-            LOAD PREVIOUS SNAPSHOT
-          # ------------------------------ #}
+            {# Build current snapshot candidate #}
+            {% set new_snapshot = {
+                "anyt": anyt,
+                "conn_dt": conn_dt|string,
+                "delay": delay,
+                "is_connected": is_connected,
+                "free": free,
+                "solar": solar,
+                "fixed": fixed
+            } %}
 
-          {% set old_snapshot = state_attr('sensor.octopus_schedule_time','last_snapshot') %}
-          {% if old_snapshot is not string %}
-            {% set old_snapshot = '' %}
-          {% endif %}
+            {# Detect if snapshot changed meaningfully #}
+            {% set recalc_needed =
+                snapshot is none
+                or snapshot.anyt != new_snapshot.anyt
+                or snapshot.conn_dt != new_snapshot.conn_dt
+            %}
 
-          {# ------------------------------ #
-            FREEZE LOGIC: if snapshot unchanged,
-            return CURRENT timestamp unchanged
-          # ------------------------------ #}
+            {# If NOT anytime -> normal rules recalc ALWAYS #}
+            {% if not anyt %}
+              {% set recalc_needed = true %}
+            {% endif %}
 
-          {% if snapshot_current == old_snapshot and current_dt is not none %}
-            {{ current_dt }}
-          {% else %}
-            {# ---------- SNAPSHOT changed → RECALC timestamp ---------- #}
+            {# ----------- RECALC BRANCH ----------- #}
+            {% if recalc_needed %}
+              {% if free_p and free not in ['unknown','unavailable','none'] %}
+                {% set base_time = free | as_datetime | as_local %}
 
-            {% if free_p and free not in ['unknown','unavailable','none'] %}
-              {% set base_time = free | as_datetime | as_local %}
+              {% elif not anyt and solar_p and solar not in ['unknown','unavailable','none'] and not fixed_p %}
+                {% set base_time = solar | as_datetime | as_local %}
 
-            {% elif not anyt and solar_p and solar not in ['unknown','unavailable','none'] %}
-              {% set base_time = solar | as_datetime | as_local %}
+              {% elif not anyt and fixed_p and fixed not in ['unknown','unavailable','none'] %}
+                {% set base_time = fixed | as_datetime | as_local %}
 
-            {% elif not anyt and fixed_p and fixed not in ['unknown','unavailable','none'] %}
-              {% set base_time = fixed | as_datetime | as_local %}
-
-            {% elif anyt %}
-              {# ---------- ANYTIME MODE ---------- #}
-
-              {% if conn_dt is none %}
-                {% set base_time = now_local + timedelta(days=10) %}
-
-              {% else %}
-                {% set planned = conn_dt + timedelta(minutes=delay) %}
-
-                {% if planned > now_local %}
-                  {% set base_time = planned %}
+              {% elif anyt %}
+                {# ANYTIME MODE RECALC #}
+                {% if is_connected and conn_dt is not none %}
+                  {% set base_time = conn_dt + timedelta(minutes=delay) %}
                 {% else %}
-                  {% set base_time = now_local + timedelta(minutes=delay) %}
+                  {# Anytime but no connection → freeze disabled placeholder #}
+                  {% set base_time = now_local + timedelta(days=10) %}
                 {% endif %}
+              {% else %}
+                {% set base_time = now_local + timedelta(days=10) %}
               {% endif %}
 
             {% else %}
-              {% set base_time = now_local + timedelta(days=10) %}
+              {# ----------- FREEZE BRANCH ----------- #}
+              {% set base_time = prev_dt %}
             {% endif %}
 
             {{ base_time }}
-          {% endif %}
 
-        attributes:
-          last_snapshot: >
-            {{ {
-              "anyt": is_state('input_boolean.octopus_schedule_anytime','on'),
-              "solar_p": is_state('input_boolean.solar_export_priority','on'),
-              "fixed_p": is_state('input_boolean.use_fixed_time','on'),
-              "free": states('sensor.octopus_free_electricity_start'),
-              "solar": states('sensor.solar_export_threshold'),
-              "fixed": states('sensor.don_t_charge_ev_before_time_wobble'),
-              "conn": states('sensor.zappi_last_connected'),
-              "disc": states('sensor.zappi_last_disconnected'),
-              "delay": states('input_number.delay_when_ev_connected') | float(0)
-            } | tojson }}
+          attributes:
+            anytime_snapshot: >
+              {% set free    = states('sensor.octopus_free_electricity_start') %}
+              {% set solar   = states('sensor.solar_export_threshold') %}
+              {% set fixed   = states('sensor.don_t_charge_ev_before_time_wobble') %}
+              {% set anyt    = is_state('input_boolean.octopus_schedule_anytime', 'on') %}
+              {% set conn    = states('sensor.zappi_last_connected') %}
+              {% set disc    = states('sensor.zappi_last_disconnected') %}
+              {% set delay   = states('input_number.delay_when_ev_connected') | float(0) %}
+
+              {% set conn_dt = conn | as_datetime | as_local
+                    if conn not in ['unknown','unavailable','none'] else None %}
+              {% set disc_dt = disc | as_datetime | as_local
+                    if disc not in ['unknown','unavailable','none'] else None %}
+              {% set now_local = now() | as_local %}
+              {% set is_connected =
+                    conn_dt is not none and
+                    (disc_dt is none or conn_dt > disc_dt)
+              %}
+
+              {{
+                {
+                  "anyt": anyt,
+                  "conn_dt": conn_dt|string,
+                  "disc_dt": disc_dt|string,
+                  "delay": delay,
+                  "is_connected": is_connected,
+                  "free": free,
+                  "solar": solar,
+                  "fixed": fixed
+                } | to_json
+              }}
+
 
 
 
