@@ -1,4 +1,4 @@
-# v7.2.0
+# v7.3.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -395,11 +395,6 @@ sections:
               entity: sensor.solax_local_battery_soc
               name: Current SoC
         title: Battery Exporting Status
-        header:
-          type: graph
-          entity: sensor.solax_local_battery_dump_power
-          detail: 2
-          hours_to_show: 10
         visibility:
           - condition: or
             conditions:
@@ -426,7 +421,12 @@ sections:
         entities:
           - type: section
           - entity: sensor.solax_local_inverter_mode
-          - entity: sensor.solax_local_manual_mode_behaviour
+          - type: conditional
+            conditions:
+              - entity: sensor.solax_local_manual_mode_behaviour
+                state_not: Do Nothing
+            row:
+              entity: sensor.solax_local_manual_mode_behaviour
         title: Inverter Current Mode
       - type: history-graph
         hours_to_show: 15
@@ -498,6 +498,7 @@ sections:
           - entity: input_button.solax_submit_settings
           - type: section
           - entity: input_boolean.inverter_modes_show_hide
+          - entity: input_boolean.inverter_settings_show_hide
           - type: section
           - type: conditional
             conditions:
@@ -509,23 +510,27 @@ sections:
             conditions:
               - entity: input_boolean.inverter_modes_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Self Use
+              - entity: input_select.solax_work_mode
+                state_not: Feed In Priority
+            row:
+              entity: input_select.solax_manual_modes
+          - type: section
+          - type: conditional
+            conditions:
+              - entity: input_boolean.inverter_modes_show_hide
+                state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_boolean.solax_system_enable
               name: Inverter Off/On
           - type: conditional
             conditions:
-              - entity: input_boolean.inverter_modes_show_hide
-                state: "on"
-            row:
-              entity: input_select.solax_manual_modes
-          - type: section
-          - entity: input_boolean.inverter_settings_show_hide
-          - type: section
-          - type: conditional
-            conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
-              - entity: sensor.solax_local_inverter_mode
+              - entity: input_select.solax_work_mode
                 state: Self Use
             row:
               entity: input_number.solax_selfuse_battery_min_soc
@@ -533,7 +538,7 @@ sections:
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
-              - entity: sensor.solax_local_inverter_mode
+              - entity: input_select.solax_work_mode
                 state: Self Use
             row:
               entity: input_number.solax_selfuse_charge_to_soc
@@ -541,35 +546,39 @@ sections:
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
-              - entity: sensor.solax_local_inverter_mode
-                state: Feed in
+              - entity: input_select.solax_work_mode
+                state: Feed In Priority
             row:
-              entity: input_number.solax_selfuse_battery_min_soc
+              entity: input_number.solax_feed_in_battery_min_soc
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
-              - entity: sensor.solax_local_inverter_mode
-                state: Feed in
+              - entity: input_select.solax_work_mode
+                state: Feed In Priority
             row:
-              entity: input_number.solax_selfuse_charge_to_soc
+              entity: input_number.solax_feed_in_charge_to_soc
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_datetime.solax_battery_start_discharge_time
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_datetime.solax_battery_stop_discharge_time
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
-              - entity: sensor.solax_local_inverter_mode
+              - entity: input_select.solax_work_mode
                 state: Self Use
             row:
               entity: input_boolean.self_use_enable_charge_from_grid
@@ -577,36 +586,48 @@ sections:
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_datetime.solax_battery_start_charge_time
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_datetime.solax_battery_stop_charge_time
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_boolean.solaxchargeperiod2
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_datetime.solax_start_charge_2
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_datetime.solax_stop_charge_2
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_boolean.battery_heat_enable
               name: Battery Heating (Read-Only)
@@ -614,30 +635,40 @@ sections:
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_select.solax_battery_heat_level
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_datetime.solax_battery_start_heat_time
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_datetime.solax_battery_stop_heat_time
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_datetime.solax_start_heat_2
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
                 state: "on"
+              - entity: input_select.solax_work_mode
+                state_not: Manual
             row:
               entity: input_datetime.solax_stop_heat_2
           - type: section

@@ -173,6 +173,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v7.3.0|**23/11/25**|Solax & Octopus Settings.yaml (dashboard) | filter relevant Settings for the Work Mode selected|
 | v7.2.0|**23/11/25**|Solax & Octopus Settings.yaml (dashboard) <br> automations_5000-5005.yaml<br>packages\solax_zappi_octopus_ui\input_button.yaml<br>packages\solax_loads\template_battery_soh.yaml| Removed automation 5003 and replaced with a button on dashboard to apply settings, 5001 was updated to perform the apply setting.|
 | v7.1.1|**22/11/25**|packages\octopus_dispatches\template_get_octopus_schedule.yaml| bug fix to anytime not latching properly|
 | v7.1.0|**21/11/25**|packages\solax_exports\template_discharge_magic.yaml| Added new trigger for JIT Nightly exports |
