@@ -744,20 +744,24 @@
     from: EV Connected
     trigger: state
     alias: Charging
-  - entity_id:
+  - alias: EV Paused
+    entity_id:
     - sensor.zappi_plug_status
-    from: Charging
-    to: EV Connected
+    from:
+    - Charging
+    to:
+    - EV Connected
     id: Paused EV Charging
     trigger: state
-    alias: EV Paused
-  - entity_id:
+  - alias: EV Paused
+    entity_id:
     - sensor.zappi_plug_status
-    from: Waiting for EV
-    to: EV Connected
+    from:
+    - Waiting for EV
+    to:
+    - EV Connected
     id: Paused EV Charging
     trigger: state
-    alias: EV Paused
   - alias: Peak Rate
     entity_id:
     - binary_sensor.octopus_energy_electricity_off_peak
@@ -1011,18 +1015,6 @@
         - Charging to Disconnected
         - Waiting to Disconnected
       sequence:
-      - action: select.select_option
-        metadata: {}
-        data:
-          option: Stopped
-        target:
-          entity_id: select.zappi_charge_mode
-      - action: script.safe_switch_toggle
-        data:
-          target_switch: switch.octopus_intelligent_smart_charge
-          desired_state: 'off'
-          max_retries: 4
-          backoff: 5
       - if:
         - condition: template
           value_template: "{{(state_attr('sensor.solax_local_settings', 'Data')[10]
@@ -1042,6 +1034,18 @@
           title: EV Disconnected
           class: normal
         enabled: true
+      - action: select.select_option
+        metadata: {}
+        data:
+          option: Stopped
+        target:
+          entity_id: select.zappi_charge_mode
+      - action: script.safe_switch_toggle
+        data:
+          target_switch: switch.octopus_intelligent_smart_charge
+          desired_state: 'off'
+          max_retries: 4
+          backoff: 5
       alias: EV Disconnected
     - conditions:
       - condition: trigger
@@ -1235,6 +1239,14 @@
           != default_mode) \nor (state_attr('sensor.solax_local_settings', 'Data')[0]
           != min_soc) \nor (state_attr('sensor.solax_local_settings', 'Data')[12]
           != min_soc)}}\n"
+      - condition: template
+        value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
+          != 3)
+
+          }}
+
+          '
+        enabled: true
       sequence:
       - action: script.solax_set_mode_and_settings
         data:

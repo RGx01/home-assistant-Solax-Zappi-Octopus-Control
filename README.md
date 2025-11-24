@@ -173,6 +173,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v7.3.2|**24/11/25**| automations_5000-5005.yaml <br> packages\solax_exports\template_discharge_magic.yaml |Improved logic|
 | v7.3.1|**23/11/25**| packages\octopus_dispatches\template_get_octopus_schedule.yaml| Improved logic|
 | v7.3.0|**23/11/25**|Solax & Octopus Settings.yaml (dashboard) | filter relevant Settings for the Work Mode selected|
 | v7.2.0|**23/11/25**|Solax & Octopus Settings.yaml (dashboard) <br> automations_5000-5005.yaml<br>packages\solax_zappi_octopus_ui\input_button.yaml<br>packages\solax_loads\template_battery_soh.yaml| Removed automation 5003 and replaced with a button on dashboard to apply settings, 5001 was updated to perform the apply setting.|

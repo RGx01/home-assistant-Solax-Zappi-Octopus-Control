@@ -76,6 +76,8 @@ solax_export_template_discharge_magic:
               states('sensor.battery_budget_reserve_soc') | int(default=20)
             ] | max %}
 
+            {% set gap_start = state_attr('sensor.octopus_next_gap_duration', 'next_gap_start') | as_datetime %}
+            {% set gap_end   = state_attr('sensor.octopus_next_gap_duration', 'next_gap_end')   | as_datetime %}
 
             {% set soc_window = states('input_number.battery_discharge_soc_window_limit') | float(6) %}
             {% set exportable_kwh = states('sensor.battery_exportable_allowance_kwh') | float(0) %}
@@ -102,6 +104,10 @@ solax_export_template_discharge_magic:
               and ev_status == 'EV Connected'
               and connected_for_min >= min_connected_min
               and has_gap
+              and gap_start is not none
+              and gap_end is not none
+              and now_time >= gap_start
+              and now_time < gap_end
               and exportable_kwh > (0 if target_soc > 15 else 0.350)
               and (solar_threshold is none or now_time >= solar_threshold)
               and (
@@ -114,6 +120,12 @@ solax_export_template_discharge_magic:
             connected_for_min: >
               {{ ((as_timestamp(now()) - as_timestamp(states.sensor.zappi_plug_status.last_changed)) / 60) | round(1) }}
             next_gap_duration_hr: "{{ states('sensor.octopus_next_gap_duration') }}"
+            next_gap_start: >
+              {% set g = state_attr('sensor.octopus_next_gap_duration', 'next_gap_start') %}
+              {{ g if g not in ['unknown','unavailable','',none] else none }}
+            next_gap_end: >
+              {% set g = state_attr('sensor.octopus_next_gap_duration', 'next_gap_end') %}
+              {{ g if g not in ['unknown','unavailable','',none] else none }}
             solar_threshold: >
               {% set s = states('sensor.solar_export_threshold') %}
               {{ (s | as_datetime | as_local) if s not in ['unknown','unavailable','',none] else none }}

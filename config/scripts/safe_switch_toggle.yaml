@@ -1,4 +1,6 @@
 safe_switch_toggle:
+  trace:
+    stored_traces: 20
   description: "Toggle a switch safely with configurable retry and back-off if it fails"
   fields:
     target_switch:
