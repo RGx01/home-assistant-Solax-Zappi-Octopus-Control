@@ -152,14 +152,11 @@ octopus_dispatches_template_octopus_dispatch:
             {% set min_gap_hr = 20 / 60 %}
             {% set cutoff_time = "23:30" %}
 
-            {# now and gaps #}
             {% set now_t = now() %}
             {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps_dt') %}
-
-            {# ----- compute blackout window: cutoff_dt .. stop_dt ----- #}
             {% set cutoff_dt = today_at(cutoff_time) %}
 
-            {# 1) parse solax stop time #}
+            {# ---- parse solax stop time ---- #}
             {% set solax_raw = states('input_datetime.solax_battery_stop_charge_time') %}
             {% set t_solax = none %}
             {% if solax_raw %}
@@ -174,7 +171,7 @@ octopus_dispatches_template_octopus_dispatch:
               {% endif %}
             {% endif %}
 
-            {# 2) parse intelligent target time #}
+            {# ---- parse Intelligent Target ---- #}
             {% set intel_raw = states('select.octopus_intelligent_target_time') %}
             {% set t_intel = none %}
             {% if intel_raw and ':' in intel_raw %}
@@ -184,7 +181,7 @@ octopus_dispatches_template_octopus_dispatch:
               {% endif %}
             {% endif %}
 
-            {# choose stop_dt #}
+            {# ---- determine blackout end (stop_dt) ---- #}
             {% if t_intel is none and t_solax is none %}
               {% set stop_dt = cutoff_dt + timedelta(hours=7) %}
             {% elif t_intel is none %}
@@ -192,15 +189,13 @@ octopus_dispatches_template_octopus_dispatch:
             {% elif t_solax is none %}
               {% set stop_dt = t_intel %}
             {% else %}
-              {% set stop_dt = (t_intel if t_intel > t_solax else t_solax) %}
+              {% set stop_dt = t_intel if t_intel > t_solax else t_solax %}
             {% endif %}
 
-            {# ensure stop_dt is after cutoff_dt #}
             {% if stop_dt <= cutoff_dt %}
               {% set stop_dt = stop_dt + timedelta(days=1) %}
             {% endif %}
 
-            {# If gaps missing or not iterable, no gap #}
             {% if gaps is not iterable %}
               0
             {% else %}
@@ -212,19 +207,19 @@ octopus_dispatches_template_octopus_dispatch:
                 {% if not start or not end %}
                   {% continue %}
                 {% endif %}
-
                 {% if end <= now_t %}
                   {% continue %}
                 {% endif %}
 
-                {# skip if ANY part of gap overlaps blackout window #}
-                {% if not (end <= cutoff_dt or start >= stop_dt) %}
-                  {% continue %}
-                {% endif %}
+                {# --------- FIX: proper clamping instead of skipping ---------- #}
 
+                {# clamp start to now #}
                 {% set effective_start = start if start > now_t else now_t %}
+
+                {# clamp end to cutoff #}
                 {% set effective_end = end if end < cutoff_dt else cutoff_dt %}
 
+                {# if clamped window vanishes, skip #}
                 {% if effective_end <= effective_start %}
                   {% continue %}
                 {% endif %}
@@ -246,7 +241,7 @@ octopus_dispatches_template_octopus_dispatch:
               {% set cutoff = today_at("23:30") %}
               {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps_dt') %}
 
-              {# rebuild blackout window (cutoff .. stop_dt) #}
+              {# rebuild blackout window #}
               {% set solax_raw = states('input_datetime.solax_battery_stop_charge_time') %}
               {% set t_solax = none %}
               {% if solax_raw %}
@@ -277,7 +272,7 @@ octopus_dispatches_template_octopus_dispatch:
               {% elif t_solax is none %}
                 {% set stop_dt = t_intel %}
               {% else %}
-                {% set stop_dt = (t_intel if t_intel > t_solax else t_solax) %}
+                {% set stop_dt = t_intel if t_intel > t_solax else t_solax %}
               {% endif %}
               {% if stop_dt <= cutoff %}
                 {% set stop_dt = stop_dt + timedelta(days=1) %}
@@ -289,25 +284,13 @@ octopus_dispatches_template_octopus_dispatch:
                 {% for gap in gaps %}
                   {% set start = as_datetime(gap.start) %}
                   {% set end = as_datetime(gap.end) %}
+                  {% if not start or not end %}{% continue %}{% endif %}
+                  {% if end <= now_t %}{% continue %}{% endif %}
 
-                  {% if not start or not end %}
-                    {% continue %}
-                  {% endif %}
-                  {% if end <= now_t %}
-                    {% continue %}
-                  {% endif %}
-
-                  {# skip if any overlap with blackout #}
-                  {% if not (end <= cutoff or start >= stop_dt) %}
-                    {% continue %}
-                  {% endif %}
-
+                  {# FIX: clamping (same as main state) #}
                   {% set effective_start = start if start > now_t else now_t %}
                   {% set effective_end = end if end < cutoff else cutoff %}
-
-                  {% if effective_end <= effective_start %}
-                    {% continue %}
-                  {% endif %}
+                  {% if effective_end <= effective_start %}{% continue %}{% endif %}
 
                   {% set dur_hr = (effective_end - effective_start).total_seconds() / 3600 %}
                   {% if dur_hr >= min_gap_hr %}
@@ -324,7 +307,7 @@ octopus_dispatches_template_octopus_dispatch:
               {% set cutoff = today_at("23:30") %}
               {% set gaps = state_attr('sensor.octopus_total_planned_dispatch', 'gaps_dt') %}
 
-              {# blackout window again #}
+              {# same blackout window rebuild as above #}
               {% set solax_raw = states('input_datetime.solax_battery_stop_charge_time') %}
               {% set t_solax = none %}
               {% if solax_raw %}
@@ -355,7 +338,7 @@ octopus_dispatches_template_octopus_dispatch:
               {% elif t_solax is none %}
                 {% set stop_dt = t_intel %}
               {% else %}
-                {% set stop_dt = (t_intel if t_intel > t_solax else t_solax) %}
+                {% set stop_dt = t_intel if t_intel > t_solax else t_solax %}
               {% endif %}
               {% if stop_dt <= cutoff %}
                 {% set stop_dt = stop_dt + timedelta(days=1) %}
@@ -367,25 +350,13 @@ octopus_dispatches_template_octopus_dispatch:
                 {% for gap in gaps %}
                   {% set start = as_datetime(gap.start) %}
                   {% set end = as_datetime(gap.end) %}
+                  {% if not start or not end %}{% continue %}{% endif %}
+                  {% if end <= now_t %}{% continue %}{% endif %}
 
-                  {% if not start or not end %}
-                    {% continue %}
-                  {% endif %}
-                  {% if end <= now_t %}
-                    {% continue %}
-                  {% endif %}
-
-                  {# skip if ANY overlap #}
-                  {% if not (end <= cutoff or start >= stop_dt) %}
-                    {% continue %}
-                  {% endif %}
-
+                  {# FIX: clamping #}
                   {% set effective_start = start if start > now_t else now_t %}
                   {% set effective_end = end if end < cutoff else cutoff %}
-
-                  {% if effective_end <= effective_start %}
-                    {% continue %}
-                  {% endif %}
+                  {% if effective_end <= effective_start %}{% continue %}{% endif %}
 
                   {% set dur_hr = (effective_end - effective_start).total_seconds() / 3600 %}
                   {% if dur_hr >= min_gap_hr %}
@@ -395,6 +366,7 @@ octopus_dispatches_template_octopus_dispatch:
                 {% endfor %}
                 {{ ns.end or '' }}
               {% endif %}
+
 
 
 
