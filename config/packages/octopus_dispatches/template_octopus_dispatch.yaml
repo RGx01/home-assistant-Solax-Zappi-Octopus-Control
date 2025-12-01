@@ -1,4 +1,5 @@
 ########################################
+# v8.0.1 Additional attribute in octopus_total_planned_dispatch.dispatches_kwh to support dashboard
 # v8.0.0 Refactor/Clean up and improved Gap logic
 # v1.0.1 Remove old dispatched items
 # Template to agragate the total of the dispatches
@@ -124,7 +125,20 @@ octopus_dispatches_template_octopus_dispatch:
               {% endfor %}
 
               {{ ns.gaps }}
-
+            dispatches_kwh: >
+              {% set planned = state_attr('binary_sensor.octopus_intelligent_dispatching','planned_dispatches') or [] %}
+              {% set ns4 = namespace(members=[]) %}
+              {% for dispatch in planned %}
+                {% if dispatch.start is not none and dispatch.end is not none and as_datetime(dispatch.end) > now() %}
+                  {% set start = as_local(as_datetime(dispatch.start)).strftime('%H:%M') %}
+                  {% set end   = as_local(as_datetime(dispatch.end)).strftime('%H:%M') %}
+                  {% set kwh   = (dispatch.charge_in_kwh | float(0)) %}
+                  {% set ns4.members = ns4.members + [{
+                    "dispatch": start ~ " to " ~ end ~ " " ~ (kwh | round(2)) ~ " kWh"
+                  }] %}
+                {% endif %}
+              {% endfor %}
+              {{ ns4.members }}
 
     ###############################################
     # Remaining Dispatch for this session

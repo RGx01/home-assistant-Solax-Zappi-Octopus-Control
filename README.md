@@ -177,6 +177,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v8.1.0|**01/12/25**| Solax & Octopus Settings.yaml (dashboard) <br> packages\octopus_dispatches\template_octopus_dispatch.yaml| Dashboard refinement around octopus dispatches |
 | v8.0.0|**01/12/25**| ALL | Attempt to work around tiny dispatches and pauses in 5001 <br> Removed dependancy on free electric events sensor.<br> Better dispatch gap calculation logic <br> Better logic for calculating the 'get schedule' <br> Fixed small bug in tariff sensor created after removing free electric dependancy <br> Tiny adjustments to discharge magic and a bug fix to exportable allowence <br> Fixed small bug in the battery budget allocator pyscript <br> Improved battery_budget_schedule pyscript to prevent charge windows impinging on dynamic slots. |
 | v7.3.2|**24/11/25**| automations_5000-5005.yaml <br> packages\solax_exports\template_discharge_magic.yaml |Improved logic|
 | v7.3.1|**23/11/25**| packages\octopus_dispatches\template_get_octopus_schedule.yaml| Improved logic|

@@ -1,4 +1,4 @@
-# v8.0.0
+# v8.1.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -32,19 +32,20 @@ sections:
             tap_action:
               action: more-info
       - type: markdown
-        content: >-
+        content: >+
           {% if state_attr('sensor.octopus_total_planned_dispatch','dispatches')
           != None%}    
 
           Planned Dispatches
 
           {% set current =
-          state_attr('sensor.octopus_total_planned_dispatch','dispatches')|list|
+          state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh')|list|
           map(attribute='dispatch') | list %}
             {% for dispatch in current%}
               {{dispatch}}
             {% endfor %}
           {%endif%}
+
         visibility:
           - condition: numeric_state
             entity: sensor.octopus_total_planned_dispatch
@@ -2099,4 +2100,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-
