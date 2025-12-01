@@ -136,10 +136,11 @@ automation: !include automations.yaml
  	<img width="1222" height="741" alt="Screenshot 2025-11-21 at 13 12 26" src="https://github.com/user-attachments/assets/3e2f5a50-50a0-4b70-ba92-8437021f772d" />
 	<img width="1223" height="742" alt="Screenshot 2025-11-21 at 13 20 49" src="https://github.com/user-attachments/assets/aaae398c-23a8-4de2-8192-109c38fa3309" />
 
-18. Configuring Solax Inverter
-    - Note the "Battery Start Charge Time". To get the best SoH results the battery must be left to settle (the longer the better) after a discharge cycle end's (usually 23:30 if on IOG). If too short of a time is left between a force discharge and charge cycle the BMS has been observed to artificially raise SoC during charge resulting in a lower grid stored result.
+18. # Configuring Solax Inverter - IMPORTANT
+    - **Note the "Battery Start Charge Time". To get the best SoH results the battery must be left to settle (the longer the better) after a discharge cycle before charging. If too short of a time between discharge and charge, the BMS has been observed to artificially raise SoC at unrealistic charge rates during initial charge. The net result is less energy being stored. The SoH calc is simplistic, essentially comparing the theoretical capacity vs what actually gets stored. If you store less then the SoH looks worse. Letting the battery settle for as long as possible gives the best results and likely helps keep cells balanced.**
     - Recommended settings are as follows:
-    insert screen shot
+    <img width="444" height="727" alt="Screenshot 2025-11-30 at 06 47 43" src="https://github.com/user-attachments/assets/421e3e4e-7efd-4c64-8856-8ad51fadab7c" />
+
 19. Done.
 
 # Notification Management
