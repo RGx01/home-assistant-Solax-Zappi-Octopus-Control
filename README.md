@@ -69,8 +69,8 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
     - Find and set the billing period offsets you require
     - Find ev_charging_daily_vehicle and replace the vehicle names and set them as you wish
     - Find ev_charging_monthly_vehicle and replace the vehicle names and set them as you wish
-10. .\config\packages\octoplus_sessions\template.yaml
-    - Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969
+10. ~~.\config\packages\octoplus_sessions\template.yaml ~~
+    - ~~Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969~~
 11. .\config\packages\zappi_renamed_entities\template.yaml
     - Find and replace all zappi serial numbers zappi_XXXXXXXX with your own i.e. zappi_12345678
 12. Copy the contents of automations_5000-5005.yaml to the bottom of .\config automations.yaml
@@ -136,8 +136,11 @@ automation: !include automations.yaml
  	<img width="1222" height="741" alt="Screenshot 2025-11-21 at 13 12 26" src="https://github.com/user-attachments/assets/3e2f5a50-50a0-4b70-ba92-8437021f772d" />
 	<img width="1223" height="742" alt="Screenshot 2025-11-21 at 13 20 49" src="https://github.com/user-attachments/assets/aaae398c-23a8-4de2-8192-109c38fa3309" />
 
-    
-18. Done.
+18. Configuring Solax Inverter
+    - Note the "Battery Start Charge Time". To get the best SoH results the battery must be left to settle (the longer the better) after a discharge cycle end's (usually 23:30 if on IOG). If too short of a time is left between a force discharge and charge cycle the BMS has been observed to artificially raise SoC during charge resulting in a lower grid stored result.
+    - Recommended settings are as follows:
+    insert screen shot
+19. Done.
 
 # Notification Management
 
@@ -154,7 +157,7 @@ automation: !include automations.yaml
 # Equipment Used During Development
 <ol>
 <li>Solax X1-G4 Inverter</li>
-<li>Solax 9kWh Battery</li>
+<li>Solax 9kWh Battery TP3.0</li>
 <li>Wired LAN Connection to Inverter</li>
 <li>Wired LAN to Zappi</li>
 </ol>
@@ -173,6 +176,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v8.0.0|**01/12/25**| ALL | Attempt to work around tiny dispatches and pauses in 5001 <br> Removed dependancy on free electric events sensor.<br> Better dispatch gap calculation logic <br> Better logic for calculating the 'get schedule' <br> Fixed small bug in tariff sensor created after removing free electric dependancy <br> Tiny adjustments to discharge magic and a bug fix to exportable allowence <br> Fixed small bug in the battery budget allocator pyscript <br> Improved battery_budget_schedule pyscript to prevent charge windows impinging on dynamic slots. |
 | v7.3.2|**24/11/25**| automations_5000-5005.yaml <br> packages\solax_exports\template_discharge_magic.yaml |Improved logic|
 | v7.3.1|**23/11/25**| packages\octopus_dispatches\template_get_octopus_schedule.yaml| Improved logic|
 | v7.3.0|**23/11/25**|Solax & Octopus Settings.yaml (dashboard) | filter relevant Settings for the Work Mode selected|
@@ -193,5 +197,4 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 | v6.0.0|**21/10/25**|All| new architecture - ident-potent inverter/zappi control|
 
 # Known Issues
-1. Latest release of Octopus Energy (by bottlecapdave) V17 has a deprication notice for the free electric entities in May 2026
-    - This means new development required so that users can Prep the SoC for the upcoming session.
+1. None at this time

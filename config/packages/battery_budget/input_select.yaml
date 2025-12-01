@@ -37,6 +37,28 @@ battery_budget_input_select:
         - 30
         - 60
       icon: mdi:timer-cog-outline
+    ignore_additional_reserve_after:
+      name: Ignore Additional Reserve After
+      options:
+        - ' '
+        - "19:00"
+        - "19:15"
+        - "19:30"
+        - "19:45"
+        - "20:00"
+        - "20:15"
+        - "20:30"
+        - "20:45"
+        - "21:00"
+        - "21:15"
+        - "21:30"
+        - "21:45"
+        - "22:00"
+        - "22:15"
+        - "22:30"
+        - "22:45"
+        - "23:00"
+      icon: mdi:clock-end
 
 
 

@@ -1,11 +1,8 @@
-###############################################
-# Replace octopus account number z_ZZZZZZZZ
-###############################################
-octoplus_sessions_templates:
+octoplus_sessions_octoplus_templates:
   template:
     ######################################################
     # Octopus free/saving sensors
-    # V6.0   Refactor
+    # V8.0.0   Refactor
     ######################################################
 
     ######################################################
@@ -31,7 +28,6 @@ octoplus_sessions_templates:
     ######################################################
     # binary_sensor.free_electricity_today
     ######################################################
-
     - binary_sensor:
         - name: Free Electricity Today
           unique_id: free_electricity_today
@@ -39,17 +35,23 @@ octoplus_sessions_templates:
           # and is currently still running.
           # Otherwise, it is OFF.
           state: >
-            {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
+            {% set events = state_attr('sensor.octoplus_free_electricity_session_events','events') or [] %}
             {% set now_dt = now() %}
-            {% if events %}
-              {# Try to find today’s session by matching today’s date in 'start' #}
-              {% set today_event = events | selectattr('start','search', now_dt.date().isoformat()) | first %}
-              {% if today_event is defined and today_event['end'] not in [none,''] %}
-                {% set end_dt = today_event['end'] | as_datetime | as_local %}
-                {{ now_dt < end_dt }}
-              {% else %}
-                false
+            {% set ns = namespace(today_event=None) %}
+
+            {# Find today’s event #}
+            {% for e in events %}
+              {% if e.start is defined %}
+                {% set e_start = e.start | as_datetime | as_local %}
+                {% if e_start.date() == now_dt.date() %}
+                  {% set ns.today_event = e %}
+                {% endif %}
               {% endif %}
+            {% endfor %}
+
+            {% if ns.today_event is not none and ns.today_event.end is defined %}
+              {% set end_dt = ns.today_event.end | as_datetime | as_local %}
+              {{ now_dt < end_dt }}
             {% else %}
               false
             {% endif %}
@@ -60,38 +62,38 @@ octoplus_sessions_templates:
               {# - If there is a session today, it shows today’s start. #}
               {# - If no session today, it shows the start of the *next upcoming* session. #}
               {# - If no future sessions exist, it falls back to the last known session. #}
-              {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
+              {% set events = state_attr('sensor.octoplus_free_electricity_session_events','events') or [] %}
               {% set now_dt = now() %}
-              {% set ns = namespace(future_events=[]) %}
-              {% set today_event = events | selectattr('start','search', now_dt.date().isoformat()) | first if events else none %}
+              {% set ns = namespace(today_event=None, future_events=[]) %}
 
-              {% if today_event is defined and today_event['start'] not in [none,''] %}
-                {{ today_event['start'] | as_datetime | as_local }}
-
-              {% elif events %}
-                {# Build a list of all future sessions after now #}
-                {% for e in events %}
-                  {% if e.start not in [none,''] %}
-                    {% set e_start_dt = e.start | as_datetime %}
-                    {% if e_start_dt > now_dt %}
-                      {% set ns.future_events = ns.future_events + [e] %}
-                    {% endif %}
+              {# Find today’s event #}
+              {% for e in events %}
+                {% if e.start is defined %}
+                  {% set e_start = e.start | as_datetime | as_local %}
+                  {% if e_start.date() == now_dt.date() %}
+                    {% set ns.today_event = e %}
+                  {% elif e_start > now_dt %}
+                    {% set ns.future_events = ns.future_events + [e] %}
                   {% endif %}
-                {% endfor %}
+                {% endif %}
+              {% endfor %}
 
-                {# Sort by start date and pick the next event, or fallback to last known #}
-                {% set ns.future_events = ns.future_events | sort(attribute='start') %}
-                {% set next_event = ns.future_events[0] if ns.future_events | length > 0 else none %}
-
-                {% if next_event not in [none,''] %}
-                  {{ next_event['start'] | as_datetime | as_local }}
-                {% elif events | length > 0 %}
-                  {% set last_event = events | last %}
-                  {{ last_event['start'] | as_datetime | as_local }}
+              {% if ns.today_event is not none and ns.today_event.start is defined %}
+                {{ ns.today_event.start | as_datetime | as_local }}
+              {% elif ns.future_events | length > 0 %}
+                {% set next_event = ns.future_events | sort(attribute='start') | first %}
+                {% if next_event.start is defined %}
+                  {{ next_event.start | as_datetime | as_local }}
                 {% else %}
                   none
                 {% endif %}
-
+              {% elif events | length > 0 %}
+                {% set last_event = events[-1] %}
+                {% if last_event.start is defined %}
+                  {{ last_event.start | as_datetime | as_local }}
+                {% else %}
+                  none
+                {% endif %}
               {% else %}
                 none
               {% endif %}
@@ -101,36 +103,38 @@ octoplus_sessions_templates:
               {# - Today’s end if there is one. #}
               {# - Next session’s end if there isn’t one today.#}
               {# - Falls back to the last known session’s end if no future events exist. #}
-              {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
+              {% set events = state_attr('sensor.octoplus_free_electricity_session_events','events') or [] %}
               {% set now_dt = now() %}
-              {% set ns = namespace(future_events=[]) %}
-              {% set today_event = events | selectattr('start','search', now_dt.date().isoformat()) | first if events else none %}
+              {% set ns = namespace(today_event=None, future_events=[]) %}
 
-              {% if today_event is defined and today_event['end'] not in [none,''] %}
-                {{ today_event['end'] | as_datetime | as_local }}
-
-              {% elif events %}
-                {% for e in events %}
-                  {% if e.start not in [none,''] %}
-                    {% set e_start_dt = e.start | as_datetime %}
-                    {% if e_start_dt > now_dt %}
-                      {% set ns.future_events = ns.future_events + [e] %}
-                    {% endif %}
+              {# Find today and future events #}
+              {% for e in events %}
+                {% if e.start is defined %}
+                  {% set e_start = e.start | as_datetime | as_local %}
+                  {% if e_start.date() == now_dt.date() %}
+                    {% set ns.today_event = e %}
+                  {% elif e_start > now_dt %}
+                    {% set ns.future_events = ns.future_events + [e] %}
                   {% endif %}
-                {% endfor %}
+                {% endif %}
+              {% endfor %}
 
-                {% set ns.future_events = ns.future_events | sort(attribute='start') %}
-                {% set next_event = ns.future_events[0] if ns.future_events | length > 0 else none %}
-
-                {% if next_event not in [none,''] and next_event['end'] not in [none,''] %}
-                  {{ next_event['end'] | as_datetime | as_local }}
-                {% elif events | length > 0 %}
-                  {% set last_event = events | last %}
-                  {{ last_event['end'] | as_datetime | as_local }}
+              {% if ns.today_event is not none and ns.today_event.end is defined %}
+                {{ ns.today_event.end | as_datetime | as_local }}
+              {% elif ns.future_events | length > 0 %}
+                {% set next_event = ns.future_events | sort(attribute='start') | first %}
+                {% if next_event.end is defined %}
+                  {{ next_event.end | as_datetime | as_local }}
                 {% else %}
                   none
                 {% endif %}
-
+              {% elif events | length > 0 %}
+                {% set last_event = events[-1] %}
+                {% if last_event.end is defined %}
+                  {{ last_event.end | as_datetime | as_local }}
+                {% else %}
+                  none
+                {% endif %}
               {% else %}
                 none
               {% endif %}
@@ -140,36 +144,38 @@ octoplus_sessions_templates:
               {# - Today’s duration if today has a session. #}
               {# - Next upcoming session’s duration if not today. #}
               {# - Falls back to the last known session duration if no future exists. #}
-              {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
+              {% set events = state_attr('sensor.octoplus_free_electricity_session_events','events') or [] %}
               {% set now_dt = now() %}
-              {% set ns = namespace(future_events=[]) %}
-              {% set today_event = events | selectattr('start','search', now_dt.date().isoformat()) | first if events else none %}
+              {% set ns = namespace(today_event=None, future_events=[]) %}
 
-              {% if today_event is defined and today_event['duration_in_minutes'] not in [none,''] %}
-                {{ today_event['duration_in_minutes'] | int }}
-
-              {% elif events %}
-                {% for e in events %}
-                  {% if e.start not in [none,''] %}
-                    {% set e_start_dt = e.start | as_datetime %}
-                    {% if e_start_dt > now_dt %}
-                      {% set ns.future_events = ns.future_events + [e] %}
-                    {% endif %}
+              {# Find today and future events #}
+              {% for e in events %}
+                {% if e.start is defined %}
+                  {% set e_start = e.start | as_datetime | as_local %}
+                  {% if e_start.date() == now_dt.date() %}
+                    {% set ns.today_event = e %}
+                  {% elif e_start > now_dt %}
+                    {% set ns.future_events = ns.future_events + [e] %}
                   {% endif %}
-                {% endfor %}
+                {% endif %}
+              {% endfor %}
 
-                {% set ns.future_events = ns.future_events | sort(attribute='start') %}
-                {% set next_event = ns.future_events[0] if ns.future_events | length > 0 else none %}
-
-                {% if next_event not in [none,''] and next_event['duration_in_minutes'] not in [none,''] %}
-                  {{ next_event['duration_in_minutes'] | int }}
-                {% elif events | length > 0 %}
-                  {% set last_event = events | last %}
-                  {{ last_event['duration_in_minutes'] | int }}
+              {% if ns.today_event is not none and ns.today_event.duration_in_minutes is defined %}
+                {{ ns.today_event.duration_in_minutes | int }}
+              {% elif ns.future_events | length > 0 %}
+                {% set next_event = ns.future_events | sort(attribute='start') | first %}
+                {% if next_event.duration_in_minutes is defined %}
+                  {{ next_event.duration_in_minutes | int }}
                 {% else %}
                   0
                 {% endif %}
-
+              {% elif events | length > 0 %}
+                {% set last_event = events[-1] %}
+                {% if last_event.duration_in_minutes is defined %}
+                  {{ last_event.duration_in_minutes | int }}
+                {% else %}
+                  0
+                {% endif %}
               {% else %}
                 0
               {% endif %}
@@ -232,7 +238,7 @@ octoplus_sessions_templates:
           # - If today's session has finished and another session is scheduled later → ON
           # - If there are no sessions at all → OFF
           state: >
-            {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
+            {% set events = state_attr('sensor.octoplus_free_electricity_session_events','events') %}
             {% set now_dt = now() %}
             {% if events %}
               {# collect all events that start after now into a namespace #}
@@ -271,7 +277,7 @@ octoplus_sessions_templates:
           attributes:
             next_session_start: >
               {# Start time of the next future session (if any) #}
-              {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
+              {% set events = state_attr('sensor.octoplus_free_electricity_session_events','events') %}
               {% set now_dt = now() %}
               {% set ns = namespace(future_events=[]) %}
               {% if events %}
@@ -292,7 +298,7 @@ octoplus_sessions_templates:
 
             next_session_end: >
               {# End time of the next future session (if any) #}
-              {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
+              {% set events = state_attr('sensor.octoplus_free_electricity_session_events','events') %}
               {% set now_dt = now() %}
               {% set ns = namespace(future_events=[]) %}
               {% if events %}
@@ -313,7 +319,7 @@ octoplus_sessions_templates:
 
             next_session_duration: >
               {# Duration (minutes) of the next future session (if any) #}
-              {% set events = state_attr('event.octopus_energy_z_ZZZZZZZZ_octoplus_free_electricity_session_events','events') %}
+              {% set events = state_attr('sensor.octoplus_free_electricity_session_events','events') %}
               {% set now_dt = now() %}
               {% set ns = namespace(future_events=[]) %}
               {% if events %}
@@ -333,50 +339,70 @@ octoplus_sessions_templates:
               {% endif %}
 
 
-    # # Octopus Saving Session
-    # - trigger:
-    #     - trigger: time_pattern
-    #       minutes: /30
-    #     - trigger: state
-    #       entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions
-    #       not_to:
-    #         - unavailable
-    #         - unknown
-    #     - trigger: state
-    #       entity_id: binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions
-    #       attribute: next_joined_event_start
-    #   sensor:
-    #     - name: "Octopus - Is there a Saving Session today?"
-    #       unique_id: octopus_is_there_a_saving_session_today
-    #       state: >
-    #         {% if state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','current_joined_event_start') != 'unknown'%}
-    #         {% set current_event = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','current_joined_event_start') %} 
-    #         {% set next_event =state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','next_joined_event_start') %} 
-    #         {% set upcoming_event = current_event if (current_event != None) else next_event %} 
-    #         {{ 'yes' if (upcoming_event !=None and upcoming_event.strftime('%j') == now().strftime('%j')) else 'no' }}
-    #         {%else%}
-    #         {% set current_event =None %} 
-    #         {% set next_event =None %} 
-    #         {{'no'}}
-    #         {%endif%}
-    #       attributes:
-    #         session_start: >
-    #           {% if state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','current_joined_event_start') != 'unknown'%}
-    #           {% set current_event = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','current_joined_event_start') %} 
-    #           {% set next_event =state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','next_joined_event_start') %} 
-    #           {%else%}
-    #           {% set current_event =None %} 
-    #           {% set next_event =None %} 
-    #           {%endif%}
-    #           {% set upcoming_event = current_event if (current_event != None) else next_event %} 
-    #           {{ (now() + timedelta(days=7)).strftime('%Y-%m-%d 00:00:00') if (upcoming_event == None) else upcoming_event}}
-    #         session_end: >
-    #           {% if state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','current_joined_event_end') != 'unknown'%}
-    #           {% set current_event_end = state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','current_joined_event_end') %} 
-    #           {% set next_event_end =state_attr('binary_sensor.octopus_energy_z_ZZZZZZZZ_octoplus_saving_sessions','next_joined_event_end')   %} 
-    #           {%else%}
-    #           {% set current_event_end =None %} 
-    #           {% set next_event_end =None %} 
-    #           {%endif%}
-    #           {% set upcoming_event_end = current_event_end if (current_event_end != None) else next_event_end %} 
-    #           {{ (now() + timedelta(days=7)).strftime('%Y-%m-%d 01:00:00') if (upcoming_event_end == None) else upcoming_event_end}}
+
+    - trigger:
+        # Update every 15 minutes
+        - platform: time_pattern
+          minutes: "/15"
+
+        # Also update on HA startup
+        - platform: homeassistant
+          event: start
+
+      action:
+        # 1️⃣ Discover calendar dynamically
+        - variables:
+            octoplus_cal: >
+              {{ states.calendar
+                | selectattr('entity_id','search','_octoplus_free_electricity_session$')
+                | map(attribute='entity_id')
+                | first
+              }}
+
+        # 2️⃣ Fetch past events (last 730 days)
+        - service: calendar.get_events
+          target:
+            entity_id: "{{ octoplus_cal }}"
+          data:
+            start_date_time: "{{ (now() - timedelta(days=730)).isoformat() }}"
+            end_date_time: "{{ now().isoformat() }}"
+          response_variable: past_events
+
+        # 3️⃣ Fetch future events (next 365 days)
+        - service: calendar.get_events
+          target:
+            entity_id: "{{ octoplus_cal }}"
+          data:
+            start_date_time: "{{ now().isoformat() }}"
+            end_date_time: "{{ (now() + timedelta(days=30)).isoformat() }}"
+          response_variable: future_events
+
+      sensor:
+        - name: Octoplus Free Electricity Session Events
+          unique_id: octoplus_free_electricity_session_events
+          state: "ok"
+          attributes:
+            events: >
+              {% set cal = octoplus_cal %}
+              {% set past = past_events[cal].events if past_events and cal in past_events else [] %}
+              {% set future = future_events[cal].events if future_events and cal in future_events else [] %}
+              {% set all_events = past + future %}
+
+              {% set ns = namespace(normalized=[]) %}
+              {% for e in all_events %}
+                {% if e.start is defined and e.end is defined %}
+                  {% set start_dt = e.start | as_datetime | as_local %}
+                  {% set end_dt = e.end | as_datetime | as_local %}
+                  {% set duration = ((end_dt - start_dt).total_seconds() / 60) | int %}
+                  {% set ns.normalized = ns.normalized + [{
+                    'code': loop.index|string,
+                    'start': start_dt.isoformat(),
+                    'end': end_dt.isoformat(),
+                    'duration_in_minutes': duration
+                  }] %}
+                {% endif %}
+              {% endfor %}
+
+              {{ ns.normalized }}
+
+

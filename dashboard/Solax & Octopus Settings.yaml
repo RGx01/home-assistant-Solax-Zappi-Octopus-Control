@@ -1,4 +1,4 @@
-# v7.3.0
+# v8.0.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -55,7 +55,8 @@ sections:
             label: >-
               Automation controls the inverter, smart charge and zappi mode, it
               responds to events such as car charging and Grid Supplier rate
-              changes.
+              changes by controlling the Minimum SoC. It also handles
+              exporting. 
           - entity: automation.solax_zappi_octopus_control
           - entity: input_number.delay_when_ev_connected
           - entity: switch.octopus_intelligent_smart_charge
@@ -432,11 +433,11 @@ sections:
         hours_to_show: 15
         show_names: false
         entities:
-          - entity: sensor.solax_local_selfuse_battery_min_soc
           - entity: sensor.solax_local_feed_in_battery_min_soc
-          - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: sensor.solax_local_selfuse_battery_min_soc
           - entity: sensor.solax_local_battery_soc
           - entity: sensor.battery_budget_reserve_soc
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
         grid_options:
           columns: 12
           rows: 3
@@ -622,6 +623,7 @@ sections:
                 state_not: Manual
             row:
               entity: input_datetime.solax_stop_charge_2
+          - type: section
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
@@ -629,8 +631,8 @@ sections:
               - entity: input_select.solax_work_mode
                 state_not: Manual
             row:
-              entity: input_boolean.battery_heat_enable
-              name: Battery Heating (Read-Only)
+              entity: sensor.solax_local_battery_heat_enabled
+              name: Battery Heating
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
@@ -638,7 +640,7 @@ sections:
               - entity: input_select.solax_work_mode
                 state_not: Manual
             row:
-              entity: input_select.solax_battery_heat_level
+              entity: sensor.solax_local_battery_heat_level
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
@@ -646,7 +648,7 @@ sections:
               - entity: input_select.solax_work_mode
                 state_not: Manual
             row:
-              entity: input_datetime.solax_battery_start_heat_time
+              entity: sensor.solax_local_battery_heat_start
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
@@ -654,7 +656,7 @@ sections:
               - entity: input_select.solax_work_mode
                 state_not: Manual
             row:
-              entity: input_datetime.solax_battery_stop_heat_time
+              entity: sensor.solax_local_battery_heat_stop
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
@@ -662,7 +664,7 @@ sections:
               - entity: input_select.solax_work_mode
                 state_not: Manual
             row:
-              entity: input_datetime.solax_start_heat_2
+              entity: sensor.solax_local_battery_heat_start_2
           - type: conditional
             conditions:
               - entity: input_boolean.inverter_settings_show_hide
@@ -670,7 +672,7 @@ sections:
               - entity: input_select.solax_work_mode
                 state_not: Manual
             row:
-              entity: input_datetime.solax_stop_heat_2
+              entity: sensor.solax_local_battery_heat_stop_2
           - type: section
           - entity: input_boolean.inverter_default_behaviours_show_hide
           - type: section
@@ -890,6 +892,10 @@ sections:
         entities:
           - type: section
           - entity: input_boolean.battery_reserve_show_hide
+          - entity: sensor.solax_local_battery_soc
+            name: Current SoC
+          - entity: sensor.battery_budget_reserve_soc
+            name: Total Reserved
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
@@ -898,14 +904,12 @@ sections:
               entity: sensor.battery_budget_reserve_soc
               name: Required SoC to get to E.O.D
               type: attribute
-              attribute: reserve_soc
+              attribute: reserve_soc_eod
               suffix: "%"
           - entity: sensor.battery_budget_reserve_soc
-            name: Total Reserved
-          - entity: sensor.battery_budget_reserve_soc
-            name: Deficite (SoC below Reserve)
+            name: Deficit (SoC below Reserve)
             type: attribute
-            attribute: deficite
+            attribute: deficit
             suffix: "%"
           - type: section
             label: >-
@@ -914,6 +918,7 @@ sections:
               raised which any GAP or DAILY exports will respect
           - entity: input_number.additional_reserve_soc
           - entity: input_number.hours_of_reserve_energy
+          - entity: input_select.ignore_additional_reserve_after
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
@@ -977,6 +982,12 @@ sections:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
+              entity: sensor.solax_discharge_capacity
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
               entity: sensor.battery_exportable_allowance_kwh
           - type: conditional
             conditions:
@@ -993,14 +1004,8 @@ sections:
               entity: sensor.battery_budget_reserve_kwh
               name: Required kWh to get to E.O.D
               type: attribute
-              attribute: reserve_kwh
+              attribute: reserve_kwh_eod
               suffix: kWh
-          - type: conditional
-            conditions:
-              - entity: input_boolean.battery_reserve_show_hide
-                state: "on"
-            row:
-              entity: sensor.solax_discharge_capacity
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
@@ -1009,7 +1014,7 @@ sections:
               entity: sensor.battery_budget_reserve_soc
               name: Required SoC to get to E.O.D
               type: attribute
-              attribute: reserve_soc
+              attribute: reserve_soc_eod
               suffix: "%"
           - type: conditional
             conditions:
@@ -1180,15 +1185,15 @@ sections:
         type: history-graph
         hours_to_show: 36
         entities:
+          - entity: sensor.solax_local_feed_in_battery_min_soc
+          - entity: sensor.solax_local_selfuse_battery_min_soc
           - entity: sensor.solax_local_battery_soc
           - entity: sensor.battery_budget_reserve_soc
-          - entity: sensor.solax_local_selfuse_battery_min_soc
-          - entity: sensor.solax_local_feed_in_battery_min_soc
+          - entity: input_number.solax_manual_forced_discharge_limit_soc
           - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to
           - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
           - entity: input_number.solax_default_charge_to_limit_soc
           - entity: input_number.solax_default_discharge_limit_soc
-          - entity: input_number.solax_manual_forced_discharge_limit_soc
         grid_options:
           columns: 36
           rows: auto
@@ -2094,3 +2099,4 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
+

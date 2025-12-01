@@ -1,7 +1,8 @@
 - id: '5000'
   alias: 5000 - Solax Zappi Octopus Control - House Keeping
-  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v7.0.0
-    New function Battery Budget\n---\n- v1.0.0 Initial \nSee documentation in repo"
+  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v8.0.0
+    Minor updates to triggers\n---\n- v7.0.0 New function Battery Budget\n---\n- v1.0.0
+    Initial \nSee documentation in repo"
   triggers:
   - trigger: state
     entity_id:
@@ -179,6 +180,8 @@
     - input_select.slot_end
     - input_select.slot_interval
     - input_select.slot_start
+    - input_datetime.solax_battery_start_charge_time
+    - input_datetime.solax_battery_stop_charge_time
     id: house_power_average_power_stat
     for:
       hours: 0
@@ -188,6 +191,14 @@
     trigger: time
     at: 00:00:01
     id: house_power_average_power_stat
+    enabled: false
+  - alias: House Power Stat
+    trigger: template
+    id: house_power_average_power_stat
+    value_template: "{% set ts = state_attr('sensor.solax_grid_stored_at_first_max_soc','timestamp')
+      %} {% if ts in [None, '', 'unknown', 'unavailable'] %}\n  false\n{% else %}\n
+      \ {% set dt = as_datetime(ts) %}\n  {% if dt is none %}\n    false\n  {% else
+      %}\n    {{ now() >= dt + timedelta(minutes=1) }}\n  {% endif %}\n{% endif %}\n"
   - alias: New Octopus Dispatch
     trigger: state
     entity_id:
@@ -550,7 +561,7 @@
       - delay:
           hours: 0
           minutes: 0
-          seconds: 20
+          seconds: 50
           milliseconds: 0
       - action: pyscript.battery_budget_allocator
         metadata: {}
@@ -684,10 +695,14 @@
   max: 20
 - id: '5001'
   alias: 5001 - Solax Zappi Octopus Control
-  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v7.0.0 New function Battery
-    Budget\n---\n- v1.0.2 Minor bug fix to stop 'Finished Charge Message' when smart
-    charge switch was off to begin with\n---\n-  v1.0.0 \n + Indent-potent handling
-    of inverter mode and settings\n + Zappi and Octopus handling\n---\n\n"
+  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v8.0.0 Attempt at trying
+    to stop flip flopping around tiny Octopus dispatches and pauses\n---\n- v7.3.2
+    Logic changed around EV pause logic to stop flip flopping the min_soc when octopus
+    does these small charges or small gaps between charges. Hopefully they sort it
+    out.\n---\n- v7.0.0 New function Battery Budget\n---\n- v1.0.2 Minor bug fix to
+    stop 'Finished Charge Message' when smart charge switch was off to begin with\n---\n-
+    \ v1.0.0 \n + Indent-potent handling of inverter mode and settings\n + Zappi and
+    Octopus handling\n---\n\n"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -753,6 +768,10 @@
     - EV Connected
     id: Paused EV Charging
     trigger: state
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
   - alias: EV Paused
     entity_id:
     - sensor.zappi_plug_status
@@ -762,17 +781,23 @@
     - EV Connected
     id: Paused EV Charging
     trigger: state
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
   - alias: Peak Rate
     entity_id:
     - binary_sensor.octopus_energy_electricity_off_peak
-    to: 'off'
+    to:
+    - 'off'
     id: Peak Rate
     trigger: state
-    from: 'on'
+    from:
+    - 'on'
     for:
       hours: 0
-      minutes: 1
-      seconds: 0
+      minutes: 10
+      seconds: 1
   - trigger: time
     at:
       entity_id: sensor.octopus_intelligent_target_time
@@ -911,18 +936,22 @@
     value_template: '{% set ev_charging = is_state(''sensor.zappi_plug_status'',''Charging'')%}
 
       {% set return_to_min_soc = states(''sensor.solax_local_selfuse_battery_min_soc'')|int(default=15)
-      if states(''sensor.solax_default_operation_mode'') | int(0) == 0 else states(''sensor.solax_local_selfuse_battery_min_soc'')|int(default=15)
+      if states(''sensor.solax_default_operation_mode'') | int(0) == 0 else states(''sensor.solax_local_feed_in_battery_min_soc'')|int(default=15)
       | int %}
 
       {% set soc = states(''sensor.solax_local_battery_soc'') | float(0) %}
 
+      {% set batt_out = states(''sensor.solax_local_battery_use_out'')|float(0) <
+      80 %}
+
       {% set valid_hours = now() > today_at("05:30") and now() < today_at("23:30")%}
 
 
-      {{(not ev_charging) and soc <= return_to_min_soc and valid_hours}}  '
+      {{(not ev_charging) and soc <= return_to_min_soc and batt_out and valid_hours
+      and soc != return_to_min_soc}}  '
     for:
       hours: 0
-      minutes: 5
+      minutes: 12
       seconds: 0
     id: Check Settings
   - trigger: state
@@ -1072,6 +1101,11 @@
               option: Eco+
             target:
               entity_id: select.zappi_charge_mode
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 10
+              milliseconds: 0
           - action: script.safe_switch_toggle
             metadata: {}
             data:
@@ -1525,8 +1559,6 @@
               }}'
             selfuse_charge_battery_from_grid: '{{ states(''input_number.solax_selfuse_charge_to_soc'')
               }}'
-            selfuse_charge_from_grid_enable: '{{ 1 if is_state(''input_boolean.self_use_enable_charge_from_grid'',''on'')
-              else 0 }}'
             forced_charge_start: '{{(as_datetime(state_attr(''input_datetime.solax_battery_start_charge_time'',''timestamp'')).hour
               * 1) + (as_datetime(state_attr(''input_datetime.solax_battery_start_charge_time'',
               ''timestamp'')).minute * 256) }}'
@@ -1539,6 +1571,8 @@
             allowed_discharge_end: '{{(as_datetime(state_attr(''input_datetime.solax_battery_stop_discharge_time'',''timestamp'')).hour
               * 1) + (as_datetime(state_attr(''input_datetime.solax_battery_stop_discharge_time'',
               ''timestamp'')).minute * 256) }}'
+            selfuse_charge_from_grid_enable: '{{ 1 if is_state(''input_boolean.self_use_enable_charge_from_grid'',''on'')
+              else 0 }}'
             forced_charge_start2: '{{ (as_datetime(state_attr(''input_datetime.solax_start_charge_2'',''timestamp'')).hour)
               + (as_datetime(state_attr(''input_datetime.solax_start_charge_2'', ''timestamp'')).minute
               * 256) }}'

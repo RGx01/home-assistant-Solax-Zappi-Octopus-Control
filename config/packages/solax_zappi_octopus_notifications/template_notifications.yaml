@@ -27,26 +27,6 @@ solax_zappi_octopus_notifications_template_notifications:
               {%- endif  -%}
               {% set ns.members =  [{"device": " "}]+ns.members  %}
               {{ns.members}}
-    
-    # Moved to 5000. don't like the way things are going for 2026.5
-    # - trigger: 
-    #     - trigger: state
-    #       entity_id: 
-    #         - sensor.solax_zappi_octopus_device_list
-    #       attribute: mobile_devices
-    #     - trigger: homeassistant
-    #       event: start
-    #       id: "HA_START"
-    #     - trigger: time_pattern
-    #       minutes: /1
-    #   action:
-    #     - service: input_select.set_options
-    #       target:
-    #         entity_id: input_select.solax_automation_notification_devices
-    #       data:
-    #         options: >
-    #           {% set opts = (state_attr('sensor.solax_zappi_octopus_device_list', 'mobile_devices')) | map(attribute='device') | list %}
-    #           {{ opts if opts else ['Default'] }}
 
     - trigger: 
         - trigger: state

@@ -112,7 +112,8 @@ solax_loads_template_battery_soh:
           unique_id: solax_local_battery_soh
           unit_of_measurement: "%"
           state_class: measurement
-          icon: mdi:skull-crossbones
+          device_class: "battery"
+          icon: mdi:battery-heart-outline
           state: >
             {% set min_soc = states('sensor.solax_local_min_soc') | int(0) %}
             {% set max_soc = state_attr('sensor.solax_grid_stored_at_first_max_soc','max_soc') | int(0) %}
