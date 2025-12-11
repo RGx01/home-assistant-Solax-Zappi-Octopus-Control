@@ -1,7 +1,8 @@
     ###################################
     # Solax X1 Hybrid G4 Rest Sensors #
     ###################################
-    # v1.3.0 Added:
+    # V2.0.1 Consolidation of version numbers
+    # V1.3.0 Added:
     #  headers:
     #    Connection: "close"
     #    Cache-Control: "no-cache"
@@ -14,7 +15,7 @@
     # Sends your POST/GET,
     # Forces the inverter to respond fresh,
     # Then closes the connection cleanly.
-    # Enables templates to confirm a response was valid.
+    # Enables templates to confirm a response was valid. HOPEFULLY???!!?
     #
     # V1.0.0
     # 12 - Feed In Min SOC %

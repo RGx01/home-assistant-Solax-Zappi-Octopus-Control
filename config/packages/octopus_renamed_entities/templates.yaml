@@ -184,3 +184,10 @@ octopus_renamed_entities_templates:
             {% else %}
               {{ t | as_local }}
             {% endif %}
+
+    - binary_sensor:
+        - name: "Octopus Smart Charge"
+          unique_id: octopus_smart_charge
+          state: "{{ is_state('switch.octopus_intelligent_smart_charge', 'on') }}"
+          device_class: power  
+          icon: mdi:ev-station

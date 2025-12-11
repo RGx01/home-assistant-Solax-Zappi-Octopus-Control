@@ -1,7 +1,10 @@
 # Solax-Zappi-Octopus-Control
-Written specifically for IOG Zappi and Solax X1-G4 Inverter
+## Version 9.0.0 is here. Big Changes to support IOG 6hr charge limits
+
+Written specifically for IOG Zappi and Solax X1-G4 Inverter and TP3.0 Battery - MAY NOT BE COMPATIBLE WITH YOUR SYSTEM
+If unsure if your inverter can be controlled try using https://github.com/RGx01/Solax-Local-Control-Using-REST if successful control can be established then proceed with companion https://github.com/RGx01/Solax-Local-Realtime-Using-REST. This repo bundles those but in the future they will become pre requiste. (Ideally if others contribute with other inverters.)
 Main features:
-1. Control inverter settings locally with REST.
+1. Control inverter settings locally with REST. No need to be connected to Solax Cloud for any reason besides any firmware updates.
 2. Read realtime inverter data locally.
 3. Option - Daily discharge to a Reserve SoC based on your typical usage (Battery Budget enhancements from 7.0.0)
 4. Option - Just in Time discharge to 10% by 23:30
@@ -9,9 +12,10 @@ Main features:
 6. Handling of CT clamps in different positions on the Henley block.
 7. Create statistics.
 8. User notifications to mobile devices.
-9. Handles Free Electric Sessions from Octoplus. <-- needs an update to calendar events in May 2026
+9. Handles Free Electric Sessions from Octoplus. 
 10. ~~Handles Saving Sessions~~. Removed
 11. Calculates Capacity SoH on each full recharge.
+12. Sets Octopus Intelligent Charge Target based on EV SoC and based on 6hr charge limit rules coming in Jan 2026
 
 ![delme](https://github.com/user-attachments/assets/c2eb91f9-8c83-4f31-8a76-75df950f1d05)
 
@@ -67,14 +71,18 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
     - Find and set the billing period offsets you require
 9. .\config\packages\zappi_loads\utility_meters.yaml
     - Find and set the billing period offsets you require
+10. .\config\packages\connected_ev_tracking\utility_meters.yaml
     - Find ev_charging_daily_vehicle and replace the vehicle names and set them as you wish
     - Find ev_charging_monthly_vehicle and replace the vehicle names and set them as you wish
-10. ~~.\config\packages\octoplus_sessions\template.yaml ~~
-    - ~~Find and replace all octopus account number z_ZZZZZZZZ with your own i.e. a_42036969~~
-11. .\config\packages\zappi_renamed_entities\template.yaml
+11. .\config\packages\connected_ev_tracking\template_ev_mapper.yaml
+    - Modify connected_ev_battery_size to match the utility meter tariffs in connected_ev_tracking\utility_meters.yaml
+    - Create binary_sensors representing the EV('s) connected status and battery level in the format: 
+        - binary_sensor.'EV1'_plugged_in e.g. binary_sensor.tesla_model_3_plugged_in
+        - sensor.'EV1'_battery_level e.g. sensor.tesla_model_3_battery_level
+12. .\config\packages\zappi_renamed_entities\template.yaml
     - Find and replace all zappi serial numbers zappi_XXXXXXXX with your own i.e. zappi_12345678
-12. Copy the contents of automations_5000-5005.yaml to the bottom of .\config automations.yaml
-13. Edit your configuration.yaml to pick up the new packages.
+13. Copy the contents of automations_5000-5005.yaml to the bottom of .\config automations.yaml
+14. Edit your configuration.yaml to pick up the new packages.
 
 Rather than putting all the config in the single '\config\configuration.yaml file, to keep things clean and tidy and more manageable, the package files can referenced like this in the configuration.yaml:
 In the example below see the use of the homeassistant: tag. The directory referenced under homeassistant: tag is the packages directory where we've already stored all the new config. You must also add the script directory. if you already have a scripts.yaml that should be moved to the scripts directory.
@@ -95,9 +103,9 @@ homeassistant:
 script: !include_dir_merge_named scripts  
 automation: !include automations.yaml
 ```
-12. Check all the steps above have been done.
-13. Restart Home Assistant.
-14. Adding the dashboad.
+15. Check all the steps above have been done.
+16. Restart Home Assistant.
+17. Adding the dashboad.
     - Copy the contents of Solax & Octopus Settings.yaml in the repo
     - Open Home Assistant
     - Open Overview dashboard
@@ -109,7 +117,7 @@ automation: !include automations.yaml
     - Click Save
     - Click Done
 # Configuring
-15. On the dashboard select/set:
+18. On the dashboard select/set:
     - solax battery size,
     - solax inverter size,
     - default inverter mode.
@@ -118,13 +126,13 @@ automation: !include automations.yaml
     - Solax Battery SoH Stored initial value to 100 (it will recalucate each time a full charge cycle 10-100%)
 <img width="468" height="477" alt="Screenshot 2025-11-21 at 13 01 20" src="https://github.com/user-attachments/assets/18159443-f912-4622-ae40-0ed0ebff5422" />  
 
-16. On the dashboard select/set:
+19. On the dashboard select/set:
     - select Octopus schedule type
     - EV ready time
     - EV charge %
 <img width="461" height="555" alt="Screenshot 2025-11-21 at 13 03 47" src="https://github.com/user-attachments/assets/4d88a31e-6d0c-492d-9390-cf3526036ce4" />
 
-17. Battery Reserves
+20. Battery Reserves
     - In the Battery Reserve Section of the dashboard select:
        - Start Slot (time you start using your battery - e.g. 05:30)
        - End Slot (time you stop using your battery - e.g. 23:30)
@@ -136,12 +144,17 @@ automation: !include automations.yaml
  	<img width="1222" height="741" alt="Screenshot 2025-11-21 at 13 12 26" src="https://github.com/user-attachments/assets/3e2f5a50-50a0-4b70-ba92-8437021f772d" />
 	<img width="1223" height="742" alt="Screenshot 2025-11-21 at 13 20 49" src="https://github.com/user-attachments/assets/aaae398c-23a8-4de2-8192-109c38fa3309" />
 
-18. # Configuring Solax Inverter - IMPORTANT
-    - **Note the "Battery Start Charge Time". To get the best SoH results the battery must be left to settle (the longer the better) after a discharge cycle before charging. If too short of a time between discharge and charge, the BMS has been observed to artificially raise SoC at unrealistic charge rates during initial charge. The net result is less energy being stored. The SoH calc is simplistic, essentially comparing the theoretical capacity vs what actually gets stored. If you store less then the SoH looks worse. Letting the battery settle for as long as possible gives the best results and likely helps keep cells balanced.**
+21. # Configuring Solax Inverter - IMPORTANT
+    - **Note the "Battery Start Charge Time". To get the best SoH results the battery must be left to settle (the longer the better) after a discharging.**
     - Recommended settings are as follows:
     <img width="444" height="727" alt="Screenshot 2025-11-30 at 06 47 43" src="https://github.com/user-attachments/assets/421e3e4e-7efd-4c64-8856-8ad51fadab7c" />
 
-19. Done.
+22. # Configuring IOG 6hr Charge Limit
+    - Insert screen shot
+    - Set an approximate limit of 42kWh (set it to whatever you want, some EV's rate limit near peak SoC so you can reduce the target to remove risk from exceeding 6hr's of charging). There is a fall back that will turn off charging at 6hr's. If you don't care about paying more for exceeding then turn the switch to on to ignore the limiting.
+    - WARNING - if you do not configure the plugged_in or battery_level sensor required to drive the Charge Target you must set the Charge Target manually in the Octopus App or in the area of this dashboard.
+
+23. Done.
 
 # Notification Management
 
@@ -177,6 +190,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v9.0.0|**10/12/25**| All | Dashboard and template updates to support changes to IOG to limit total charge time to 6hr + a host of bug fixes and tweeks<br> Automation and template hardening <br> Allocator improvements (HA restart required) <br> Fixed bug with template_get_octopus_schedule |
 | v8.1.0|**01/12/25**| Solax & Octopus Settings.yaml (dashboard) <br> packages\octopus_dispatches\template_octopus_dispatch.yaml| Dashboard refinement around octopus dispatches |
 | v8.0.0|**01/12/25**| ALL | Attempt to work around tiny dispatches and pauses in 5001 <br> Removed dependancy on free electric events sensor.<br> Better dispatch gap calculation logic <br> Better logic for calculating the 'get schedule' <br> Fixed small bug in tariff sensor created after removing free electric dependancy <br> Tiny adjustments to discharge magic and a bug fix to exportable allowence <br> Fixed small bug in the battery budget allocator pyscript <br> Improved battery_budget_schedule pyscript to prevent charge windows impinging on dynamic slots. |
 | v7.3.2|**24/11/25**| automations_5000-5005.yaml <br> packages\solax_exports\template_discharge_magic.yaml |Improved logic|

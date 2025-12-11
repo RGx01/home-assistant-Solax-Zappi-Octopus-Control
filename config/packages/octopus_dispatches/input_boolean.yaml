@@ -1,0 +1,5 @@
+octopus_dispatches_input_boolean:
+  input_boolean:
+    ignore_6hr:
+      name: 6hr Limit (on to ignore)
+      icon: mdi:timer-cog-outline

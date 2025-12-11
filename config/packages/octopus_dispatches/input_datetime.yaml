@@ -1,0 +1,7 @@
+octopus_dispatches_input_datetime:
+  input_datetime:
+    charging_24hr_allowance:
+      name: Charging 24hr Allowance
+      has_date: true
+      has_time: true
+      icon: mdi:timer-plus-outline

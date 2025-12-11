@@ -142,3 +142,9 @@ zappi_renamed_entities_templates:
                 entity_id: number.myenergi_zappi_XXXXXXXX_minimum_green_level
               data:
                 value: "{{ value }}"
+
+    - sensor:
+        - name: "Zappi Charge Mode"
+          unique_id: zappi_charge_mode
+          state: "{{ states('select.zappi_charge_mode') }}"
+          icon: mdi:ev-station

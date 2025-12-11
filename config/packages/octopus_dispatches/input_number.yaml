@@ -1,0 +1,10 @@
+octopus_dispatches_input_number:
+  input_number:
+    limit_ev_kwh_charge_target:
+      name: Limit EV Charge Target
+      unit_of_measurement: "kWh"
+      min: 20
+      max: 42
+      mode: box
+      step: 0.5
+      icon: mdi:meter-electric-outline

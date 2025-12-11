@@ -1,4 +1,5 @@
 ########################################
+# v8.2.0 Hardened battery_exportable_allowance_kwh
 # v8.0.0 added nightly_battery_discharge_soc_window_limit
 # Template to estimate remaining energy required to survive the day
 ########################################
@@ -22,24 +23,89 @@ solax_export_template_discharge_magic:
           unique_id: battery_exportable_allowance_kwh
           unit_of_measurement: "kWh"
           icon: mdi:battery-arrow-down
+
+          # Sensor is only available if all critical inputs exist
+          availability: >
+            {% set soc = states('sensor.solax_local_battery_soc') %}
+            {% set op_mode = states('sensor.solax_default_operation_mode') %}
+            {% set min_selfuse = states('sensor.solax_local_selfuse_battery_min_soc') %}
+            {% set min_feed_in = states('sensor.solax_local_feed_in_battery_min_soc') %}
+            {% set reserve_soc = states('sensor.battery_budget_reserve_soc') %}
+            {% set usable = state_attr('sensor.solax_discharge_capacity','usable_capacity') %}
+            {{ not (
+              soc in ['unknown','unavailable','none'] or
+              op_mode in ['unknown','unavailable','none'] or
+              min_selfuse in ['unknown','unavailable','none'] or
+              min_feed_in in ['unknown','unavailable','none'] or
+              reserve_soc in ['unknown','unavailable','none'] or
+              usable is none
+            ) }}
+
+          # Numeric state calculation, only runs when available
           state: >
-            {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
-            {% set return_to_min_soc = states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) if states('sensor.solax_default_operation_mode') | int == 0 else states('sensor.solax_local_feed_in_battery_min_soc')|int(default=15) | int %}
-            {% set target_soc = [
-              return_to_min_soc,
-              states('sensor.battery_budget_reserve_soc') | int(default=20)
-            ] | max %}
-            {% set batt_usable = state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10)  %}
-            {% set exportable = batt_usable * ((soc - target_soc) / 100) %}
-            {% set exportable = batt_usable * ((soc - target_soc) / (100 - return_to_min_soc)) %}
-            {{ [exportable, 0] | max | round(2) }}
+            {% set soc = states('sensor.solax_local_battery_soc') | float %}
+            {% set op_mode = states('sensor.solax_default_operation_mode') | int %}
+            {% set min_selfuse = states('sensor.solax_local_selfuse_battery_min_soc') | int %}
+            {% set min_feed_in = states('sensor.solax_local_feed_in_battery_min_soc') | int %}
+            {% set reserve_soc = states('sensor.battery_budget_reserve_soc') | int %}
+            {% set usable = state_attr('sensor.solax_discharge_capacity','usable_capacity') | float %}
+
+            {% set return_to_min_soc = min_selfuse if op_mode == 0 else min_feed_in %}
+            {% set denom = 100 - return_to_min_soc %}
+            {% if denom <= 0 %}
+              0
+            {% else %}
+              {% set target_soc = [return_to_min_soc, reserve_soc] | max %}
+              {{ ([usable * ((soc - target_soc) / denom), 0] | max) | round(2) }}
+            {% endif %}
+
           attributes:
             current_soc: "{{ states('sensor.solax_local_battery_soc') }}"
             target_soc: "{{ states('sensor.battery_budget_reserve_soc') }}"
-            batt_usable_kwh: >
-              {{ state_attr('sensor.solax_discharge_capacity','usable_capacity')|float(10)  }}
+            batt_usable_kwh: "{{ state_attr('sensor.solax_discharge_capacity','usable_capacity') }}"
             total_reserved_kwh: "{{ state_attr('sensor.battery_budget_reserve_soc', 'reserve_kwh') }}"
-            note: "Energy available for export before reaching the reserve SoC (already includes reserves & buffers)."
+            note: "Energy available for export before reaching the reserve SoC."
+
+    - sensor:
+        - name: "Battery Exportable Allowance SoC"
+          unique_id: battery_exportable_allowance_soc
+          unit_of_measurement: "%"
+          icon: mdi:battery-arrow-down
+
+          # Sensor is only available if all critical inputs exist
+          availability: >
+            {% set soc = states('sensor.solax_local_battery_soc') %}
+            {% set op_mode = states('sensor.solax_default_operation_mode') %}
+            {% set min_selfuse = states('sensor.solax_local_selfuse_battery_min_soc') %}
+            {% set min_feed_in = states('sensor.solax_local_feed_in_battery_min_soc') %}
+            {% set reserve_soc = states('sensor.battery_budget_reserve_soc') %}
+            {% set usable = state_attr('sensor.solax_discharge_capacity','usable_capacity') %}
+            {{ not (
+              soc in ['unknown','unavailable','none'] or
+              op_mode in ['unknown','unavailable','none'] or
+              min_selfuse in ['unknown','unavailable','none'] or
+              min_feed_in in ['unknown','unavailable','none'] or
+              reserve_soc in ['unknown','unavailable','none'] or
+              usable is none
+            ) }}
+
+          # Numeric state calculation, only runs when available
+          state: >
+            {% set soc = states('sensor.solax_local_battery_soc') | float %}
+            {% set op_mode = states('sensor.solax_default_operation_mode') | int %}
+            {% set min_selfuse = states('sensor.solax_local_selfuse_battery_min_soc') | int %}
+            {% set min_feed_in = states('sensor.solax_local_feed_in_battery_min_soc') | int %}
+            {% set reserve_soc = states('sensor.battery_budget_reserve_soc') | int %}
+            
+            {% set return_to_min_soc = min_selfuse if op_mode == 0 else min_feed_in %}
+            {% set denom = 100 - return_to_min_soc %}
+            {% if denom <= 0 %}
+              0
+            {% else %}
+              {% set target_soc = [return_to_min_soc, reserve_soc] | max %}
+              {{ ([(soc - target_soc), 0] | max) | round(2) }}
+            {% endif %}
+
 
     ######################################################
     # Single flag to indicate if discharge can occur
@@ -69,6 +135,7 @@ solax_export_template_discharge_magic:
           unique_id: ev_gap_discharge_allowed
           device_class: power
           state: >
+            {% set a5001 = is_state('automation.solax_zappi_octopus_control','on') %}
             {% set free_electric = is_state('binary_sensor.free_electricity_today','off') %}
             {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
             
@@ -101,6 +168,7 @@ solax_export_template_discharge_magic:
             {% set lower_threshold = target_soc %}
 
             {{ is_state('input_boolean.battery_discharge_in_dispatch_gaps','on')
+              and a5001
               and free_electric
               and dispatch
               and ev_status == 'EV Connected'
@@ -110,7 +178,7 @@ solax_export_template_discharge_magic:
               and gap_end is not none
               and now_time >= gap_start
               and now_time < gap_end
-              and exportable_kwh > (0 if target_soc > 15 else 0.300)
+              and exportable_kwh > (0 if target_soc > 13 else 0.300)
               and (solar_threshold is none or now_time >= solar_threshold)
               and (
                 (prev_state and soc > lower_threshold)
@@ -148,6 +216,7 @@ solax_export_template_discharge_magic:
           unique_id: daily_export_discharge_allowed
           device_class: power
           state: >
+            {% set a5001 = is_state('automation.solax_zappi_octopus_control','on') %}
             {% set planned_dispatch = states('sensor.octopus_total_planned_dispatch')| float(0)%}
             {% set allow_with_ev_connected = is_state('input_boolean.daily_export_when_ev_connected','on') and planned_dispatch < 1 %}
             {% set free_electric = is_state('binary_sensor.free_electricity_today','off')%}
@@ -172,6 +241,7 @@ solax_export_template_discharge_magic:
             {% set lower_threshold = target_soc  %}
 
             {{ is_state('input_boolean.export_battery_daily','on')
+              and a5001
               and free_electric
               and (
                     ev_status == 'EV Disconnected'
@@ -223,6 +293,7 @@ solax_export_template_discharge_magic:
           device_class: power
 
           state: >
+            {% set a5001 = is_state('automation.solax_zappi_octopus_control','on') %}
             {% set planned_dispatch = states('sensor.octopus_total_planned_dispatch')| float(0)%}
             {% set allow_with_ev_connected = is_state('input_boolean.nightly_export_when_ev_connected','on') and (planned_dispatch < 1 or states('switch.octopus_intelligent_smart_charge') == 'off') %}
 
@@ -272,6 +343,7 @@ solax_export_template_discharge_magic:
             {% set exportable_kwh = states('sensor.battery_exportable_allowance_kwh') | float(0) %}
 
             {{ is_state('input_boolean.export_battery_nightly','on')
+              and a5001
               and (
                     ev_status == 'EV Disconnected'
                     or (ev_status == 'EV Connected' and allow_with_ev_connected)
@@ -349,6 +421,7 @@ solax_export_template_discharge_magic:
           unique_id: free_electric_discharge_allowed
           device_class: power
           state: >
+            {% set a5001 = is_state('automation.solax_zappi_octopus_control','on') %}
             {% set return_to_min_soc = states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) if states('sensor.solax_default_operation_mode') | int == 0 else states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) | int %}
             {% set target_soc = [
               return_to_min_soc,
@@ -391,6 +464,7 @@ solax_export_template_discharge_magic:
             ) | float(0) %}
 
             {{ valid_window
+              and a5001
               and free_electric_soc
               and discharge_allowed
               and free_today
@@ -433,7 +507,8 @@ solax_export_template_discharge_magic:
           unique_id: manual_discharge_allowed
           device_class: power
           state: >
-            {%set return_to_min_soc = states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) if states('sensor.solax_default_operation_mode') | int == 0 else states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) | int %}
+            {% set a5001 = is_state('automation.solax_zappi_octopus_control','on') %}
+            {% set return_to_min_soc = states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) if states('sensor.solax_default_operation_mode') | int == 0 else states('sensor.solax_local_selfuse_battery_min_soc')|int(default=15) | int %}
             {% set target_soc = [
               return_to_min_soc,
               states('input_number.solax_manual_forced_discharge_limit_soc') | int(default=20)
@@ -447,6 +522,7 @@ solax_export_template_discharge_magic:
             {% set lower_threshold = target_soc %}
 
             {{ manual_discharge
+              and a5001
               and ev_status != 'Charging'
               and (
                 (prev_state and soc > lower_threshold)

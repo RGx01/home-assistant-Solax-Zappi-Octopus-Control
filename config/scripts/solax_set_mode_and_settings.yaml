@@ -1,5 +1,6 @@
 ###########################################
 # solax_set_mode_and_settings Script
+# v2.0.1 Consolidation of version number - no changes to this template.
 # v1.7.0 Added return to 'do nothing' after discharge
 # v1.6.2 Forgot a namespace
 # v1.6.1 Deterministic verification using observed values + diagnostic logging

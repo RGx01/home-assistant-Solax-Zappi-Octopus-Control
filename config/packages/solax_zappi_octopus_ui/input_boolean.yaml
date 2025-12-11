@@ -129,4 +129,13 @@ solax_zappi_octopus_ui_input_boolean:
     inverter_and_battery_show_hide:
       name: Show/Hide Inverter and Battery
       icon: mdi:eye-off
+    battery_soh_show_hide:
+      name: Hide Battery SoH Charts
+      icon: mdi:eye-off
+    battery_voltage_show_hide:
+      name: Show/Hide Battery Voltage Charts
+      icon: mdi:eye-off
+    ev_charging_show_hide:
+      name: Show/Hide EV Charging Charts
+      icon: mdi:eye-off
     ###########################################

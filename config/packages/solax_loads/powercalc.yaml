@@ -1,9 +1,10 @@
 ########################################
-# v1.0 solax_additions_powercalc
+# v8.2.0 powercalc deprication of force update.
+# v1.0.0 solax_additions_powercalc
 ########################################
 solax_loads_powercalc:
   powercalc:
-    force_update_frequency: 00:01:00
+    energy_update_interval: 60
     sensors:
       - entity_id: sensor.solax_local_pv_output
         power_sensor_id: sensor.solax_local_pv_output

@@ -19,3 +19,4 @@ zappi_loads_template_loads:
           unit_of_measurement: "W"
           device_class: "power"
           state_class: measurement
+

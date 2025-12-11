@@ -1,6 +1,7 @@
 ###############################################
 #
 # Change log
+# v9.0.0 Finally fixed octopus_schedule_time...well.. I hope
 # v8.0.0 octopus_schedule_time improved logic
 # v6.0.0 Cleaned up and split into different template files
 ###############################################
@@ -45,10 +46,10 @@ octopus_dispatches_template_get_octopus_schedule:
           unique_id: earliest_ev_charge_start_time
           device_class: "timestamp"
           state: >
-            {%set target_time = states('sensor.octopus_intelligent_target_time')|as_timestamp (default=today_at("05:30")|as_timestamp)%}
-            {%set target_percentage = states('number.octopus_intelligent_charge_target')|int (default=100) %}
-            {%set ev_size = states('input_number.ev_battery_size')|int(default=10) %}
-            {%set delta_time = ((ev_size|int/6.8)*(target_percentage|int/100))*60*60%}
+            {% set target_time = states('sensor.octopus_intelligent_target_time')|as_timestamp (default=today_at("05:30")|as_timestamp)%}
+            {% set target_percentage = states('number.octopus_intelligent_charge_target')|int (default=100) %}
+            {% set ev_size = states('input_number.ev_battery_size')|int(default=10) %}
+            {% set delta_time = ((ev_size|int/6.8)*(target_percentage|int/100))*60*60%}
             {{(target_time-delta_time)|as_datetime (default=(now()|as_timestamp-delta_time)|as_datetime)}}
     ######################################################
     # Solar threshold calcs
@@ -102,151 +103,239 @@ octopus_dispatches_template_get_octopus_schedule:
             {% set local_sunset_time2 = sunset_hour|string +':'+ sunset_minute|string  -%}
             {{ local_sunset_time.isoformat() if local_sunset_time else (now() + timedelta(days=10)) | as_local | isoformat }}
 
+    # =====================================================
+    # Now 189 Thats what I call Jinja
+    # 1. What is love?
+    # 2. Jinja don't hurt me (no more)
+    # 3. What else can I say?
+    # 4. It's up to you.....
+    # =====================================================
+    # =====================================================
+    # Smart Charge Time Sensor – Behaviour Spec
+    # =====================================================
+    #
+    # Modes:
+    #   anytime_p       : 'Octopus Schedule Anytime'
+    #   solar_p         : 'Solar Export Priority'
+    #   fixed_p         : 'Fixed Time'
+    #   default         : no mode selected
+    #
+    # Logic:
+    #   1. anytime_p:
+    #        - Timestamp only leaps forward in two cases:
+    #            a) EV initially becomes connected
+    #            b) Mode switches to anytime_p
+    #        - Otherwise, previous lock is retained to prevent "minute creep"
+    #
+    #   2. solar_p:
+    #        - base_time = max(default_solar, last_conn_plus, prev_solar_locked)
+    #            default_solar      : current solar export threshold
+    #            last_conn_plus     : EV connection time + delay (if connected)
+    #            prev_solar_locked  : previous solar lock snapshot
+    #        - Ensures timestamp only moves forward, never backward
+    #        - Solar scenarios:
+    #            - EV connects before threshold:
+    #                timestamp = threshold
+    #            - EV connects after threshold:
+    #                timestamp = connection + delay
+    #            - Mode switch to solar, EV already connected before threshold:
+    #                timestamp = threshold
+    #            - Mode switch to solar, EV already connected after threshold:
+    #                timestamp = connection + delay
+    #            - Mode switch to solar, EV disconnected before threshold:
+    #                timestamp = threshold
+    #            - Mode switch to solar, EV disconnected after threshold:
+    #                timestamp = previous lock or threshold
+    #            - Solar threshold recalculated:
+    #                timestamp = max(new threshold, last_conn_plus, prev_solar_locked)
+    #
+    #   3. fixed_p:
+    #        - Behaves similarly to solar_p
+    #        - base_time = max(default_fixed, last_conn_plus, prev_fixed_locked)
+    #        - Ensures timestamp only moves forward
+    #        - Scenarios mirror solar_p logic, replacing threshold with fixed time
+    #
+    #   4. default (no mode):
+    #        - base_time = now_local + 10 days
+    #        - Used as a safe fallback
+    #
+    # Notes:
+    #   - Delay after EV connection is always respected for anytime_p, solar_p, fixed_p
+    #   - Timestamp never moves backward
+    #   - The snapshots attribute stores last locked times for all modes
+    # =====================================================
     - sensor:
         - name: "Smart Charge Time"
           unique_id: octopus_schedule_time
           device_class: timestamp
 
           state: >
-            {% set free    = states('sensor.octopus_free_electricity_start') %}
-            {% set free_p  = is_state('binary_sensor.free_electricity_today', 'on') %}
+            {% set now_local = now() | as_local %}
+            {% set now_local = now_local.replace(second=0, microsecond=0) %}
+            {% set delay = states('input_number.delay_when_ev_connected') | float(0) %}
 
-            {% set solar   = states('sensor.solar_export_threshold') %}
-            {% set solar_p = is_state('input_boolean.solar_export_priority', 'on') %}
-
-            {% set fixed   = states('sensor.don_t_charge_ev_before_time_wobble') %}
+            {# Mode toggles #}
+            {% set anyt = is_state('input_boolean.octopus_schedule_anytime','on') %}
+            {% set solar_p = is_state('input_boolean.solar_export_priority','on') %}
             {% set fixed_p = is_state('input_boolean.use_fixed_time','on') %}
 
-            {% set anyt    = is_state('input_boolean.octopus_schedule_anytime', 'on') %}
+            {# EV connection times #}
+            {% set conn_raw = states('sensor.zappi_last_connected') %}
+            {% set disc_raw = states('sensor.zappi_last_disconnected') %}
+            {% set conn = (conn_raw | as_datetime | as_local) if conn_raw not in ['unknown','unavailable','none',''] else none %}
+            {% set disc = (disc_raw | as_datetime | as_local) if disc_raw not in ['unknown','unavailable','none',''] else none %}
+            {% set is_connected = conn and (not disc or conn > disc) %}
+            {% set last_conn_plus = conn + timedelta(minutes=delay) if conn else none %}
 
-            {% set conn    = states('sensor.zappi_last_connected') %}
-            {% set disc    = states('sensor.zappi_last_disconnected') %}
-            {% set delay   = states('input_number.delay_when_ev_connected') | float(0) %}
-
-            {% set now_local = now() | as_local %}
-
-            {# Parse datetimes #}
-            {% set conn_dt = conn | as_datetime | as_local
-                  if conn not in ['unknown','unavailable','none'] else None %}
-            {% set disc_dt = disc | as_datetime | as_local
-                  if disc not in ['unknown','unavailable','none'] else None %}
-
-            {# Connection state #}
-            {% set is_connected =
-                  conn_dt is not none and
-                  (disc_dt is none or conn_dt > disc_dt)
-            %}
-
-            {# Load previous timestamp (for freeze) #}
-            {% set prev = states('sensor.octopus_schedule_time') %}
-            {% set prev_dt = prev | as_datetime | as_local
-                if prev not in ['unknown','unavailable','none'] else None %}
-
-            {# Load stored snapshot #}
-            {% set snap_raw = state_attr('sensor.octopus_schedule_time','anytime_snapshot') %}
-            {% if snap_raw is string %}
-              {% set snapshot = snap_raw | from_json %}
+            {# Previous snapshots #}
+            {% set prev_snap_raw = state_attr('sensor.octopus_schedule_time','snapshots') %}
+            {% if prev_snap_raw in [None,'','unknown'] %}
+              {% set prev_snap = {} %}
+            {% elif prev_snap_raw is string %}
+              {% set prev_snap = (prev_snap_raw | from_json) if prev_snap_raw | trim != '' else {} %}
             {% else %}
-              {% set snapshot = snap_raw %}
+              {% set prev_snap = prev_snap_raw %}
             {% endif %}
 
-            {# Current snapshot candidate #}
-            {% set new_snapshot = {
-              "anyt": anyt,
-              "is_connected": is_connected,
-              "conn_dt": conn_dt|string,
-              "delay": delay,
-              "free": free,
-              "solar": solar,
-              "fixed": fixed
-            } %}
+            {% set prev_anyt_locked = (prev_snap.get('anytime', {}).get('locked') | as_datetime | as_local)
+                if prev_snap.get('anytime', {}).get('locked') not in [None,'','unknown'] else none %}
+            {% set prev_anyt_mode = prev_snap.get('anytime', {}).get('anyt', false) %}
+            {% set prev_anyt_connected = prev_snap.get('anytime', {}).get('is_connected', false) %}
 
-            {# Determine if recalculation is needed #}
-            {% set recalc_needed =
-                snapshot is none
-                or snapshot.anyt != new_snapshot.anyt
-                or snapshot.is_connected != new_snapshot.is_connected
-                or snapshot.conn_dt != new_snapshot.conn_dt
-                or snapshot.delay != new_snapshot.delay
-                or snapshot.free != new_snapshot.free
-                or snapshot.solar != new_snapshot.solar
-                or snapshot.fixed != new_snapshot.fixed
-            %}
+            {# Solar fallback #}
+            {% set solar_raw = states('sensor.solar_export_threshold') %}
+            {% set default_solar = solar_raw | as_datetime | as_local
+                if solar_raw not in ['unknown','unavailable','none',''] else none %}
+            {% set prev_solar_locked = (
+                  prev_snap.get('solar', {}).get('locked') | as_datetime | as_local
+                ) if prev_snap.get('solar', {}).get('locked') not in [None,'','unknown']
+                else default_solar %}
 
-            {# If NOT anytime -> always recalc #}
-            {% if not anyt %}
-              {% set recalc_needed = true %}
-            {% endif %}
+            {# Fixed fallback #}
+            {% set fixed_raw_from_state = states('sensor.don_t_charge_ev_before_time_wobble') %}
+            {% set default_fixed = fixed_raw_from_state | as_datetime | as_local
+                if fixed_raw_from_state not in ['unknown','unavailable','none',''] else none %}
+            {% set prev_fixed_locked = (
+                  prev_snap.get('fixed', {}).get('locked') | as_datetime | as_local
+                ) if prev_snap.get('fixed', {}).get('locked') not in [None,'','unknown']
+                else default_fixed %}
 
-            {# ------------- RECALC BRANCH ------------- #}
-            {% if recalc_needed %}
+            {# ============================
+              MAIN MODE SELECTION BLOCK
+              ============================ #}
 
-              {% if free_p and free not in ['unknown','unavailable','none'] %}
-                {% set base_time = free | as_datetime | as_local %}
+            {% if anyt %}
 
-              {% elif not anyt and solar_p and solar not in ['unknown','unavailable','none'] and not fixed_p %}
-                {% set base_time = solar | as_datetime | as_local %}
+              {# Only leap forward if mode just enabled OR EV just connected #}
+              {% set anytime_just_enabled = anyt and not prev_anyt_mode %}
+              {% set ev_just_connected = is_connected and not prev_anyt_connected %}
 
-              {% elif not anyt and fixed_p and fixed not in ['unknown','unavailable','none'] %}
-                {% set base_time = fixed | as_datetime | as_local %}
-
-              {% elif anyt %}
-                {# ------------ ANYTIME MODE LOGIC ------------ #}
-
-                {% if is_connected %}
-                  {# If anytime was just turned on → use now + delay #}
-                  {% if snapshot is none or snapshot.anyt != anyt %}
-                    {% set base_time = now_local + timedelta(minutes=delay) %}
-                  {% else %}
-                    {# Normal anytime behaviour → conn_dt + delay #}
-                    {% set base_time = conn_dt + timedelta(minutes=delay) %}
-                  {% endif %}
-                {% else %}
-                  {# Not connected → schedule disabled placeholder #}
-                  {% set base_time = now_local + timedelta(days=10) %}
-                {% endif %}
-
+              {% if prev_anyt_locked and prev_anyt_locked > now_local %}
+                  {% set base_time = prev_anyt_locked %}
+              {% elif anytime_just_enabled or ev_just_connected %}
+                  {% set base_time = now_local + timedelta(minutes=delay) %}
               {% else %}
-                {# No valid mode → push far into future #}
-                {% set base_time = now_local + timedelta(days=10) %}
+                  {% set base_time = prev_anyt_locked if prev_anyt_locked else now_local + timedelta(minutes=delay) %}
               {% endif %}
 
+            {% elif solar_p %}
+              {# Solar Mode #}
+              {% set base_time = [default_solar, last_conn_plus, prev_solar_locked] | select('!=',none) | list | max %}
+
+            {% elif fixed_p %}
+              {# Fixed Mode #}
+              {% set base_time = [default_fixed, last_conn_plus, prev_fixed_locked] | select('!=',none) | list | max %}
+
             {% else %}
-              {# ------------ FREEZE BRANCH ------------ #}
-              {% set base_time = prev_dt %}
+              {# Default fallback #}
+              {% set base_time = now_local + timedelta(days=10) %}
             {% endif %}
 
-            {{ base_time }}
+            {{ base_time.replace(second=0, microsecond=0) }}
 
           attributes:
-            anytime_snapshot: >
-              {% set free    = states('sensor.octopus_free_electricity_start') %}
-              {% set solar   = states('sensor.solar_export_threshold') %}
-              {% set fixed   = states('sensor.don_t_charge_ev_before_time_wobble') %}
-              {% set anyt    = is_state('input_boolean.octopus_schedule_anytime', 'on') %}
-              {% set conn    = states('sensor.zappi_last_connected') %}
-              {% set disc    = states('sensor.zappi_last_disconnected') %}
-              {% set delay   = states('input_number.delay_when_ev_connected') | float(0) %}
-
-              {% set conn_dt = conn | as_datetime | as_local
-                    if conn not in ['unknown','unavailable','none'] else None %}
-              {% set disc_dt = disc | as_datetime | as_local
-                    if disc not in ['unknown','unavailable','none'] else None %}
+            snapshots: >
               {% set now_local = now() | as_local %}
-              {% set is_connected =
-                    conn_dt is not none and
-                    (disc_dt is none or conn_dt > disc_dt)
-              %}
+              {% set now_local = now_local.replace(second=0, microsecond=0) %}
+              {% set delay = states('input_number.delay_when_ev_connected') | float(0) %}
+
+              {# Mode toggles #}
+              {% set anyt = is_state('input_boolean.octopus_schedule_anytime','on') %}
+              {% set solar_p = is_state('input_boolean.solar_export_priority','on') %}
+              {% set fixed_p = is_state('input_boolean.use_fixed_time','on') %}
+
+              {# EV connection times #}
+              {% set conn_raw = states('sensor.zappi_last_connected') %}
+              {% set disc_raw = states('sensor.zappi_last_disconnected') %}
+              {% set conn = (conn_raw | as_datetime | as_local) if conn_raw not in ['unknown','unavailable','none',''] else none %}
+              {% set disc = (disc_raw | as_datetime | as_local) if disc_raw not in ['unknown','unavailable','none',''] else none %}
+              {% set is_connected = conn and (not disc or conn > disc) %}
+              {% set last_conn_plus = conn + timedelta(minutes=delay) if conn else none %}
+
+              {# Previous snapshots #}
+              {% set prev_snap_raw = state_attr('sensor.octopus_schedule_time','snapshots') %}
+              {% if prev_snap_raw in [None,'','unknown'] %}
+                {% set prev_snap = {} %}
+              {% elif prev_snap_raw is string %}
+                {% set prev_snap = (prev_snap_raw | from_json) if prev_snap_raw | trim != '' else {} %}
+              {% else %}
+                {% set prev_snap = prev_snap_raw %}
+              {% endif %}
+
+              {% set prev_anyt_locked = (prev_snap.get('anytime', {}).get('locked') | as_datetime | as_local)
+                  if prev_snap.get('anytime', {}).get('locked') not in [None,'','unknown'] else none %}
+              {% set prev_anyt_mode = prev_snap.get('anytime', {}).get('anyt', false) %}
+              {% set prev_anyt_connected = prev_snap.get('anytime', {}).get('is_connected', false) %}
+
+              {# Solar snapshot #}
+              {% set solar_raw = states('sensor.solar_export_threshold') %}
+              {% set default_solar = solar_raw | as_datetime | as_local
+                  if solar_raw not in ['unknown','unavailable','none',''] else none %}
+              {% set prev_solar_locked = (
+                    prev_snap.get('solar', {}).get('locked') | as_datetime | as_local
+                  ) if prev_snap.get('solar', {}).get('locked') not in [None,'','unknown']
+                  else default_solar %}
+
+              {# Fixed snapshot #}
+              {% set fixed_raw_from_state = states('sensor.don_t_charge_ev_before_time_wobble') %}
+              {% set default_fixed = fixed_raw_from_state | as_datetime | as_local
+                  if fixed_raw_from_state not in ['unknown','unavailable','none',''] else none %}
+              {% set prev_fixed_locked = (
+                    prev_snap.get('fixed', {}).get('locked') | as_datetime | as_local
+                  ) if prev_snap.get('fixed', {}).get('locked') not in [None,'','unknown']
+                  else default_fixed %}
+
+              {# Anytime snapshot #}
+              {% set anytime_just_enabled = anyt and not prev_anyt_mode %}
+              {% set ev_just_connected = is_connected and not prev_anyt_connected %}
+              {% if prev_anyt_locked and prev_anyt_locked > now_local %}
+                {% set locked_anytime = prev_anyt_locked %}
+              {% elif anytime_just_enabled or ev_just_connected %}
+                {% set locked_anytime = now_local + timedelta(minutes=delay) %}
+              {% else %}
+                {% set locked_anytime = prev_anyt_locked if prev_anyt_locked else now_local + timedelta(minutes=delay) %}
+              {% endif %}
+
+              {# Solar snapshot #}
+              {% set locked_solar = [default_solar, last_conn_plus, prev_solar_locked] | select('!=',none) | list | max %}
+
+              {# Fixed snapshot #}
+              {% set locked_fixed = [default_fixed, last_conn_plus, prev_fixed_locked] | select('!=',none) | list | max %}
 
               {{
                 {
-                  "anyt": anyt,
-                  "is_connected": is_connected,
-                  "conn_dt": conn_dt|string,
-                  "disc_dt": disc_dt|string,
-                  "delay": delay,
-                  "free": free,
-                  "solar": solar,
-                  "fixed": fixed
+                  "anytime": {
+                    "locked": (locked_anytime | string),
+                    "anyt": anyt,
+                    "is_connected": is_connected
+                  },
+                  "solar": {
+                    "locked": (locked_solar | string),
+                    "solar_p": solar_p
+                  },
+                  "fixed": {
+                    "locked": (locked_fixed | string),
+                    "fixed_p": fixed_p
+                  }
                 } | to_json
               }}

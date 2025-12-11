@@ -1,18 +1,11 @@
 
 ##############################################################
-# v6.0.0 utility meter for solax
+# v9.0.0 utility meter 
 ##############################################################
 #
 # offset:
 #   days: 2 <---- update to your billing day (2 if your bills start on the 3rd)
 #
-# For EV Meters please add your own vehicles i.e.
-#         tariffs:
-#         - Car1
-#         - Car2
-#         - Guest
-# Automations should be added to detect which EV is plugged in and switch tariff
-# Automations should be added to detect which tariff is applicable and apply tariff to the meter
 ##############################################################
 zappi_loads_utilitymeter:
   utility_meter:
@@ -73,37 +66,8 @@ zappi_loads_utilitymeter:
         days: 2
 
     ##########################################################
-    # EV Meters
+    # EV Meter
     ##########################################################
-    ev_charging_daily_vehicle:
-      unique_id: 2654432e-7161-4ce5-86e9-fe3919bd0df0
-      source: sensor.zappi_charge_added_session
-      name: Daily EV Charging Vehicle
-      cycle: daily
-      net_consumption: false
-      delta_values: false
-      periodically_resetting: true
-      always_available: false
-      tariffs:
-        - car1
-        - car2
-        - Guest
-
-    ev_charging_monthly_vehicle:
-      unique_id: 1c511899-2af4-4953-b32f-acb6e06058d2
-      source: sensor.zappi_charge_added_session
-      name: Monthly EV Charging Vehicle
-      cycle: monthly
-      net_consumption: false
-      delta_values: false
-      periodically_resetting: true
-      always_available: false
-      offset:
-        days: 2
-      tariffs:
-        - car1
-        - car2
-        - Guest
 
     zappi_charging_daily:
       unique_id: 493a5661-71ee-4b57-ae79-ca8f91aa9005

@@ -1,4 +1,5 @@
 ####################################
+# v2.0.1 removed measurement tags from user set SoC values 
 # v1.3.0 Added attribute to show if cached sensor values are used
 # v1.2.0 Tidy up
 ####################################
@@ -60,7 +61,7 @@ solax_control_templates:
             {% set d = state_attr('sensor.solax_local_settings','Data') or [] %}
             {{ d[0] | int(0) }}
           unit_of_measurement: "%"
-          state_class: measurement
+        # state_class: measurement
           device_class: battery
           icon: mdi:battery-20
           availability: "{{ state_attr('sensor.solax_local_settings','Data') is not none }}"
@@ -82,7 +83,7 @@ solax_control_templates:
             {% set d = state_attr('sensor.solax_local_settings','Data') or [] %}
             {{ d[2] | int(94) }}
           unit_of_measurement: "%"
-          state_class: measurement
+        # state_class: measurement
           device_class: battery
           icon: mdi:battery-charging-90
           availability: "{{ state_attr('sensor.solax_local_settings','Data') is not none }}"
@@ -94,7 +95,7 @@ solax_control_templates:
             {% set d = state_attr('sensor.solax_local_settings','Data') or [] %}
             {{ d[12] | int(0) }}
           unit_of_measurement: "%"
-          state_class: measurement
+        # state_class: measurement
           device_class: battery
           icon: mdi:battery-20
           availability: "{{ state_attr('sensor.solax_local_settings','Data') is not none }}"
@@ -106,7 +107,7 @@ solax_control_templates:
             {% set d = state_attr('sensor.solax_local_settings','Data') or [] %}
             {{ d[13] | int(0) }}
           unit_of_measurement: "%"
-          state_class: measurement
+        # state_class: measurement
           device_class: battery
           icon: mdi:battery-charging-90
           availability: "{{ state_attr('sensor.solax_local_settings','Data') is not none }}"

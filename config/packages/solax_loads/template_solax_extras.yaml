@@ -232,6 +232,7 @@ solax_loads_template_solax_extras:
     # just before or during the chargeing window
     # Sometimes the inverter can take a while to get into force discharge mode and it may take several iterations
     # in the automations. 20 mins seems a fair window to avoid scenarios described above
+    # not used due for deleteions
     ######################################################
     - sensor:
       - name: Discharge Window Closed
@@ -276,3 +277,81 @@ solax_loads_template_solax_extras:
             {% set usable = (100- states('input_number.solax_default_discharge_limit_soc')|int (default=15)) /100 * states('input_number.solax_battery_capacity')|float (default=9.2) * battery_soh|float%}
             {{usable|float (default=0.0)}}
         icon: mdi:battery
+
+    # - sensor:
+    #     - name: alternative Solax Battery SoC
+    #       unique_id: alternative_solax_battery_soc
+    #       unit_of_measurement: "%"
+    #       device_class: battery
+    #       icon: mdi:battery
+    #       state: >
+    #         {# --- retrieve last valid SOC --- #}
+    #         {% set last = state_attr('sensor.alternative_solax_battery_soc', 'last_valid_soc') %}
+
+    #         {# get inputs #}
+    #         {% set usable_capacity = state_attr('sensor.solax_discharge_capacity','usable_capacity') %}
+    #         {% set battery_used = states('sensor.daily_battery_use') %}
+    #         {% set battery_dumped = states('sensor.daily_manual_battery_export') %}
+    #         {% set solar_stored = states('sensor.daily_solar_stored') %}
+    #         {% set L = states('input_number.solax_default_discharge_limit_soc') | float %}
+
+    #         {# if ANY input or last value missing → return nothing, avoid spike #}
+    #         {% if usable_capacity is none
+    #               or battery_used in ['unknown','unavailable','none']
+    #               or battery_dumped in ['unknown','unavailable','none']
+    #               or solar_stored in ['unknown','unavailable','none'] %}
+    #           {{ last }}
+    #         {% else %}
+    #           {% set usable_capacity = usable_capacity | float %}
+    #           {% set battery_used = battery_used | float %}
+    #           {% set battery_dumped = battery_dumped | float %}
+    #           {% set solar_stored = solar_stored | float %}
+
+    #           {% if usable_capacity == 0 %}
+    #             {{ last }}
+    #           {% else %}
+    #             {# 1) compute SOC inside usable span 0–100 #}
+    #             {% set soc_usable = 100 * ((usable_capacity - (battery_used + battery_dumped - solar_stored)) / usable_capacity) %}
+    #             {% set soc_usable = [soc_usable, 100] | min %}
+    #             {% set soc_usable = [soc_usable, 0] | max %}
+
+    #             {# 2) map usable 0–100 → actual L–100 #}
+    #             {% set soc = L + (soc_usable / 100) * (100 - L) %}
+
+    #             {{ soc | int }}
+    #           {% endif %}
+    #         {% endif %}
+
+    #       attributes:
+    #         last_valid_soc: >
+    #           {# --- same calculation for attribute --- #}
+    #           {% set last = state_attr('sensor.alternative_solax_battery_soc','last_valid_soc') %}
+    #           {% set usable_capacity = state_attr('sensor.solax_discharge_capacity','usable_capacity') %}
+    #           {% set battery_used = states('sensor.daily_battery_use') %}
+    #           {% set battery_dumped = states('sensor.daily_manual_battery_export') %}
+    #           {% set solar_stored = states('sensor.daily_solar_stored') %}
+    #           {% set L = states('input_number.solax_default_discharge_limit_soc') | float %}
+
+    #           {# same logic: no value until everything is valid #}
+    #           {% if usable_capacity is none
+    #                 or battery_used in ['unknown','unavailable','none']
+    #                 or battery_dumped in ['unknown','unavailable','none']
+    #                 or solar_stored in ['unknown','unavailable','none'] %}
+    #             {{ last }}
+    #           {% else %}
+    #             {% set usable_capacity = usable_capacity | float %}
+    #             {% set battery_used = battery_used | float %}
+    #             {% set battery_dumped = battery_dumped | float %}
+    #             {% set solar_stored = solar_stored | float %}
+
+    #             {# 1) calc SOC inside usable span #}
+    #             {% set soc_usable = 100 * ((usable_capacity - (battery_used + battery_dumped - solar_stored)) / usable_capacity) %}
+    #             {% set soc_usable = [soc_usable, 100] | min %}
+    #             {% set soc_usable = [soc_usable, 0] | max %}
+
+    #             {# 2) map usable 0–100 → actual L–100 #}
+    #             {% set soc = L + (soc_usable / 100) * (100 - L) %}
+
+    #             {{ soc | int }}
+    #           {% endif %}
+

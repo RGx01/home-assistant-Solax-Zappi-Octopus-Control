@@ -125,7 +125,7 @@ solax_loads_template_battery_soh:
             {% set stored = states('input_number.solax_battery_soh_stored') | float(100.0) %}
 
             {# Calculate SoH if charge window is meaningful, else use persisted value #}
-            {% if delta_soc >= 85 and capacity > 0 and grid_stored > 0 %}
+            {% if delta_soc >= 80 and capacity > 0 and grid_stored > 0 %}
               {{ [ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1), 100 ] | min }}
             {% else %}
               {{ stored|float }}
@@ -143,7 +143,7 @@ solax_loads_template_battery_soh:
               {% set stored = states('input_number.solax_battery_soh_stored') | float(100.0) %}
 
               {# Calculate SoH if charge window is meaningful, else use persisted value #}
-              {% if delta_soc >= 85 and capacity > 0 and grid_stored > 0 %}
+              {% if delta_soc >= 80 and capacity > 0 and grid_stored > 0 %}
                 {{ [ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1), 100 ] | min }}
               {% else %}
                 {{ stored|float }}

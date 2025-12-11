@@ -1,4 +1,4 @@
-# v8.1.0
+# v9.0.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -32,7 +32,7 @@ sections:
             tap_action:
               action: more-info
       - type: markdown
-        content: >+
+        content: >-
           {% if state_attr('sensor.octopus_total_planned_dispatch','dispatches')
           != None%}    
 
@@ -45,7 +45,6 @@ sections:
               {{dispatch}}
             {% endfor %}
           {%endif%}
-
         visibility:
           - condition: numeric_state
             entity: sensor.octopus_total_planned_dispatch
@@ -56,15 +55,41 @@ sections:
             label: >-
               Automation controls the inverter, smart charge and zappi mode, it
               responds to events such as car charging and Grid Supplier rate
-              changes by controlling the Minimum SoC. It also handles
-              exporting. 
+              changes by controlling the Minimum SoC. It also handles exporting
+              and Free Electric Sessions.
           - entity: automation.solax_zappi_octopus_control
+          - type: section
+          - entity: binary_sensor.ev_currently_plugged_in
+            type: attribute
+            attribute: ev_name
           - entity: input_number.delay_when_ev_connected
-          - entity: switch.octopus_intelligent_smart_charge
-          - entity: select.zappi_charge_mode
+          - entity: input_boolean.ignore_6hr
+          - type: conditional
+            conditions:
+              - entity: input_boolean.ignore_6hr
+                state: "off"
+            row:
+              entity: sensor.octopus_intelligent_time_allowance_remaining
+              format: datetime
+          - type: conditional
+            conditions:
+              - entity: input_boolean.ignore_6hr
+                state: "off"
+            row:
+              entity: input_number.limit_ev_kwh_charge_target
+          - type: conditional
+            conditions:
+              - entity: input_boolean.ignore_6hr
+                state: "off"
+            row:
+              entity: sensor.octopus_intelligent_remaining_today
+          - type: section
+          - entity: sensor.octopus_total_planned_dispatch
+          - entity: binary_sensor.octopus_smart_charge
+          - entity: sensor.zappi_charge_mode
         show_header_toggle: false
         state_color: true
-        title: Automation 5001 Controlled
+        title: Automation On/Off
         visibility:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
@@ -102,10 +127,13 @@ sections:
           entities:
             - type: section
             - entity: sensor.octopus_schedule_time
+              name: Smart Charge After
               format: datetime
             - entity: input_number.sun_degrees_above_horizon
             - entity: number.octopus_intelligent_charge_target
             - entity: select.octopus_intelligent_target_time
+            - entity: switch.octopus_intelligent_smart_charge
+            - entity: select.zappi_charge_mode
           title: Smart Charge After Sunset
       - type: conditional
         conditions:
@@ -120,9 +148,12 @@ sections:
           entities:
             - type: section
             - entity: sensor.octopus_schedule_time
+              name: Smart Charge After
               format: datetime
             - entity: number.octopus_intelligent_charge_target
             - entity: select.octopus_intelligent_target_time
+            - entity: switch.octopus_intelligent_smart_charge
+            - entity: select.zappi_charge_mode
           title: Smart Charge Anytime
       - type: conditional
         conditions:
@@ -142,10 +173,13 @@ sections:
           entities:
             - type: section
             - entity: sensor.octopus_schedule_time
+              name: Smart Charge After
               format: datetime
             - entity: input_datetime.don_t_charge_ev_before_time
             - entity: number.octopus_intelligent_charge_target
             - entity: select.octopus_intelligent_target_time
+            - entity: switch.octopus_intelligent_smart_charge
+            - entity: select.zappi_charge_mode
           title: Smart Charge After Fixed Time
       - type: entities
         entities:
@@ -159,6 +193,56 @@ sections:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
             state: "on"
+      - type: markdown
+        content: >
+          Completed Dispatches Since Last Connected
+
+
+          {% set current =
+          state_attr('sensor.octopus_total_completed_dispatch','completed_dispatches_kwh')|list|
+          map(attribute='dispatch') | list %}
+            {% for completed in current%}
+              {{completed}}
+            {% endfor %}
+      - type: conditional
+        conditions:
+          - condition: or
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: or
+                    conditions:
+                      - condition: state
+                        entity: binary_sensor.upcoming_free_electricity
+                        state: "on"
+                      - condition: state
+                        entity: binary_sensor.free_electricity_today
+                        state: "on"
+                  - condition: state
+                    entity: input_boolean.solax_octopus_hide_settings
+                    state: "off"
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: input_boolean.solax_octopus_hide_settings
+                    state: "on"
+        card:
+          type: entities
+          entities:
+            - type: section
+            - entity: input_boolean.free_electric
+            - entity: sensor.octopus_free_electricity_start
+              format: datetime
+            - entity: sensor.octopus_free_electricity_stop
+              secondary_info: none
+              format: datetime
+            - entity: input_boolean.octopus_free_electric_soc_use
+            - entity: input_number.octopus_free_session_battery_prep_soc
+            - entity: input_datetime.octopus_free_electricity_prep
+            - entity: binary_sensor.free_electricity_today
+          state_color: true
+          title: Free Electric Sessions
+          show_header_toggle: false
       - type: vertical-stack
         cards:
           - type: entities
@@ -439,6 +523,7 @@ sections:
           - entity: sensor.solax_local_battery_soc
           - entity: sensor.battery_budget_reserve_soc
           - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: sensor.battery_exportable_allowance_soc
         grid_options:
           columns: 12
           rows: 3
@@ -893,6 +978,7 @@ sections:
         entities:
           - type: section
           - entity: input_boolean.battery_reserve_show_hide
+          - entity: sensor.battery_exportable_allowance_soc
           - entity: sensor.solax_local_battery_soc
             name: Current SoC
           - entity: sensor.battery_budget_reserve_soc
@@ -940,6 +1026,13 @@ sections:
               attribute: additional_reserve_kwh
               name: Additional Reserve kWh
               suffix: kWh
+          - type: conditional
+            conditions:
+              - entity: input_boolean.battery_reserve_show_hide
+                state: "on"
+            row:
+              entity: sensor.typical_house_power
+              name: Typical House Power From Battery
           - type: section
             label: >-
               The battery reserve is calculated from historical home usage (+ a
@@ -983,13 +1076,13 @@ sections:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: sensor.solax_discharge_capacity
+              entity: sensor.battery_exportable_allowance_kwh
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
                 state: "on"
             row:
-              entity: sensor.battery_exportable_allowance_kwh
+              entity: sensor.solax_discharge_capacity
           - type: conditional
             conditions:
               - entity: input_boolean.battery_reserve_show_hide
@@ -1040,45 +1133,6 @@ sections:
           - condition: state
             entity: input_boolean.solax_octopus_hide_settings
             state: "on"
-      - type: conditional
-        conditions:
-          - condition: or
-            conditions:
-              - condition: and
-                conditions:
-                  - condition: or
-                    conditions:
-                      - condition: state
-                        entity: binary_sensor.upcoming_free_electricity
-                        state: "on"
-                      - condition: state
-                        entity: binary_sensor.free_electricity_today
-                        state: "on"
-                  - condition: state
-                    entity: input_boolean.solax_octopus_hide_settings
-                    state: "off"
-              - condition: and
-                conditions:
-                  - condition: state
-                    entity: input_boolean.solax_octopus_hide_settings
-                    state: "on"
-        card:
-          type: entities
-          entities:
-            - type: section
-            - entity: input_boolean.free_electric
-            - entity: sensor.octopus_free_electricity_start
-              format: datetime
-            - entity: sensor.octopus_free_electricity_stop
-              secondary_info: none
-              format: datetime
-            - entity: input_boolean.octopus_free_electric_soc_use
-            - entity: input_number.octopus_free_session_battery_prep_soc
-            - entity: input_datetime.octopus_free_electricity_prep
-            - entity: binary_sensor.free_electricity_today
-          state_color: true
-          title: Free Electric Sessions
-          show_header_toggle: false
     column_span: 1
   - type: grid
     cards:
@@ -1175,7 +1229,6 @@ sections:
           - entity: binary_sensor.octopus_energy_electricity_off_peak
           - entity: binary_sensor.octopus_intelligent_dispatching
           - entity: sensor.zappi_plug_status
-          - entity: sensor.zappi_status
           - entity: sensor.solax_runmode
         fit_y_data: true
         hours_to_show: 36
@@ -1191,6 +1244,7 @@ sections:
           - entity: sensor.solax_local_battery_soc
           - entity: sensor.battery_budget_reserve_soc
           - entity: input_number.solax_manual_forced_discharge_limit_soc
+          - entity: sensor.battery_exportable_allowance_soc
           - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to
           - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
           - entity: input_number.solax_default_charge_to_limit_soc
@@ -1200,6 +1254,8 @@ sections:
           rows: auto
       - type: history-graph
         entities:
+          - entity: sensor.solax_local_inverter_mode
+          - entity: sensor.zappi_plug_status
           - entity: select.daily_grid_import
             name: Log
         fit_y_data: true
@@ -1222,6 +1278,7 @@ sections:
           - entity: sensor.solax_discharge_capacity
           - entity: sensor.solcast_pv_forecast_forecast_remaining_today
           - entity: sensor.battery_budget_reserve_kwh
+          - entity: sensor.battery_exportable_allowance_kwh
         grid_options:
           columns: 36
           rows: auto
@@ -1372,45 +1429,6 @@ sections:
             name: Log
         fit_y_data: true
         hours_to_show: 36
-        grid_options:
-          columns: 36
-          rows: auto
-      - title: Cell Voltage (Pack Voltage/X cells)
-        type: history-graph
-        hours_to_show: 36
-        entities:
-          - entity: sensor.solax_local_battery_cell_voltage
-        grid_options:
-          columns: 36
-          rows: auto
-        min_y_axis: 3
-      - title: Battery Temperature
-        type: history-graph
-        hours_to_show: 36
-        entities:
-          - entity: sensor.solax_local_battery_temperature
-        grid_options:
-          columns: 36
-          rows: auto
-      - title: " Grid Stored/Theoretical Grid Stored= Capacity SoH"
-        type: history-graph
-        hours_to_show: 1500
-        entities:
-          - entity: sensor.solax_grid_stored_at_first_max_soc
-        fit_y_data: false
-        grid_options:
-          columns: 36
-          rows: auto
-        min_y_axis: 9
-      - title: " Grid Stored/Theoretical Grid Stored= Capacity SoH"
-        type: history-graph
-        hours_to_show: 1500
-        entities:
-          - entity: sensor.solax_local_battery_soh
-          - entity: sensor.solax_local_min_soc
-          - entity: sensor.solax_local_max_soc
-          - entity: sensor.solax_local_battery_temperature
-        fit_y_data: false
         grid_options:
           columns: 36
           rows: auto
@@ -2056,6 +2074,83 @@ sections:
       - condition: state
         entity: input_boolean.solax_octopus_hide_stats
         state: "on"
+  - type: grid
+    cards:
+      - type: heading
+        heading: " Grid Stored/Theoretical Grid Stored= Capacity SoH"
+        heading_style: title
+      - type: history-graph
+        hours_to_show: 1500
+        entities:
+          - entity: sensor.solax_grid_stored_at_first_max_soc
+          - entity: sensor.solax_local_battery_soh
+          - entity: sensor.solax_local_min_soc
+          - entity: sensor.solax_local_max_soc
+          - entity: sensor.solax_local_battery_temperature
+        fit_y_data: false
+        grid_options:
+          columns: 36
+    column_span: 3
+    visibility:
+      - condition: state
+        entity: input_boolean.battery_soh_show_hide
+        state: "on"
+  - type: grid
+    cards:
+      - type: heading
+        heading: Cell Voltage (Pack Voltage/X cells)
+        heading_style: title
+      - type: history-graph
+        hours_to_show: 36
+        entities:
+          - entity: sensor.solax_local_battery_cell_voltage
+          - entity: sensor.solax_local_battery_temperature
+        grid_options:
+          columns: 36
+        min_y_axis: 3
+    column_span: 3
+    visibility:
+      - condition: state
+        entity: input_boolean.battery_voltage_show_hide
+        state: "on"
+  - cards:
+      - type: heading
+        heading: EV Charging
+        heading_style: title
+      - type: history-graph
+        hours_to_show: 36
+        entities:
+          - entity: sensor.octopus_total_planned_dispatch
+          - entity: sensor.octopus_intelligent_remaining_dispatch
+          - entity: sensor.octopus_intelligent_time_allowance_remaining
+          - entity: sensor.zappi_charge_added_session
+          - entity: select.ev_charging_daily_vehicle
+            name: Vehicle
+          - entity: sensor.zappi_plug_status
+            name: Plug
+          - entity: sensor.zappi_power_ct_internal_load
+          - entity: sensor.octopus_intelligent_remaining_today
+        grid_options:
+          columns: full
+        title: Octopus Dispatch vs Zappi Charge Added
+      - chart_type: bar
+        period: day
+        type: statistics-graph
+        entities:
+          - sensor.ev_charging_monthly_vehicle_ariya
+          - sensor.ev_charging_monthly_vehicle_corsa
+          - sensor.zappi_charging
+        stat_types:
+          - state
+        days_to_show: 366
+        title: Car Charging
+        grid_options:
+          columns: full
+    column_span: 3
+    visibility:
+      - condition: state
+        entity: input_boolean.ev_charging_show_hide
+        state: "on"
 cards: []
 badges:
   - type: entity
@@ -2094,6 +2189,30 @@ badges:
     show_state: false
     show_icon: true
     entity: input_boolean.solax_octopus_hide_stats
+    show_entity_picture: false
+    tap_action:
+      action: toggle
+  - type: entity
+    show_name: true
+    show_state: false
+    show_icon: true
+    entity: input_boolean.battery_soh_show_hide
+    show_entity_picture: false
+    tap_action:
+      action: toggle
+  - type: entity
+    show_name: true
+    show_state: false
+    show_icon: true
+    entity: input_boolean.ev_charging_show_hide
+    show_entity_picture: false
+    tap_action:
+      action: toggle
+  - type: entity
+    show_name: true
+    show_state: false
+    show_icon: true
+    entity: input_boolean.battery_voltage_show_hide
     show_entity_picture: false
     tap_action:
       action: toggle

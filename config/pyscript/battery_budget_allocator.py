@@ -1,6 +1,6 @@
 # ---------------------------------------------------------
 # battery_budget_allocator.py
-# Version: v8.0.0
+# Version: v8.2.0
 #
 # SUMMARY OF REQUIREMENTS
 # ---------------------------------------------------------
@@ -12,49 +12,23 @@
 #     • Optional hours-of-reserve-energy
 #     • Optional “ignore after HH:MM” cutoff for the above extras
 #
+# ✔ Behaviour for ignore_additional_reserve_after:
+#   - If input_select.ignore_additional_reserve_after is blank -> NEVER ignore additional reserve.
+#   - If it is set:
+#       • After the cutoff today -> ignore additional reserve for the rest of the day.
+#       • Between 00:00 and the first schedule slot whose reserve_type is 'max' or 'dynamic' -> ignore additional reserve.
+#       • Once the first 'max' or 'dynamic' slot is reached -> resume additional reserve.
+#
 # ✔ Battery Model:
-#   batt_usable = battery_size_kWh * SoH * (100% – min_soc%)
-#   All calculations must be based on usable kWh above min_soc.
+#   batt_usable = usable_capacity attribute (already factors SOH) -- all calculations use usable kWh above min_soc.
 #
-# ✔ Schedule Handling:
-#   • reserve_schedule is a list of {start, end, cumulative_kwh}
-#   • Find the current active schedule entry based on time-in-range
-#   • Use previous entry if between bands
-#
-# ✔ Additional Reserve (critical requirement):
-#   • input_number.additional_reserve_soc is ABSOLUTE SOC POINTS
-#       Example: if min_soc=20% and additional_pct=5,
-#       user wants target_soc = required + 5% (absolute), not % of usable.
-#
-#   • Convert additional_pct to kWh by:
-#         additional_reserve_kwh = batt_usable * (additional_pct / usable_percent)
-#
-#   • hours_of_reserve_energy adds:
-#         hours_buffer_kwh = hours_buffer * typical_house_kw
-#
-#   • Total buffer_kwh = additional_reserve_kwh + hours_buffer_kwh
-#
-# ✔ “Ignore additional after HH:MM”:
-#   • If now >= ignore_time → additional_pct = 0 and hours_buffer = 0
-#
-# ✔ Target Soc Calculation:
-#     required_soc = min_soc + (required_kwh / batt_usable) * usable_percent
-#     target_soc   = min_soc + ((required_kwh + buffer_kwh) / batt_usable) * usable_percent
-#
-# ✔ Sensors to update:
-#   • sensor.battery_budget_reserve_soc (%, dynamic icon)
-#   • sensor.battery_budget_reserve_kwh (kWh)
-#
-# ✔ Execution Controls:
-#   • Debounce triggers
-#   • Single-active-run enforcement
-#   • Automatic next-slot scheduling
-#   • Safe behaviour on reload
+# ✔ Additional Reserve:
+#   input_number.additional_reserve_soc is ABSOLUTE SOC POINTS (e.g. 5 means +5% SoC)
+#   additional_reserve_kwh = batt_usable * (additional_pct / usable_percent)
+#   hours_buffer_kwh = hours_buffer * typical_house_kw
+#   buffer_kwh = additional_reserve_kwh + hours_buffer_kwh
 #
 # ---------------------------------------------------------
-
-# battery_budget_allocator.py
-# Pyscript version with: single-active-run protection, debounce, dev cleanup, diagnostics, and dynamic icon
 
 import uuid
 from datetime import datetime, timedelta
@@ -84,7 +58,6 @@ except NameError:
 _running_task = None
 _debounce_task = None
 _active_run_id = None
-
 
 # ---------------------------------------------------------
 #  Battery level → icon mapper
@@ -207,6 +180,7 @@ def battery_budget_allocator(run_id: str = None):
 
         current_slot = current_entry.get("start")
         reserve_kwh = float(current_entry.get("cumulative_kwh", 0.0))
+        current_reserve_type = current_entry.get("reserve_type", "").lower()
 
         # Battery properties
         batt_usable = float(state.getattr("sensor.solax_discharge_capacity").get("usable_capacity", 10))
@@ -214,37 +188,88 @@ def battery_budget_allocator(run_id: str = None):
         usable_percent = max(0.0, 100.0 - min_soc)
 
         # -------------------------
-        # User inputs and NEW ignore-after logic
+        # User inputs and ignore-after logic
         # -------------------------
         additional_pct = float(state.get("input_number.additional_reserve_soc") or 0)
         hours_buffer = float(state.get("input_number.hours_of_reserve_energy") or 0)
         typical_kw = float(state.get("input_number.typical_house_power") or 0)
 
-        ignore_after = state.get("input_select.ignore_additional_reserve_after") or " "
+        ignore_after_raw = state.get("input_select.ignore_additional_reserve_after")
+        ignore_after = (ignore_after_raw or "").strip()
+
         now_dt = datetime.now()
 
-        if ignore_after.strip() != "":
+        # If ignore_after is blank -> never ignore additional reserve
+        effective_ignore = False
+        if not ignore_after:
+            # No ignore requested
+            effective_ignore = False
+            log.debug(f"[allocator {run_id}] ignore_additional_reserve_after is blank → additional reserve always allowed")
+        else:
+            # parse ignore time for today (if valid)
+            ignore_time_today = None
             try:
-                ignore_time = datetime.strptime(ignore_after, "%H:%M").replace(
+                ignore_time_today = datetime.strptime(ignore_after, "%H:%M").replace(
                     year=now_dt.year, month=now_dt.month, day=now_dt.day
                 )
-                if now_dt >= ignore_time:
-                    log.info(f"Additional reserve ignored after {ignore_after}")
-                    additional_pct = 0
-                    hours_buffer = 0
-            except Exception as e:
-                log.warning(f"Invalid ignore_additional_reserve_after value: {ignore_after} ({e})")
+            except Exception:
+                ignore_time_today = None
+                log.warning(f"[allocator {run_id}] Invalid ignore_additional_reserve_after value: {ignore_after_raw}")
+
+            # Find the first slot (chronologically) that is reserve_type 'max' or 'dynamic'
+            first_reenable_start = None
+            for entry in schedule:
+                rtype = (entry.get("reserve_type") or "").lower()
+                if rtype in ("max", "dynamic"):
+                    first_reenable_start = entry.get("start")
+                    break
+
+            # parse that to a datetime (today)
+            first_reenable_dt = None
+            if first_reenable_start:
+                try:
+                    first_reenable_dt = datetime.strptime(first_reenable_start, "%H:%M:%S").replace(
+                        year=now_dt.year, month=now_dt.month, day=now_dt.day
+                    )
+                    # If the reenable slot start equals '00:00:00' it is treated as today's 00:00:00
+                except Exception:
+                    first_reenable_dt = None
+
+            # Rule A: if now >= ignore_time_today -> ignore extras for rest of today
+            if ignore_time_today and now_dt >= ignore_time_today:
+                effective_ignore = True
+                log.info(f"[allocator {run_id}] ignore_after time passed ({ignore_after}) -> ignoring additional reserve for rest of day")
+
+            # Rule B: between 00:00 and first_reenable_dt -> ignore additional (midnight persistence)
+            # Only apply this if first_reenable_dt exists and it's later than 00:00
+            if first_reenable_dt:
+                midnight_dt = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+                # If first_reenable_dt was computed as earlier than midnight (rare), normalize by adding a day
+                if first_reenable_dt < midnight_dt:
+                    first_reenable_dt = first_reenable_dt + timedelta(days=1)
+                if midnight_dt <= now_dt < first_reenable_dt:
+                    # we are in the midnight-to-first-reenable window
+                    effective_ignore = True
+                    log.info(f"[allocator {run_id}] between 00:00 and first re-enable slot ({first_reenable_start}) -> ignoring additional reserve")
+
+        # Apply the effective_ignore decision
+        if effective_ignore:
+            additional_pct_applied = 0.0
+            hours_buffer_applied = 0.0
+        else:
+            additional_pct_applied = additional_pct
+            hours_buffer_applied = hours_buffer
 
         # -------------------------
-        # Calculate total buffer (Option A: additional_pct is ABSOLUTE SOC)
+        # Calculate total buffer (additional_pct is ABSOLUTE SOC points)
         # -------------------------
         # Start with hours buffer (kWh)
-        buffer_kwh = hours_buffer * typical_kw
+        buffer_kwh = hours_buffer_applied * typical_kw
 
         # Convert the absolute SOC points requested by the user into kWh
         # additional_pct is SOC points (e.g. 5 means +5% SoC)
         if batt_usable > 0 and usable_percent > 0:
-            additional_reserve_kwh = batt_usable * (additional_pct / usable_percent)
+            additional_reserve_kwh = batt_usable * (additional_pct_applied / usable_percent)
         else:
             additional_reserve_kwh = 0.0
 
@@ -260,8 +285,8 @@ def battery_budget_allocator(run_id: str = None):
             additional_pct_of_usable = 0.0
             additional_reserve_kwh = 0.0
 
-        # Optional debug logging (remove in production)
-        log.info(f"[allocator {run_id}] DEBUG additional_pct={additional_pct}, additional_reserve_kwh={additional_reserve_kwh:.6f}, "
+        log.info(f"[allocator {run_id}] DEBUG additional_pct_input={additional_pct}, effective_ignore={effective_ignore}, "
+                 f"additional_pct_applied={additional_pct_applied}, additional_reserve_kwh={additional_reserve_kwh:.6f}, "
                  f"buffer_kwh={buffer_kwh:.6f}, additional_soc_abs={additional_soc_abs:.4f}, additional_pct_of_usable={additional_pct_of_usable:.4f}")
 
         # -------------------------
@@ -269,13 +294,13 @@ def battery_budget_allocator(run_id: str = None):
         # -------------------------
         if batt_usable > 0:
             required_soc = min_soc + (reserve_kwh / batt_usable) * (100 - min_soc)
-            target_soc   = min_soc + ((reserve_kwh + buffer_kwh) / batt_usable) * (100 - min_soc)
+            target_soc = min_soc + ((reserve_kwh + buffer_kwh) / batt_usable) * (100 - min_soc)
         else:
             required_soc = min_soc
             target_soc = min_soc
 
         required_soc = min(max(required_soc, min_soc), 100.0)
-        target_soc   = min(max(target_soc, min_soc), 100.0)
+        target_soc = min(max(target_soc, min_soc), 100.0)
 
         # Current SoC
         current_soc = float(state.get("sensor.solax_local_battery_soc") or 0)
@@ -329,7 +354,6 @@ def battery_budget_allocator(run_id: str = None):
                 "note": "Dynamic SoC based on consolidated schedule",
                 "unit_of_measurement": "%",
                 "device_class": "battery",
-                "state_class": "measurement",
                 "icon": icon,
                 "unique_id": "battery_budget_reserve_soc",
                 "friendly_name": "Battery Budget Reserve SoC"
@@ -346,8 +370,6 @@ def battery_budget_allocator(run_id: str = None):
                 "reserve_kwh_eod": round(reserve_kwh, 2),
                 "additional_reserve_kwh": round(buffer_kwh, 2),
                 "unit_of_measurement": "kWh",
-                "device_class": "energy",
-                "state_class": "measurement",
                 "icon": "mdi:flash",
                 "unique_id": "battery_budget_reserve_kwh",
                 "friendly_name": "Battery Budget Reserve kWh"
