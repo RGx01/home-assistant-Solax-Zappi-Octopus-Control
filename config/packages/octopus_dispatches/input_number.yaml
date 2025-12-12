@@ -8,3 +8,8 @@ octopus_dispatches_input_number:
       mode: box
       step: 0.5
       icon: mdi:meter-electric-outline
+    zappi_charging_minutes:
+      name: Zappi Charging Minutes
+      min: 0
+      max: 100000
+      step: 1

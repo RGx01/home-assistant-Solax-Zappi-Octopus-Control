@@ -5,17 +5,20 @@
 
 octopus_dispatches_utilitymeter:
   utility_meter:
-    charging_time_24hr_allowance:
-      unique_id: dd44b78f-2708-4fba-bb3e-ad83c4c01fb1
-      name: Charging Time 24hr Allowance
-      source: sensor.zappi_charging_state_numeric
+    charge_time_24hr_allowance:
+      unique_id: dd44b78f-2708-4fba-bb3e-ad83c4c01fb9
+      source: input_number.zappi_charging_minutes
+      name: Charge Time 24hr Allowance
+
+
 
 # Track how close you are to maximum assuming 6 x 7kWh. 
 # Allows for a rough approximation of percentage required when initiallising the charge session 
-    charging_24hr_allowance:
-      unique_id: 5dcc45bd-7181-42ae-8890-9b0492feece3
+    charge_kwh_24hr_allowance:
+      unique_id: 5dcc45bd-7181-42ae-8890-9b0492feece9
       source: sensor.zappi_charge_added_session
-      name: Charging 24hr Allowance
+      name: Charge kWh 24hr Allowance
+
 
     ##########################################################
 

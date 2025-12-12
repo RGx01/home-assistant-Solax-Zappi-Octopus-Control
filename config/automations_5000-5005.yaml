@@ -633,6 +633,8 @@
       - condition: trigger
         id:
         - Dispatch for this session
+      - condition: template
+        value_template: '{{now()|as_timestamp-states(''sensor.uptime'')|as_timestamp>80}}'
       sequence:
       - choose:
         - conditions:
@@ -752,8 +754,8 @@
         metadata: {}
         target:
           entity_id:
-          - sensor.charging_24hr_allowance
-          - sensor.charging_time_24hr_allowance
+          - sensor.charge_kwh_24hr_allowance
+          - sensor.charge_time_24hr_allowance
         data:
           value: 0
       - action: input_datetime.set_datetime
@@ -763,6 +765,12 @@
         data:
           datetime: '{{ now().replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
             }}'
+      - action: input_number.set_value
+        metadata: {}
+        data:
+          value: 0
+        target:
+          entity_id: input_number.zappi_charging_minutes
       alias: Reset Octopus Usage Limits
     - conditions:
       - condition: trigger
@@ -782,7 +790,7 @@
         - Which EV Connected
       - condition: template
         value_template: '{{state_attr(''binary_sensor.ev_currently_plugged_in'',''ev_name'')
-          != unknown}}
+          != ''unknown''}}
 
           '
       sequence:

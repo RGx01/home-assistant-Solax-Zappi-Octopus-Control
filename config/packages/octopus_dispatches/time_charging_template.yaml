@@ -3,38 +3,46 @@ octopus_dispatches_time_charging_template:
     - trigger:
         - platform: time_pattern
           minutes: "/1"
+      action:
+        # Increment helper only if charging
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.zappi_charging_minutes
+          data:
+            value: >
+              {{ states('input_number.zappi_charging_minutes')|int + (1 if is_state('sensor.zappi_plug_status', 'Charging') else 0) }}
       sensor:
-        - name: Zappi Charging State Numeric
+        - name: "Zappi Charging State Numeric"
           unique_id: zappi_charging_state_numeric
           state: >
-            {{ 1 if states('sensor.zappi_plug_status') == 'Charging' else 0 }}
+            {# This is here just to keep HA happy as strictly speaking this is an automation (the action pat) in template form 
+            (it's allowed in HA without the sensor but from HA2026.5 you need a sensor to keep it happy. #}
+            {{ 1 if is_state('sensor.zappi_plug_status', 'Charging') else 0 }}
           state_class: measurement
+
 
     - trigger:
         - platform: state
-          entity_id: sensor.charging_time_24hr_allowance
-
+          entity_id: sensor.charge_time_24hr_allowance
       sensor:
         - name: "Time Allowance Remaining"
           unique_id: octopus_intelligent_time_allowance_remaining
           unit_of_measurement: "h"
           state_class: measurement
           state: >
-            {% set new = trigger.to_state.state %}
-            {% set start_hours = 6 %}
+            {% set used = states('sensor.charge_time_24hr_allowance') %}
+            {% set start_hours = 6|int %}
 
-            {# If new value is bad (unknown/unavailable/non-numeric), keep previous value #}
-            {% if not is_number(new) %}
+            {# If bad state, return previous value #}
+            {% if not is_number(used) %}
               {{ this.state }}
             {% else %}
-              {% set remaining = start_hours - new|float %}
-              {{ remaining | round(3) }}
+              {{ (start_hours - (used|int/60)|float) | round(3) }}
             {% endif %}
-
 
     - trigger:
         - platform: state
-          entity_id: sensor.charging_24hr_allowance
+          entity_id: sensor.charge_kwh_24hr_allowance
         - platform: state
           entity_id: input_number.limit_ev_kwh_charge_target
 
@@ -48,10 +56,10 @@ octopus_dispatches_time_charging_template:
             {% set daily_limit = states('input_number.limit_ev_kwh_charge_target')|float(0) %}
             {% set used = trigger.to_state.state %}
 
-            {% if trigger.entity_id == 'sensor.charging_24hr_allowance' %}
+            {% if trigger.entity_id == 'sensor.charge_kwh_24hr_allowance' %}
               {% set used = trigger.to_state.state %}
             {% else %}
-              {% set used = states('sensor.charging_24hr_allowance') %}
+              {% set used = states('sensor.charge_kwh_24hr_allowance') %}
             {% endif %}
 
             {# If used is not numeric, keep current value #}

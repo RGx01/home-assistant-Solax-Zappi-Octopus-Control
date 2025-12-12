@@ -40,15 +40,15 @@ zappi_loads_template_zappi_connected:
                 {% set disconnected = now()|as_datetime|as_local %}
               {% else %}
                 {% set disconnected = states('sensor.zappi_last_disconnected') %}
-              {%- endif-%}
-              {%- if (state_attr('binary_sensor.octopus_intelligent_dispatching','completed_dispatches') | length > 0) -%}
-                {%- for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') -%}
-                  {%- if dispatch.start|as_timestamp > disconnected|as_timestamp and dispatch.start|as_timestamp < states('sensor.zappi_last_connected')|as_timestamp-%}
-                    {%- set ns.total_dispatch = ns.total_dispatch|float (default=0.0) + dispatch.charge_in_kwh|float (default=0.0)%}
-                  {%- endif-%}
-                {%- endfor -%}
+              {% endif -%}
+              {% if (state_attr('binary_sensor.octopus_intelligent_dispatching','completed_dispatches') | length > 0) %}
+                {% for dispatch in state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') %}
+                  {% if dispatch.start|as_timestamp > disconnected|as_timestamp and dispatch.start|as_timestamp < states('sensor.zappi_last_connected')|as_timestamp -%}
+                    {% set ns.total_dispatch = ns.total_dispatch|float (default=0.0) + dispatch.charge_in_kwh|float (default=0.0) %}
+                  {% endif %}
+                {% endfor %}
                 {{ns.total_dispatch|float (default=0.0)}}  
-              {%- endif  -%}
+              {% endif %}
           
 
     ######################################################
@@ -70,8 +70,13 @@ zappi_loads_template_zappi_connected:
                 entity_id: input_number.octopus_intelligent_total_dispatch
               data:
                 value: 0
+            - service: input_datetime.set_datetime
+              target:
+                entity_id: input_datetime.zappi_last_connected
+              data:
+                datetime: "{{ now().isoformat() }}"
       sensor:
         - name: Zappi Last Connected
           unique_id: zappi_last_connected
           state: >
-            {{now()}}
+            {{states('input_datetime.zappi_last_connected')}}

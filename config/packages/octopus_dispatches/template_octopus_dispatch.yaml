@@ -421,113 +421,119 @@ octopus_dispatches_template_octopus_dispatch:
 
           state: >
             {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
-            {% set last_raw = states('sensor.zappi_last_connected') %}
-            {% set last_dt = as_datetime(last_raw) %}
-
-            {# If last_dt is invalid → return unknown #}
-            {% if not last_dt %}
+            {% set last_dt_raw = states('sensor.zappi_last_connected') | default('') %}
+            {% set last_dt = last_dt_raw | as_datetime %}
+            {% if last_dt is none %}
               {{ none }}
-
             {% else %}
+              {% set last_dt = last_dt | as_local %}
               {% set ns = namespace(total=0.0) %}
-
               {% for dispatch in completed %}
-                {% set start_dt = as_datetime(dispatch.start) %}
-                {% set end_dt   = as_datetime(dispatch.end) %}
-
-                {% if start_dt and end_dt and start_dt > last_dt and end_dt > last_dt %}
-                  {# charge_in_kwh is negative, flip sign #}
-                  {% set ns.total = ns.total + (dispatch.charge_in_kwh | float(0) * -1) %}
+                {% set start_dt = dispatch.start | as_datetime %}
+                {% set end_dt   = dispatch.end   | as_datetime %}
+                {% if start_dt is not none and end_dt is not none %}
+                  {% set start_dt = start_dt | as_local %}
+                  {% set end_dt   = end_dt   | as_local %}
+                  {% if start_dt > last_dt and end_dt > last_dt %}
+                    {% set ns.total = ns.total + (dispatch.charge_in_kwh | float(0) * -1) %}
+                  {% endif %}
                 {% endif %}
               {% endfor %}
-
               {{ 0 if ns.total < 0.5 else ns.total }}
             {% endif %}
 
-
           attributes:
             completed_total_dispatches: >
-              {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching','completed_dispatches') or [] %}
-              {% set last_dt = as_datetime(states('sensor.zappi_last_connected')) %}
-
-              {# If zappi timestamp invalid -> 0 #}
-              {% if not last_dt %}
+              {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
+              {% set last_dt = states('sensor.zappi_last_connected') | as_datetime %}
+              {% if last_dt is none %}
                 0
               {% else %}
+                {% set last_dt = last_dt | as_local %}
                 {% set ns = namespace(count=0) %}
                 {% for dispatch in completed %}
-                  {% set start_dt = as_datetime(dispatch.start) %}
-                  {% set end_dt   = as_datetime(dispatch.end) %}
-                  {% if start_dt and end_dt and start_dt > last_dt and end_dt > last_dt %}
-                    {% set ns.count = ns.count + 1 %}
+                  {% set start_dt = dispatch.start | as_datetime %}
+                  {% set end_dt   = dispatch.end   | as_datetime %}
+                  {% if start_dt is not none and end_dt is not none %}
+                    {% set start_dt = start_dt | as_local %}
+                    {% set end_dt   = end_dt   | as_local %}
+                    {% if start_dt > last_dt and end_dt > last_dt %}
+                      {% set ns.count = ns.count + 1 %}
+                    {% endif %}
                   {% endif %}
                 {% endfor %}
                 {{ ns.count }}
               {% endif %}
 
-
             completed_dispatches: >
-              {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching','completed_dispatches') or [] %}
-              {% set last_dt = as_datetime(states('sensor.zappi_last_connected')) %}
-              {% if not last_dt %}
+              {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
+              {% set last_dt = states('sensor.zappi_last_connected') | as_datetime %}
+              {% if last_dt is none %}
                 []
               {% else %}
+                {% set last_dt = last_dt | as_local %}
                 {% set ns = namespace(members=[]) %}
                 {% for dispatch in completed %}
-                  {% set start_dt = as_datetime(dispatch.start) %}
-                  {% set end_dt   = as_datetime(dispatch.end) %}
-                  {% if start_dt and end_dt and start_dt > last_dt and end_dt > last_dt %}
-                    {% set ns.members = ns.members + [{
-                      "dispatch": as_local(start_dt).strftime('%H:%M')
-                                  ~ " to "
-                                  ~ as_local(end_dt).strftime('%H:%M')
-                    }] %}
+                  {% set start_dt = dispatch.start | as_datetime %}
+                  {% set end_dt   = dispatch.end   | as_datetime %}
+                  {% if start_dt is not none and end_dt is not none %}
+                    {% set start_dt = start_dt | as_local %}
+                    {% set end_dt   = end_dt   | as_local %}
+                    {% if start_dt > last_dt and end_dt > last_dt %}
+                      {% set ns.members = ns.members + [{
+                        "dispatch": start_dt.strftime('%H:%M') ~ " to " ~ end_dt.strftime('%H:%M')
+                      }] %}
+                    {% endif %}
                   {% endif %}
                 {% endfor %}
                 {{ ns.members }}
               {% endif %}
 
             completed_dispatches_dt: >
-              {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching','completed_dispatches') or [] %}
-              {% set last_dt = as_datetime(states('sensor.zappi_last_connected')) %}
-              {% if not last_dt %}
+              {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
+              {% set last_dt = states('sensor.zappi_last_connected') | as_datetime %}
+              {% if last_dt is none %}
                 []
               {% else %}
+                {% set last_dt = last_dt | as_local %}
                 {% set ns = namespace(members=[]) %}
                 {% for dispatch in completed %}
-                  {% set start_dt = as_datetime(dispatch.start) %}
-                  {% set end_dt   = as_datetime(dispatch.end) %}
-                  {% if start_dt and end_dt and start_dt > last_dt and end_dt > last_dt %}
-                    {% set ns.members = ns.members + [{
-                      "start": as_local(start_dt).isoformat(),
-                      "end":   as_local(end_dt).isoformat()
-                    }] %}
+                  {% set start_dt = dispatch.start | as_datetime %}
+                  {% set end_dt   = dispatch.end   | as_datetime %}
+                  {% if start_dt is not none and end_dt is not none %}
+                    {% set start_dt = start_dt | as_local %}
+                    {% set end_dt   = end_dt   | as_local %}
+                    {% if start_dt > last_dt and end_dt > last_dt %}
+                      {% set ns.members = ns.members + [{
+                        "start": start_dt.isoformat(),
+                        "end":   end_dt.isoformat()
+                      }] %}
+                    {% endif %}
                   {% endif %}
                 {% endfor %}
                 {{ ns.members }}
               {% endif %}
 
-
             completed_dispatches_kwh: >
-              {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching','completed_dispatches') or [] %}
-              {% set last_dt = as_datetime(states('sensor.zappi_last_connected')) %}
-              {% if not last_dt %}
+              {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
+              {% set last_dt = states('sensor.zappi_last_connected') | as_datetime %}
+              {% if last_dt is none %}
                 []
               {% else %}
+                {% set last_dt = last_dt | as_local %}
                 {% set ns = namespace(members=[]) %}
                 {% for dispatch in completed %}
-                  {% set start_dt = as_datetime(dispatch.start) %}
-                  {% set end_dt   = as_datetime(dispatch.end) %}
-                  {% set kwh      = dispatch.charge_in_kwh | float(0) %}
-                  {% if start_dt and end_dt and start_dt > last_dt and end_dt > last_dt %}
-                    {% set ns.members = ns.members + [{
-                      "dispatch": as_local(start_dt).strftime('%H:%M')
-                                  ~ " to "
-                                  ~ as_local(end_dt).strftime('%H:%M')
-                                  ~ " "
-                                  ~ (kwh | round(2))
-                                  ~ " kWh"
-                    }] %}
+                  {% set start_dt = dispatch.start | as_datetime %}
+                  {% set end_dt   = dispatch.end   | as_datetime %}
+                  {% set kwh = dispatch.charge_in_kwh | float(0) %}
+                  {% if start_dt is not none and end_dt is not none %}
+                    {% set start_dt = start_dt | as_local %}
+                    {% set end_dt   = end_dt   | as_local %}
+                    {% if start_dt > last_dt and end_dt > last_dt %}
+                      {% set ns.members = ns.members + [{
+                        "dispatch": start_dt.strftime('%H:%M') ~ " to " ~ end_dt.strftime('%H:%M') ~ " " ~ (kwh | round(2)) ~ " kWh"
+                      }] %}
+                    {% endif %}
                   {% endif %}
                 {% endfor %}
                 {{ ns.members }}

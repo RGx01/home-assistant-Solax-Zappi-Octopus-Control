@@ -265,9 +265,9 @@ octopus_dispatches_template_get_octopus_schedule:
               {% set fixed_p = is_state('input_boolean.use_fixed_time','on') %}
 
               {# EV connection times #}
-              {% set conn_raw = states('sensor.zappi_last_connected') %}
+              {% set conn_raw = states('input_datetime.zappi_last_connected') %}
               {% set disc_raw = states('sensor.zappi_last_disconnected') %}
-              {% set conn = (conn_raw | as_datetime | as_local) if conn_raw not in ['unknown','unavailable','none',''] else none %}
+              {% set conn = (conn_raw | as_datetime | as_local) if conn_raw not in ['unknown','unavailable','none','','00:00:00'] else none %}
               {% set disc = (disc_raw | as_datetime | as_local) if disc_raw not in ['unknown','unavailable','none',''] else none %}
               {% set is_connected = conn and (not disc or conn > disc) %}
               {% set last_conn_plus = conn + timedelta(minutes=delay) if conn else none %}
