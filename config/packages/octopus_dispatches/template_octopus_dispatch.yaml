@@ -421,7 +421,7 @@ octopus_dispatches_template_octopus_dispatch:
 
           state: >
             {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
-            {% set last_dt_raw = states('sensor.zappi_last_connected') | default('') %}
+            {% set last_dt_raw = states('input_datetime.zappi_last_connected') | default('') %}
             {% set last_dt = last_dt_raw | as_datetime %}
             {% if last_dt is none %}
               {{ none }}
@@ -445,7 +445,7 @@ octopus_dispatches_template_octopus_dispatch:
           attributes:
             completed_total_dispatches: >
               {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
-              {% set last_dt = states('sensor.zappi_last_connected') | as_datetime %}
+              {% set last_dt = states('input_datetime.zappi_last_connected') | as_datetime %}
               {% if last_dt is none %}
                 0
               {% else %}
@@ -467,7 +467,7 @@ octopus_dispatches_template_octopus_dispatch:
 
             completed_dispatches: >
               {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
-              {% set last_dt = states('sensor.zappi_last_connected') | as_datetime %}
+              {% set last_dt = states('input_datetime.zappi_last_connected') | as_datetime %}
               {% if last_dt is none %}
                 []
               {% else %}
@@ -491,7 +491,7 @@ octopus_dispatches_template_octopus_dispatch:
 
             completed_dispatches_dt: >
               {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
-              {% set last_dt = states('sensor.zappi_last_connected') | as_datetime %}
+              {% set last_dt = states('input_datetime.zappi_last_connected') | as_datetime %}
               {% if last_dt is none %}
                 []
               {% else %}
@@ -516,7 +516,7 @@ octopus_dispatches_template_octopus_dispatch:
 
             completed_dispatches_kwh: >
               {% set completed = state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') or [] %}
-              {% set last_dt = states('sensor.zappi_last_connected') | as_datetime %}
+              {% set last_dt = states('input_datetime.zappi_last_connected') | as_datetime %}
               {% if last_dt is none %}
                 []
               {% else %}

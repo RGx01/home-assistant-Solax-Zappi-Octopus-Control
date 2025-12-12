@@ -13,3 +13,8 @@ octopus_dispatches_input_number:
       min: 0
       max: 100000
       step: 1
+    zappi_charging_minutes_6hr_limit:
+      name: Zappi Charging Minutes 6hr Limit
+      min: 0
+      max: 100000
+      step: 1

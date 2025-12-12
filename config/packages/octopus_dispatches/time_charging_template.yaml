@@ -11,6 +11,12 @@ octopus_dispatches_time_charging_template:
           data:
             value: >
               {{ states('input_number.zappi_charging_minutes')|int + (1 if is_state('sensor.zappi_plug_status', 'Charging') else 0) }}
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.zappi_charging_minutes_6hr_limit
+          data:
+            value: >
+              {{ states('input_number.zappi_charging_minutes_6hr_limit')|int + (1 if is_state('sensor.zappi_plug_status', 'Charging') else 0) }}
       sensor:
         - name: "Zappi Charging State Numeric"
           unique_id: zappi_charging_state_numeric

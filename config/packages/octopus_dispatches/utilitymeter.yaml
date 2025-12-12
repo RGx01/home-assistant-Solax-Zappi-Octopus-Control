@@ -7,8 +7,13 @@ octopus_dispatches_utilitymeter:
   utility_meter:
     charge_time_24hr_allowance:
       unique_id: dd44b78f-2708-4fba-bb3e-ad83c4c01fb9
-      source: input_number.zappi_charging_minutes
+      source: input_number.zappi_charging_minutes_6hr_limit
       name: Charge Time 24hr Allowance
+
+    zappi_time_spent_charging:
+      unique_id: 5c506d8e-d2bf-4e2d-bae0-3d03f77abf57
+      source: input_number.zappi_charging_minutes
+      name: Zappi Time Spent Charging
 
 
 

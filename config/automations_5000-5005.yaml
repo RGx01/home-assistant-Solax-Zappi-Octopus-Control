@@ -770,7 +770,7 @@
         data:
           value: 0
         target:
-          entity_id: input_number.zappi_charging_minutes
+          entity_id: input_number.zappi_charging_minutes_6hr_limit
       alias: Reset Octopus Usage Limits
     - conditions:
       - condition: trigger
@@ -1343,6 +1343,18 @@
               {% endif %}
             title: EV Connected - Waiting for Octopus schedule
             class: normal
+      - action: input_number.set_value
+        metadata: {}
+        target:
+          entity_id: input_number.zappi_charging_minutes
+        data:
+          value: 0
+      - action: utility_meter.calibrate
+        metadata: {}
+        target:
+          entity_id: sensor.zappi_time_spent_charging
+        data:
+          value: '0'
       alias: EV Connected
     - conditions:
       - condition: trigger
