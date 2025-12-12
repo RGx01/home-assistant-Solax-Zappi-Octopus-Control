@@ -59,6 +59,14 @@ sections:
               and Free Electric Sessions.
           - entity: automation.solax_zappi_octopus_control
           - type: section
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.ev_currently_plugged_in
+                state: "off"
+              - entity: sensor.zappi_plug_status
+                state_not: EV Disconnected
+            row:
+              entity: number.octopus_intelligent_charge_target
           - entity: binary_sensor.ev_currently_plugged_in
             type: attribute
             attribute: ev_name
@@ -2219,3 +2227,4 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
+
