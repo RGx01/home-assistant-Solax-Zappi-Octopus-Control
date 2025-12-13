@@ -1,0 +1,53 @@
+
+##############################################################
+# v9.0.0 utility meter 
+##############################################################
+#
+# offset:
+#   days: 2 <---- update to your billing day (2 if your bills start on the 3rd)
+#
+# For EV Meters please add your own vehicles i.e.
+#         tariffs:
+#         - Car1
+#         - Car2
+#         - Guest
+# Order the tariffs the worst manufacturer connectivity/reliabitiy last
+#
+# Automations should be added to detect which EV is plugged in and switch tariff
+# Automations should be added to detect which tariff is applicable and apply tariff to the meter
+##############################################################
+connected_ev_tracking_utilitymeter:
+  utility_meter:
+
+    ##########################################################
+    # EV Meters
+    ##########################################################
+    ev_charging_daily_vehicle:
+      unique_id: 2654432e-7161-4ce5-86e9-fe3919bd0df0
+      source: sensor.zappi_charge_added_session
+      name: Daily EV Charging Vehicle
+      cycle: daily
+      net_consumption: false
+      delta_values: false
+      periodically_resetting: true
+      always_available: false
+      tariffs:
+        - car1
+        - car2
+        - Guest
+
+    ev_charging_monthly_vehicle:
+      unique_id: 1c511899-2af4-4953-b32f-acb6e06058d2
+      source: sensor.zappi_charge_added_session
+      name: Monthly EV Charging Vehicle
+      cycle: monthly
+      net_consumption: false
+      delta_values: false
+      periodically_resetting: true
+      always_available: false
+      offset:
+        days: 2
+      tariffs:
+        - car1
+        - car2
+        - Guest

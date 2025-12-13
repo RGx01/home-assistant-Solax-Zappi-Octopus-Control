@@ -1,0 +1,7 @@
+zappi_loads_input_datetime:
+  input_datetime:
+    zappi_last_connected:
+      name: Zappi Last Connected
+      has_date: true
+      has_time: true
+      icon: mdi:clock-start

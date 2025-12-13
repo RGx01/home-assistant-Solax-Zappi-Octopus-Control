@@ -771,6 +771,34 @@
           value: 0
         target:
           entity_id: input_number.zappi_charging_minutes_6hr_limit
+      - if:
+        - condition: state
+          entity_id: binary_sensor.ev_currently_plugged_in
+          state:
+          - 'on'
+        then:
+        - action: number.set_value
+          metadata: {}
+          target:
+            entity_id: number.octopus_intelligent_charge_target
+          data:
+            value: "{# THIS TEMPLATE IS TO RESET THE 6HR LIMIT IF AN EARLY MORNING
+              PLUGIN HAPPENS AFTER A PREVIOUS CHARGE #}\n\n{# --- Battery sizes ---
+              #} \n{% set cap = state_attr('sensor.connected_ev_battery_size','registered_ev_size')|float
+              %} \n{% set cap_ev = states('sensor.connected_ev_battery_size')|float
+              %}  \n{# --- Max energy allowed per 24hrs 12:00 to 12:00 --- #}  {#
+              --- Max energy allowed logic --- #} \n{% set ignore = is_state('input_boolean.ignore_6hr',
+              'on') %} \n{% set max_kwh = cap if ignore else states('input_number.limit_ev_kwh_charge_target')|float
+              %}\n{% set max_percent_ev = (max_kwh / cap_ev) * 100 %}  \n{# --- Which
+              car is currently plugged in? --- #} \n{% set active_car = state_attr('binary_sensor.ev_currently_plugged_in','ev_name')
+              %}  \n\n{# --- Current battery levels --- #}\n{% set battery_entity
+              = state_attr('binary_sensor.ev_currently_plugged_in','battery_entity')%}\n{%
+              set current_ev_level = state(battery_entity) %} \n\n{# --- Desired target
+              % --- #} \n{% set target = 100 %}  \n \n\n{% set percent_needed = target
+              - current_ev_level %}     \n{% set kwh_needed = (percent_needed / 100)
+              * cap_ev %}     \n{% set percent_equiv = (kwh_needed / cap) * 100 %}
+              \    \n{% set limited_percent = [percent_equiv, max_percent_ev] | min
+              %}     \n{{ [limited_percent, 10] | max | int }}\n"
       alias: Reset Octopus Usage Limits
     - conditions:
       - condition: trigger

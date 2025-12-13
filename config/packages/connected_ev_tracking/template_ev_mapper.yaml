@@ -1,0 +1,162 @@
+connected_ev_tracking_template_ev_mapper:
+  template:
+    ###############################################
+    # If your EV doesn't always wake up when you plug it in
+    # be sure to create an automation to wake it when zappi becomes connected so that an accurate
+    # SoC can be gathered
+    ###############################################
+    # -------------------------------------------
+    # The octopus Registered EV Battery Size attribute (registered_ev_size) is required. 
+    # Order the mapper with the worst api connectivity reliabitiy last.
+    # 
+    # Example: 'Tesla Model 3'  should also match exactly what you have set in the utility meter tariff
+    # -------------------------------------------
+    - sensor:
+        - name: "Connected EV Battery Size"
+          unique_id: connected_ev_battery_size
+          unit_of_measurement: "kWh"
+          state: >-
+            {% set tariff = states('select.ev_charging_daily_vehicle') %}
+            {% set battery_map = {
+                'car2': 87,
+                'car1': 50,
+                'Guest': 42
+            } %}
+            {{ battery_map.get(tariff, 42) }}
+          attributes:
+            registered_ev_size: 87
+
+
+    # -------------------------------------------
+    # READ THIS
+    # The binary sensor below looks through all the EV's and finds the first that reports plugged in
+    # based on your named sensors as per:
+    # you must create binary_sensors representing the EV's connected status
+    # and battery level in the format: 
+    # binary_sensor.tesla_model_3_plugged_in
+    # sensor.tesla_model_3_battery_level
+    # -------------------------------------------
+    - binary_sensor:
+        - name: "EV Currently Plugged In"
+          unique_id: ev_currently_plugged_in
+          device_class: plug
+          state: >-
+            {% set plug_status = states('sensor.zappi_plug_status') %}
+            {% if plug_status == 'EV Disconnected' %}
+              off
+            {% else %}
+              {% set evs = state_attr('select.ev_charging_daily_vehicle', 'options') %}
+              {% set ns = namespace(result='off') %}
+              {% for ev in evs %}
+                {% set slug = ev | lower | replace(' ', '_') %}
+                {% set entity = 'binary_sensor.' ~ slug ~ '_plugged_in' %}
+                {% if is_state(entity, 'on') %}
+                  {% set ns.result = 'on' %}
+                  {% break %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.result }}
+            {% endif %}
+          attributes:
+            ev_name: >
+              {% if states('sensor.zappi_plug_status') == 'EV Disconnected' %}
+                None
+              {% else %}
+                {% set evs = state_attr('select.ev_charging_daily_vehicle', 'options') %}
+                {% set ns = namespace(ev_name='') %}
+                {% for ev in evs %}
+                  {% set slug = ev | lower | replace(' ', '_') %}
+                  {% if is_state('binary_sensor.' ~ slug ~ '_plugged_in', 'on') %}
+                    {% set ns.ev_name = ev %}
+                    {% break %}
+                  {% endif %}
+                {% endfor %}
+                {{ ns.ev_name }}
+              {% endif %}
+
+            ev_slug: >
+              {% if states('sensor.zappi_plug_status') == 'EV Disconnected' %}
+                None
+              {% else %}
+                {% set evs = state_attr('select.ev_charging_daily_vehicle', 'options') %}
+                {% set ns = namespace(ev_slug='') %}
+                {% for ev in evs %}
+                  {% set slug = ev | lower | replace(' ', '_') %}
+                  {% if is_state('binary_sensor.' ~ slug ~ '_plugged_in', 'on') %}
+                    {% set ns.ev_slug = slug %}
+                    {% break %}
+                  {% endif %}
+                {% endfor %}
+                {{ ns.ev_slug }}
+              {% endif %}
+
+            plugged_in_entity: >
+              {% if states('sensor.zappi_plug_status') == 'EV Disconnected' %}
+                None
+              {% else %}
+                {% set evs = state_attr('select.ev_charging_daily_vehicle', 'options') %}
+                {% set ns = namespace(entity='') %}
+                {% for ev in evs %}
+                  {% set slug = ev | lower | replace(' ', '_') %}
+                  {% set entity = 'binary_sensor.' ~ slug ~ '_plugged_in' %}
+                  {% if is_state(entity, 'on') %}
+                    {% set ns.entity = entity %}
+                    {% break %}
+                  {% endif %}
+                {% endfor %}
+                {{ ns.entity }}
+              {% endif %}
+
+            battery_entity: >
+              {% if states('sensor.zappi_plug_status') == 'EV Disconnected' %}
+                None
+              {% else %}
+                {% set evs = state_attr('select.ev_charging_daily_vehicle', 'options') %}
+                {% set ns = namespace(battery_entity='') %}
+                {% for ev in evs %}
+                  {% set slug = ev | lower | replace(' ', '_') %}
+                  {% set entity = 'binary_sensor.' ~ slug ~ '_plugged_in' %}
+                  {% if is_state(entity, 'on') %}
+                    {% set ns.battery_entity = 'sensor.' ~ slug ~ '_battery_level' %}
+                    {% break %}
+                  {% endif %}
+                {% endfor %}
+                {{ ns.battery_entity }}
+              {% endif %}
+
+            battery_level: >
+              {% if states('sensor.zappi_plug_status') == 'EV Disconnected' %}
+                None
+              {% else %}
+                {% set evs = state_attr('select.ev_charging_daily_vehicle', 'options') %}
+                {% set ns = namespace(battery_entity='') %}
+                {% for ev in evs %}
+                  {% set slug = ev | lower | replace(' ', '_') %}
+                  {% set entity = 'binary_sensor.' ~ slug ~ '_plugged_in' %}
+                  {% if is_state(entity, 'on') %}
+                    {% set ns.battery_entity = 'sensor.' ~ slug ~ '_battery_level' %}
+                    {% break %}
+                  {% endif %}
+                {% endfor %}
+                {% if ns.battery_entity != '' %}
+                  {{ states(ns.battery_entity) }}
+                {% else %}
+                  None
+                {% endif %}
+              {% endif %}
+
+              
+    - sensor:
+        - name: "EV Active Battery Level"
+          unique_id: ev_active_battery_level
+          unit_of_measurement: "%"
+          state: >-
+            {% set ev = states('select.ev_charging_daily_vehicle') %}
+            {% set slug = ev | lower | replace(' ', '_') %}
+            {% set entity_id = 'sensor.' ~ slug ~ '_battery_level' %}
+            {% set val = states(entity_id) %}
+            {% if val in ['unknown', 'unavailable','none', None] %}
+              100
+            {% else %}
+              {{ val | float }}
+            {% endif %}
