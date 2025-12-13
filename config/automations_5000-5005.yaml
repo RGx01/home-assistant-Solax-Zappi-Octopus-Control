@@ -266,19 +266,6 @@
       minutes: 0
       seconds: 10
     id: Which EV Connected
-  - alias: Octopus Smart Charge Off
-    trigger: state
-    entity_id:
-    - switch.octopus_intelligent_smart_charge
-    from:
-    - 'on'
-    to:
-    - 'off'
-    for:
-      hours: 0
-      minutes: 10
-      seconds: 0
-    id: Octopus Smart Charge Off
   conditions: []
   actions:
   - choose:
@@ -859,20 +846,6 @@
             = (kwh_needed / cap) * 100 %}     \n{% set limited_percent = [percent_equiv,
             max_percent_ev] | min %}     \n{{ [limited_percent, 10] | max | int }}\n"
       alias: Which EV Connected
-    - conditions:
-      - condition: trigger
-        id:
-        - Octopus Smart Charge Off
-      - condition: template
-        value_template: '{{now()|as_timestamp-states(''sensor.uptime'')|as_timestamp>80}}'
-      sequence:
-      - action: number.set_value
-        metadata: {}
-        target:
-          entity_id: number.octopus_intelligent_charge_target
-        data:
-          value: '10'
-      alias: Octopus Smart Charge Off
     enabled: true
   mode: parallel
   trace:
@@ -1292,6 +1265,12 @@
           desired_state: 'off'
           max_retries: 4
           backoff: 5
+      - action: number.set_value
+        metadata: {}
+        target:
+          entity_id: number.octopus_intelligent_charge_target
+        data:
+          value: '10'
       alias: EV Disconnected
     - conditions:
       - condition: trigger
