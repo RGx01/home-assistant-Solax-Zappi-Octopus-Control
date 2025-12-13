@@ -1,3 +1,6 @@
+#=====================================================
+# Tariff as in utility meter tariff....
+#=====================================================
 octopus_dispatches_template_octopus_tariff:
   template:
     - sensor:

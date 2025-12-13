@@ -48,6 +48,25 @@ octopus_dispatches_time_charging_template:
 
     - trigger:
         - platform: state
+          entity_id: sensor.zappi_time_spent_charging
+      sensor:
+        - name: "Time Spent Charging EV"
+          unique_id: time_spent_charging_ev
+          unit_of_measurement: "h"
+          state_class: measurement
+          state: >
+            {% set used = states('sensor.zappi_time_spent_charging') %}
+            {% set start_hours = 6|int %}
+
+            {# If bad state, return previous value #}
+            {% if not is_number(used) %}
+              {{ this.state }}
+            {% else %}
+              {{ ((used|int/60)|float) | round(3) }}
+            {% endif %}
+
+    - trigger:
+        - platform: state
           entity_id: sensor.charge_kwh_24hr_allowance
         - platform: state
           entity_id: input_number.limit_ev_kwh_charge_target

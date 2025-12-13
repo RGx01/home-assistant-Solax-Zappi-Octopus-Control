@@ -204,13 +204,17 @@
       hours: 0
       minutes: 0
       seconds: 10
-  - trigger: state
+  - alias: New Octopus Dispatch
+    trigger: state
     entity_id:
     - switch.octopus_intelligent_smart_charge
     id: Dispatch for this session
     to:
     - 'off'
-    alias: New Octopus Dispatch
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
   - trigger: state
     entity_id:
     - sensor.octopus_total_planned_dispatch
@@ -262,7 +266,8 @@
       minutes: 0
       seconds: 10
     id: Which EV Connected
-  - trigger: state
+  - alias: Octopus Smart Charge Off
+    trigger: state
     entity_id:
     - switch.octopus_intelligent_smart_charge
     from:
@@ -271,10 +276,9 @@
     - 'off'
     for:
       hours: 0
-      minutes: 5
+      minutes: 10
       seconds: 0
     id: Octopus Smart Charge Off
-    alias: Octopus Smart Charge Off
   conditions: []
   actions:
   - choose:
@@ -776,6 +780,8 @@
           entity_id: binary_sensor.ev_currently_plugged_in
           state:
           - 'on'
+        - condition: template
+          value_template: '{{is_number(states(''sensor.ev_active_battery_level''))}}'
         then:
         - action: number.set_value
           metadata: {}
@@ -818,7 +824,7 @@
         - Which EV Connected
       - condition: template
         value_template: '{{state_attr(''binary_sensor.ev_currently_plugged_in'',''ev_name'')
-          != ''unknown''}}
+          != Unknown}}
 
           '
       sequence:
@@ -857,6 +863,8 @@
       - condition: trigger
         id:
         - Octopus Smart Charge Off
+      - condition: template
+        value_template: '{{now()|as_timestamp-states(''sensor.uptime'')|as_timestamp>80}}'
       sequence:
       - action: number.set_value
         metadata: {}
