@@ -5,3 +5,8 @@ octopus_dispatches_input_datetime:
       has_date: true
       has_time: true
       icon: mdi:timer-plus-outline
+    #Time that ev can start charge +/- wobble
+    don_t_charge_ev_before_time:
+      name: Smart Charge After
+      has_date: false
+      has_time: true

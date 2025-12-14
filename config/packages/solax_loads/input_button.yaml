@@ -1,0 +1,10 @@
+solax_loads_input_button:
+  input_button:
+    # Refresh solax settings
+    refresh:
+      name: Refresh
+      icon: mdi:button-pointer
+      
+    solax_submit_settings:
+      name: "Apply Solax Settings"
+      icon: mdi:button-pointer

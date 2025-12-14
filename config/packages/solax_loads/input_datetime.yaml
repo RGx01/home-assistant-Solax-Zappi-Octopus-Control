@@ -1,4 +1,4 @@
-solax_zappi_octopus_ui_input_datetime:
+solax_loads_input_datetime:
   input_datetime:
     #########################################
     #Solax UI
@@ -66,28 +66,3 @@ solax_zappi_octopus_ui_input_datetime:
       has_date: false
       has_time: true
       icon: mdi:clock-end
-
-    #Time that ev can start charge +/- wobble
-    don_t_charge_ev_before_time:
-      name: Smart Charge After
-      has_date: false
-      has_time: true
-
-    daily_battery_export_time:
-      name: Daily Battery Export Time
-      has_time: true
-
-    pre_daily_battery_export_time:
-      name: Pre Daily Battery Export Time
-      has_date: true
-      has_time: true
-
-    pre_daily_battery_export_time2:
-      name: Pre Daily Battery Export Time2
-      has_date: true
-      has_time: true
-
-    pre_nightly_battery_export_time:
-      name: Pre Nightly Battery Export Time
-      has_date: true
-      has_time: true

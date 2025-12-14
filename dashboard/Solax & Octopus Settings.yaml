@@ -2138,6 +2138,7 @@ sections:
             name: Plug
           - entity: sensor.zappi_power_ct_internal_load
           - entity: sensor.octopus_intelligent_remaining_today
+          - entity: sensor.time_spent_charging_ev
         grid_options:
           columns: full
         title: Octopus Dispatch vs Zappi Charge Added
@@ -2227,4 +2228,3 @@ badges:
 dense_section_placement: true
 icon: ""
 subview: false
-

@@ -1,0 +1,6 @@
+zappi_loads_input_boolean:
+  input_boolean:
+    # Zappi always left in ECO mode when connected
+    zappi_eco_always:
+      name: Zappi always in ECO+ Mode (when connected)
+      icon: mdi:leaf

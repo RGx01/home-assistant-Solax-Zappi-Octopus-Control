@@ -1,0 +1,10 @@
+solax_zappi_octopus_notifications_input_boolean:
+  input_boolean:
+    # mute notifications
+    solax_zappi_octopus_control_notifications:
+      name: Automation Notifications
+      icon: mdi:bell
+    #Notify a mobile device_tracker
+    nofify_mobile:
+      name: Notify mobile?
+      icon: mdi:bell-plus

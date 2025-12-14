@@ -811,7 +811,7 @@
         - Which EV Connected
       - condition: template
         value_template: '{{state_attr(''binary_sensor.ev_currently_plugged_in'',''ev_name'')
-          != Unknown}}
+          != ''Unknown''}}
 
           '
       sequence:

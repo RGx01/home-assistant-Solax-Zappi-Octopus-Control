@@ -1,0 +1,32 @@
+solax_loads_input_boolean:
+  input_boolean:
+    # Solax can see zappi loads
+    solax_can_see_zappi_loads:
+      name: Solax Can See Zappi Loads
+      icon: mdi:flash
+    #Prevent EV discharging Solax Battery
+    ev_solax_battery_drain:
+      name: Prevent Zappi Draining Battery
+      icon: mdi:battery-10
+    #use grid during octopus dispatch
+    use_grid_during_octopus_dispatch:
+      name: Use Grid During Octopus Off Peak
+      icon: mdi:transmission-tower-import
+
+    #A secondary charge period usually left off
+    solaxchargeperiod2:
+      name: Charge Period 2
+      icon: mdi:battery-clock
+    #A secondary charge period usually left off
+    self_use_enable_charge_from_grid:
+      name: Self Use Enable Charge From Grid
+      icon: mdi:transmission-tower-import
+    #A secondary charge period usually left off
+    battery_heat_enable:
+      name: Battery Heating
+      icon: mdi:heating-coil
+
+    # solax System on/off
+    solax_system_enable:
+      name: Solax System Enable
+      icon: mdi:home-battery

@@ -1,0 +1,7 @@
+solax_exports_input_datetime:
+  input_datetime:
+    #########################################
+    daily_battery_export_time:
+      name: Daily Battery Export Time
+      has_time: true
+

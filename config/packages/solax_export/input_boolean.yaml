@@ -3,3 +3,26 @@ solax_export_input_boolean:
     battery_discharge_now:
       name: Battery Discharge Now
       icon: mdi:lightning-bolt-circle
+    #Export battery switch is used to determine if the remainder of solax battery can be dumped back to the grid during off peak
+    export_battery_daily:
+      name: Daily Battery Export
+      icon: mdi:light-switch
+    #Export battery switch is used to determine if the remainder of solax battery can be dumped back to the grid during off peak
+    export_battery_nightly:
+      name: Nightly Battery Export (EV Disconnected)
+      icon: mdi:light-switch 
+    #Manual Export
+    export_battery_manual:
+      name: Export Battery Manual
+      icon: mdi:light-switch
+    #Discharge in gaps   
+    battery_discharge_in_dispatch_gaps:
+      name: Battery Discharge in Dispatch Gaps
+      icon: mdi:light-switch
+
+    daily_export_when_ev_connected:
+      name: Allow when connected if no EV schedule
+      icon: mdi:transmission-tower-export
+    nightly_export_when_ev_connected:
+      name: Allow when connected if no EV schedule
+      icon: mdi:transmission-tower-export

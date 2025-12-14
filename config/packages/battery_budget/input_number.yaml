@@ -16,3 +16,19 @@ battery_budget_input_number:
       mode: box
       icon: mdi:transmission-tower-import
       unit_of_measurement: "kW" 
+    hours_of_reserve_energy:
+      name: Hours of Reserve Energy
+      min: 0
+      max: 24
+      step: 0.25
+      mode: box
+      icon: mdi:clock-star-four-points-outline
+      unit_of_measurement: "hr"
+    additional_reserve_soc:
+      name: Additional Reserve Soc
+      min: 0
+      max: 10
+      step: 1
+      mode: box
+      icon: mdi:battery-10
+      unit_of_measurement: "%"

@@ -1,0 +1,84 @@
+solax_loads_input_number:
+  input_number:
+    #Default Min SoC discharge limit
+    solax_default_discharge_limit_soc:
+      name: Default Minimum SoC
+      unit_of_measurement: "%"
+      min: 10
+      max: 100
+      step: 1
+      mode: box
+      icon: mdi:battery-40
+
+    solax_feed_in_charge_to_soc:
+      name: Feed In Charge to SoC
+      unit_of_measurement: "%"
+      min: 30
+      max: 100
+      step: 1
+      mode: slider
+      icon: mdi:battery-charging-100
+
+    solax_feed_in_battery_min_soc:
+      name: Feed In Min SoC
+      unit_of_measurement: "%"
+      min: 10
+      max: 100
+      step: 1
+      mode: slider
+      icon: mdi:battery-charging-20
+
+    solax_selfuse_charge_to_soc:
+      name: Self Use Charge to SoC
+      unit_of_measurement: "%"
+      min: 30
+      max: 100
+      step: 1
+      mode: slider
+      icon: mdi:battery-charging-100
+
+    solax_selfuse_battery_min_soc:
+      name: Self Use Min SoC
+      unit_of_measurement: "%"
+      min: 10
+      max: 100
+      step: 1
+      mode: slider
+      icon: mdi:battery-charging-20
+
+    solax_battery_capacity:
+      name: Solax Battery Size
+      unit_of_measurement: "kWh"
+      min: 3.1
+      max: 12.3
+      step: .1
+      mode: box
+      icon: mdi:home-battery
+
+    solax_inverter_capacity:
+      name: Solax Inverter Size
+      unit_of_measurement: "kWh"
+      min: 1
+      max: 10
+      step: .1
+      mode: box
+      icon: mdi:home-lightning-bolt-outline
+
+    solax_battery_soh_stored:
+      name: Solax Battery SoH Stored
+      min: 0
+      max: 100
+      step: 0.1
+      mode: box
+      icon: mdi:battery-heart-outline
+      unit_of_measurement: "%"
+
+    solax_default_charge_to_limit_soc:
+      name: Default Charge to SoC
+      unit_of_measurement: "%"
+      #initial: 18
+      min: 15
+      max: 100
+      step: 1
+      mode: box
+      icon: mdi:battery-90

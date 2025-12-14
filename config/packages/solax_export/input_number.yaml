@@ -1,0 +1,55 @@
+###############################
+# Input Numbers to support the package
+###############################
+solax_export_input_number:
+  input_number:
+    sun_degrees_above_horizon:
+      name: Sunset degrees above horizon
+      unit_of_measurement: "Degrees"
+      min: 0
+      max: 20
+      mode: box
+      step: 0.5
+      icon: mdi:weather-sunset-down
+    battery_discharge_soc_window_limit:
+      name: SoC Distance Must Be G.T.E
+      min: 5
+      max: 25
+      step: 1
+      mode: box
+      icon: mdi:battery-10
+      unit_of_measurement: "%"
+    nightly_battery_discharge_soc_window_limit:
+      name: SoC Distance Must Be G.T.E
+      min: 5
+      max: 25
+      step: 1
+      mode: box
+      icon: mdi:battery-10
+      unit_of_measurement: "%"
+    daily_battery_discharge_soc_window_limit:
+      name: SoC Distance Must Be G.T.E
+      min: 10
+      max: 50
+      step: 1
+      mode: box
+      icon: mdi:battery-10
+      unit_of_measurement: "%"
+    battery_export_margin_delta:
+      name: Export Margin Delta
+      min: 0
+      max: 60
+      step: 1
+      mode: box
+      unit_of_measurement: "minutes"
+      icon: mdi:timer-plus-outline
+    #Manual forced discharge limit
+    solax_manual_forced_discharge_limit_soc:
+      name: Manual Forced Discharge SoC
+      unit_of_measurement: "%"
+      #initial: 18
+      min: 10
+      max: 80
+      step: 1
+      mode: box
+      icon: mdi:battery-20

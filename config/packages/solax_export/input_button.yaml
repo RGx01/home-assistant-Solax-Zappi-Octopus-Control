@@ -1,0 +1,13 @@
+solax_export_input_button:
+  input_button:
+
+    # Force Solax Discharge
+    solax_force_discharge:
+      name: Solax Force Discharge
+      icon: mdi:button-pointer
+
+    # Stop Solax Discharge
+    solax_stop_discharge:
+      name: Solax Stop Discharge
+      icon: mdi:button-pointer
+

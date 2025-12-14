@@ -3,3 +3,15 @@ octopus_dispatches_input_boolean:
     ignore_6hr:
       name: 6hr Limit (on to ignore)
       icon: mdi:timer-cog-outline
+    #octopus schedule anytime switch if you switch this on automations will ignore other criteria like scheduled charge time and allow Octopus to create schedules during the day
+    #Use this when you want to charge the car during the day when octopus has surplus.
+    octopus_schedule_anytime:
+      name: Smart Charge at Anytime 
+      icon: mdi:ev-station
+    use_fixed_time:
+      name: Smart Charge at Fixed Time
+      icon: mdi:ev-station
+    #Prevent EV charging before sunset
+    solar_export_priority:
+      name: Smart Charge after Sun Elevation Threshold
+      icon: mdi:solar-power
