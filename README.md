@@ -152,7 +152,7 @@ automation: !include automations.yaml
 22. # Configuring IOG 6hr Charge Limit
     - <img width="386" height="572" alt="Screenshot 2025-12-13 at 07 45 55" src="https://github.com/user-attachments/assets/b6bda1b3-2105-4d97-ba15-52b1eed7aff7" /><img width="384" height="448" alt="Screenshot 2025-12-13 at 07 47 05" src="https://github.com/user-attachments/assets/fee12bbb-6701-4eb8-b0ad-aa209f73f43e" />
 
-    - Set an approximate limit of 42kWh (set it to whatever you want, some EV's rate limit near peak SoC so you can reduce the target to remove risk from exceeding 6hr's of charging). There is a fall back that will turn off charging at 6hr's. If you don't care about paying more for exceeding then turn the switch to on to ignore the limiting.
+    - Set an approximate limit of 42kWh (set it to whatever you want, remember that 42kWh would be the batterys charge target but Octopus will dispatch more to account for AC to DC losses and other factors. I'm using ~38). There is a fall back that will turn off charging at 6hr's. If you don't care about paying more for exceeding then turn the switch to on to ignore the limiting.
     - **WARNING - if you do not configure the plugged_in or battery_level sensor required to drive the Charge Target you must set the Charge Target manually in the Octopus App or in the area of this dashboard.**
     - Charting screen shot missing
 
