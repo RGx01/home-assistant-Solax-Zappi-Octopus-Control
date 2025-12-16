@@ -15,7 +15,7 @@ connected_ev_tracking_template_ev_mapper:
         - name: "Connected EV Battery Size"
           unique_id: connected_ev_battery_size
           unit_of_measurement: "kWh"
-          state: >-
+          state: >
             {% set tariff = states('select.ev_charging_daily_vehicle') %}
             {% set battery_map = {
                 'car2': 87,
@@ -40,7 +40,7 @@ connected_ev_tracking_template_ev_mapper:
         - name: "EV Currently Plugged In"
           unique_id: ev_currently_plugged_in
           device_class: plug
-          state: >-
+          state: >
             {% set plug_status = states('sensor.zappi_plug_status') %}
             {% if plug_status == 'EV Disconnected' %}
               off
@@ -150,7 +150,7 @@ connected_ev_tracking_template_ev_mapper:
         - name: "EV Active Battery Level"
           unique_id: ev_active_battery_level
           unit_of_measurement: "%"
-          state: >-
+          state: >
             {% set ev = states('select.ev_charging_daily_vehicle') %}
             {% set slug = ev | lower | replace(' ', '_') %}
             {% set entity_id = 'sensor.' ~ slug ~ '_battery_level' %}

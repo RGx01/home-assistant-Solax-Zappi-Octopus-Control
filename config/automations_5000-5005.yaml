@@ -1,8 +1,9 @@
 - id: '5000'
   alias: 5000 - Solax Zappi Octopus Control - House Keeping
-  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v9.0.0
-    Changes to IOG 6hr limit\n---\n- v8.0.0 Minor updates to triggers\n---\n- v7.0.0
-    New function Battery Budget\n---\n- v1.0.0 Initial \nSee documentation in repo"
+  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n v9.3.0
+    General hardening of dispatch tracking\n---\n- v9.0.0 Changes to IOG 6hr limit\n---\n-
+    v8.0.0 Minor updates to triggers\n---\n- v7.0.0 New function Battery Budget\n---\n-
+    v1.0.0 Initial \nSee documentation in repo"
   triggers:
   - trigger: state
     entity_id:
@@ -222,6 +223,7 @@
     - '0'
     id: New Octopus Dispatch Notification
     alias: New Octopus Dispatch Notification
+    enabled: true
   - trigger: state
     entity_id:
     - binary_sensor.battery_discharge_now
@@ -266,6 +268,15 @@
       minutes: 0
       seconds: 10
     id: Which EV Connected
+  - trigger: state
+    entity_id:
+    - sensor.zappi_plug_status
+    from:
+    - EV Disconnected
+    to:
+    - EV Connected
+    id: EV First Connect
+    alias: EV First Connected
   conditions: []
   actions:
   - choose:
@@ -626,6 +637,14 @@
         - Dispatch for this session
       - condition: template
         value_template: '{{now()|as_timestamp-states(''sensor.uptime'')|as_timestamp>80}}'
+      - condition: state
+        entity_id: binary_sensor.octopus_api_healthy
+        state:
+        - 'on'
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 10
       sequence:
       - choose:
         - conditions:
@@ -639,6 +658,11 @@
               is not none\n          and (\n            as_timestamp(states['number.octopus_intelligent_charge_target'].last_changed)\n
               \           >= (as_timestamp(trigger.to_state.last_changed) - 60)\n
               \         )\n        )\n      )\n}}\n"
+            enabled: false
+          - condition: template
+            value_template: "              {{ trigger.entity_id == 'sensor.octopus_total_planned_dispatch'\n
+              \                and (trigger.from_state.state | float) == 0\n                 and
+              (trigger.to_state.state | float) != 0\n              }}"
           sequence:
           - action: input_number.set_value
             metadata: {}
@@ -676,9 +700,7 @@
           - action: input_number.set_value
             metadata: {}
             data:
-              value: '0
-
-                '
+              value: 0
             target:
               entity_id: input_number.octopus_intelligent_total_dispatch
       alias: New Octopus Dispatch
@@ -693,6 +715,14 @@
           state:
           - unavailable
           - unknown
+      - condition: state
+        entity_id: binary_sensor.octopus_api_healthy
+        state:
+        - 'on'
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 10
       sequence:
       - event: Solax Zappi Octopus Control
         event_data:
@@ -846,6 +876,17 @@
             = (kwh_needed / cap) * 100 %}     \n{% set limited_percent = [percent_equiv,
             max_percent_ev] | min %}     \n{{ [limited_percent, 10] | max | int }}\n"
       alias: Which EV Connected
+    - conditions:
+      - condition: trigger
+        id:
+        - EV First Connect
+      sequence:
+      - action: utility_meter.calibrate
+        metadata: {}
+        target:
+          entity_id: sensor.zappi_time_spent_charging
+        data:
+          value: '0'
     enabled: true
   mode: parallel
   trace:
@@ -853,16 +894,21 @@
   max: 20
 - id: '5001'
   alias: 5001 - Solax Zappi Octopus Control
-  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v9.0.0  tweaks to triggers
-    and bug fixes\n---\n- v8.2.0 tweaked the EV Ready logic in variables block, sometime
-    EV charging bumps into the target time and so min_soc doesn't return to default\n---\n-
-    v8.0.0 Attempt at trying to stop flip flopping around tiny Octopus dispatches
-    and pauses\n---\n- v7.3.2 Logic changed around EV pause logic to stop flip flopping
-    the min_soc when octopus does these small charges or small gaps between charges.
-    Hopefully they sort it out.\n---\n- v7.0.0 New function Battery Budget\n---\n-
-    v1.0.2 Minor bug fix to stop 'Finished Charge Message' when smart charge switch
-    was off to begin with\n---\n-  v1.0.0 \n + Indent-potent handling of inverter
-    mode and settings\n + Zappi and Octopus handling\n---\n\n"
+  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v9.3.0 Added addition
+    case for 6hr limit trigger in the min_soc calculation. Moved time spent charging
+    to house keeping automation. Added a separate option for 6hr limit. This forces
+    zappi to stopped and ignores always in eco mode. Bit lazy as always in ECO+ when
+    connected is now in the correct state. We need to force 'stopped' as turning off
+    smart charge isn't enough to reliably end the charge. \n---\n- v9.0.0  tweaks
+    to triggers and bug fixes\n---\n- v8.2.0 tweaked the EV Ready logic in variables
+    block, sometime EV charging bumps into the target time and so min_soc doesn't
+    return to default\n---\n- v8.0.0 Attempt at trying to stop flip flopping around
+    tiny Octopus dispatches and pauses\n---\n- v7.3.2 Logic changed around EV pause
+    logic to stop flip flopping the min_soc when octopus does these small charges
+    or small gaps between charges. Hopefully they sort it out.\n---\n- v7.0.0 New
+    function Battery Budget\n---\n- v1.0.2 Minor bug fix to stop 'Finished Charge
+    Message' when smart charge switch was off to begin with\n---\n-  v1.0.0 \n + Indent-potent
+    handling of inverter mode and settings\n + Zappi and Octopus handling\n---\n\n"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -1204,7 +1250,7 @@
         -%}\n        {# Earlier in charging period OR target_time <= 05:30 #}\n        {{
         default_soc }}\n    {% endif -%}\n\n\n    \n  {# --- Daytime Charging→Disconnected
         transition → allow discharge --- #}  \n  {% elif trigger.id in ['Charging
-        to Disconnected','Connected to Disconnected'] and now() >= today_at(\"05:30\")
+        to Disconnected','Connected to Disconnected','6h Limit'] and now() >= today_at(\"05:30\")
         and now() <= today_at(\"23:30\") -%}\n    {{ default_soc }}\n\n  {# --- NEW:
         Daytime dispatch, ev chargin OFF → force default discharge ---#}  \n  {% elif
         dispatch_on and not ev_charging and now() >= today_at(\"05:30\") and now()
@@ -1364,18 +1410,11 @@
           entity_id: input_number.zappi_charging_minutes
         data:
           value: 0
-      - action: utility_meter.calibrate
-        metadata: {}
-        target:
-          entity_id: sensor.zappi_time_spent_charging
-        data:
-          value: '0'
       alias: EV Connected
     - conditions:
       - condition: trigger
         id:
         - EV Ready
-        - 6h Limit
       - condition: state
         entity_id: switch.octopus_intelligent_smart_charge
         state: 'on'
@@ -1397,7 +1436,7 @@
           - action: select.select_option
             metadata: {}
             data:
-              option: Eco+
+              option: Stopped
             target:
               entity_id: select.zappi_charge_mode
         default:
@@ -1437,6 +1476,46 @@
             title: EV Finished Charging 6hr Limit Reached
             class: normal
       alias: EV Ready
+    - conditions:
+      - condition: trigger
+        id:
+        - 6h Limit
+      - condition: state
+        entity_id: switch.octopus_intelligent_smart_charge
+        state: 'on'
+      sequence:
+      - action: select.select_option
+        metadata: {}
+        data:
+          option: Stopped
+        target:
+          entity_id: select.zappi_charge_mode
+      - action: script.safe_switch_toggle
+        metadata: {}
+        data:
+          target_switch: switch.octopus_intelligent_smart_charge
+          desired_state: 'off'
+          max_retries: 4
+          backoff: 5
+      - if:
+        - condition: template
+          value_template: "{{(state_attr('sensor.solax_local_settings', 'Data')[10]
+            != default_mode) \nor (state_attr('sensor.solax_local_settings', 'Data')[0]
+            != min_soc) \nor (state_attr('sensor.solax_local_settings', 'Data')[12]
+            != min_soc)}}"
+        then:
+        - action: script.solax_set_mode_and_settings
+          data:
+            mode: '{{default_mode}}'
+            settings:
+              selfuse_battery_min_soc: '{{min_soc}}'
+              feedin_battery_min_soc: '{{min_soc}}'
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: Smart charge off @ {{now().strftime('%H:%M')}}
+          title: EV Finished Charging 6hr Limit Reached
+          class: normal
+      alias: Intelligent 6h limit
     - conditions:
       - condition: trigger
         id:

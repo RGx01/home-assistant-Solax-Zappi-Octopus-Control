@@ -192,6 +192,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v9.3.0|**16/12/26**| automations_5000-5005.yaml <br> packages\octopus_dispatches\template_octopus_dispatch.yaml <br> packages\octopus_renamed_entities\templates.yaml| Hardening for when Octopus api becomes flakey |
 | v9.0.0|**10/12/25**| All | Dashboard and template updates to support changes to IOG to limit total charge time to 6hr + a host of bug fixes and tweeks<br> Automation and template hardening <br> Allocator improvements (HA restart required) <br> Fixed bug with template_get_octopus_schedule |
 | v8.1.0|**01/12/25**| Solax & Octopus Settings.yaml (dashboard) <br> packages\octopus_dispatches\template_octopus_dispatch.yaml| Dashboard refinement around octopus dispatches |
 | v8.0.0|**01/12/25**| ALL | Attempt to work around tiny dispatches and pauses in 5001 <br> Removed dependancy on free electric events sensor.<br> Better dispatch gap calculation logic <br> Better logic for calculating the 'get schedule' <br> Fixed small bug in tariff sensor created after removing free electric dependancy <br> Tiny adjustments to discharge magic and a bug fix to exportable allowence <br> Fixed small bug in the battery budget allocator pyscript <br> Improved battery_budget_schedule pyscript to prevent charge windows impinging on dynamic slots. |

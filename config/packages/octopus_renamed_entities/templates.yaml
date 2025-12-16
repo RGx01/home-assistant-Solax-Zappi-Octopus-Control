@@ -1,6 +1,9 @@
 ###############################################
 # Replace METER_MPAN with your own
 # Replace L_O_N_G_ZAPPIID with your own
+# v9.3.0 Hardening to reduce the amount of unnecessary triggering of the house keeping automation 
+#.       when the octopus api stops responding. Also trying to maintain the remaining disptch helper from changing
+#.       in an active charging session. (it should only change when there is a genuine new charge target)
 # V6.0.0 Refactor for Octopus Energy V17+
 ###############################################
 octopus_renamed_entities_templates:
@@ -50,7 +53,14 @@ octopus_renamed_entities_templates:
           unique_id: octopus_intelligent_smart_charge
           icon: mdi:ev-station
           state: >
-            {{ is_state('switch.octopus_energy_L_O_N_G_ZAPPIID_intelligent_smart_charge', 'on') }}
+            {# is_state('switch.octopus_energy_L_O_N_G_ZAPPIID_intelligent_smart_charge', 'on') #}
+            {# better way #}
+            {% set s = states('switch.octopus_energy_L_O_N_G_ZAPPIID_intelligent_smart_charge') %}
+            {% if s in ['unknown', 'unavailable'] %}
+              {{ states('switch.octopus_intelligent_smart_charge') }}
+            {% else %}
+              {{ s == 'on' }}
+            {% endif %}
           turn_on:
             - service: switch.turn_on
               target:
@@ -98,36 +108,54 @@ octopus_renamed_entities_templates:
           attributes:
             planned_dispatches: >
               {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
+              {% set raw = state_attr(master, 'planned_dispatches') %}
               {% set ns = namespace(out=[]) %}
-              {% for item in state_attr(master,'planned_dispatches') or [] %}
-                {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
-                {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
-                {% set new = dict(item) | combine({'start': start, 'end': end}) %}
-                {% set ns.out = ns.out + [new] %}
-              {% endfor %}
-              {{ ns.out }}
+
+              {% if raw is none %}
+                {{ state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') }}
+              {% else %}
+                {% for item in raw %}
+                  {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
+                  {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
+                  {% set new = dict(item) | combine({'start': start, 'end': end}) %}
+                  {% set ns.out = ns.out + [new] %}
+                {% endfor %}
+                {{ ns.out }}
+              {% endif %}
 
             completed_dispatches: >
               {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
+              {% set raw = state_attr(master, 'completed_dispatches') %}
               {% set ns = namespace(out=[]) %}
-              {% for item in state_attr(master,'completed_dispatches') or [] %}
-                {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
-                {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
-                {% set new = dict(item) | combine({'start': start, 'end': end}) %}
-                {% set ns.out = ns.out + [new] %}
-              {% endfor %}
-              {{ ns.out }}
+
+              {% if raw is none %}
+                {{ state_attr('binary_sensor.octopus_intelligent_dispatching', 'completed_dispatches') }}
+              {% else %}
+                {% for item in raw %}
+                  {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
+                  {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
+                  {% set new = dict(item) | combine({'start': start, 'end': end}) %}
+                  {% set ns.out = ns.out + [new] %}
+                {% endfor %}
+                {{ ns.out }}
+              {% endif %}
 
             started_dispatches: >
               {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
+              {% set raw = state_attr(master, 'started_dispatches') %}
               {% set ns = namespace(out=[]) %}
-              {% for item in state_attr(master,'started_dispatches') or [] %}
-                {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
-                {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
-                {% set new = dict(item) | combine({'start': start, 'end': end}) %}
-                {% set ns.out = ns.out + [new] %}
-              {% endfor %}
-              {{ ns.out }}
+
+              {% if raw is none %}
+                {{ state_attr('binary_sensor.octopus_intelligent_dispatching', 'started_dispatches') }}
+              {% else %}
+                {% for item in raw %}
+                  {% set start = item.start if item.start is string else (item.start.isoformat() if item.start is not none else none) %}
+                  {% set end   = item.end   if item.end   is string else (item.end.isoformat()   if item.end   is not none else none) %}
+                  {% set new = dict(item) | combine({'start': start, 'end': end}) %}
+                  {% set ns.out = ns.out + [new] %}
+                {% endfor %}
+                {{ ns.out }}
+              {% endif %}
 
             provider: >
               {% set master = 'binary_sensor.octopus_energy_L_O_N_G_ZAPPIID_intelligent_dispatching' %}
@@ -191,3 +219,14 @@ octopus_renamed_entities_templates:
           state: "{{ is_state('switch.octopus_intelligent_smart_charge', 'on') }}"
           device_class: power  
           icon: mdi:ev-station
+
+    - binary_sensor:
+        - name: Octopus API Healthy
+          unique_id: octopus_api_healthy
+          icon: mdi:cloud-check
+          state: >
+            {{
+              states('binary_sensor.octopus_intelligent_dispatching') not in ['unknown','unavailable']
+              and states('switch.octopus_intelligent_smart_charge') not in ['unknown','unavailable']
+              and states('number.octopus_intelligent_charge_target') not in ['unknown','unavailable']
+            }}
