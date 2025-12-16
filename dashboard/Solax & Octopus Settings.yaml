@@ -1,4 +1,4 @@
-# v9.0.0
+# v9.3.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -33,6 +33,39 @@ sections:
               action: more-info
       - type: markdown
         content: >-
+          {% if states('sensor.zappi_plug_status') != 'EV Disconnected' and
+          state_attr('binary_sensor.ev_currently_plugged_in','ev_name') !=
+          'Unknown' %}
+
+          Charge Target:
+          {{states('number.octopus_intelligent_charge_target')|int}}% of
+          {{state_attr('sensor.connected_ev_battery_size','registered_ev_size')}}
+          kWh = {{((states('number.octopus_intelligent_charge_target')|int/100)*
+
+          state_attr('sensor.connected_ev_battery_size','registered_ev_size')|int)|round(1)}}
+          kWh
+
+          Total Dispatch Provided:
+          {{states('input_number.octopus_intelligent_total_dispatch')|round(1)}}
+          kWh
+
+          **EV Details**
+
+          EV: {{state_attr('binary_sensor.ev_currently_plugged_in','ev_name')}}
+
+          EV  Size: {{states('sensor.connected_ev_battery_size')}} kWh
+
+          EV SoC: {{states('sensor.ev_active_battery_level')|int}}%
+
+
+          Registered EV Size:
+          {{state_attr('sensor.connected_ev_battery_size','registered_ev_size')}}
+          kWh
+
+
+
+          {% endif %}
+
           {% if state_attr('sensor.octopus_total_planned_dispatch','dispatches')
           != None%}    
 
@@ -2098,6 +2131,8 @@ sections:
         fit_y_data: false
         grid_options:
           columns: 36
+          rows: 12
+        title: Usable Capacity
     column_span: 3
     visibility:
       - condition: state
@@ -2141,13 +2176,14 @@ sections:
           - entity: sensor.time_spent_charging_ev
         grid_options:
           columns: full
+          rows: 14
         title: Octopus Dispatch vs Zappi Charge Added
       - chart_type: bar
         period: day
         type: statistics-graph
         entities:
-          - sensor.ev_charging_monthly_vehicle_ariya
-          - sensor.ev_charging_monthly_vehicle_corsa
+          - sensor.ev_charging_monthly_vehicle_car2
+          - sensor.ev_charging_monthly_vehicle_car1
           - sensor.zappi_charging
         stat_types:
           - state
