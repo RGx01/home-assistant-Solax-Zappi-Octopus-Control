@@ -1,6 +1,6 @@
 - id: '5000'
   alias: 5000 - Solax Zappi Octopus Control - House Keeping
-  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n v9.3.0
+  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v9.3.0
     General hardening of dispatch tracking\n---\n- v9.0.0 Changes to IOG 6hr limit\n---\n-
     v8.0.0 Minor updates to triggers\n---\n- v7.0.0 New function Battery Budget\n---\n-
     v1.0.0 Initial \nSee documentation in repo"
@@ -660,9 +660,9 @@
               \         )\n        )\n      )\n}}\n"
             enabled: false
           - condition: template
-            value_template: "              {{ trigger.entity_id == 'sensor.octopus_total_planned_dispatch'\n
-              \                and (trigger.from_state.state | float) == 0\n                 and
-              (trigger.to_state.state | float) != 0\n              }}"
+            value_template: "{{ trigger.entity_id == 'sensor.octopus_total_planned_dispatch'\n
+              \  and (trigger.from_state.state | float) == 0\n   and (trigger.to_state.state
+              | float) != 0\n}}\n"
           sequence:
           - action: input_number.set_value
             metadata: {}
@@ -812,16 +812,16 @@
               %}  \n{# --- Max energy allowed per 24hrs 12:00 to 12:00 --- #}  {#
               --- Max energy allowed logic --- #} \n{% set ignore = is_state('input_boolean.ignore_6hr',
               'on') %} \n{% set max_kwh = cap if ignore else states('input_number.limit_ev_kwh_charge_target')|float
-              %}\n{% set max_percent_ev = (max_kwh / cap_ev) * 100 %}  \n{# --- Which
-              car is currently plugged in? --- #} \n{% set active_car = state_attr('binary_sensor.ev_currently_plugged_in','ev_name')
-              %}  \n\n{# --- Current battery levels --- #}\n{% set battery_entity
-              = state_attr('binary_sensor.ev_currently_plugged_in','battery_entity')%}\n{%
-              set current_ev_level = state(battery_entity) %} \n\n{# --- Desired target
-              % --- #} \n{% set target = 100 %}  \n \n\n{% set percent_needed = target
-              - current_ev_level %}     \n{% set kwh_needed = (percent_needed / 100)
-              * cap_ev %}     \n{% set percent_equiv = (kwh_needed / cap) * 100 %}
-              \    \n{% set limited_percent = [percent_equiv, max_percent_ev] | min
-              %}     \n{{ [limited_percent, 10] | max | int }}\n"
+              * 0.93 %}\n{% set max_percent_ev = (max_kwh / cap_ev) * 100 %}  \n{#
+              --- Which car is currently plugged in? --- #} \n{% set active_car =
+              state_attr('binary_sensor.ev_currently_plugged_in','ev_name') %}  \n\n{#
+              --- Current battery levels --- #}\n{% set battery_entity = state_attr('binary_sensor.ev_currently_plugged_in','battery_entity')%}\n{%
+              set current_ev_level = states(battery_entity) %} \n\n{# --- Desired
+              target % --- #} \n{% set target = 100 %}  \n \n\n{% set percent_needed
+              = target - current_ev_level %}     \n{% set kwh_needed = (percent_needed
+              / 100) * cap_ev %}     \n{% set percent_equiv = (kwh_needed / cap) *
+              100 %}     \n{% set limited_percent = [percent_equiv, max_percent_ev]
+              | min %}     \n{{ [limited_percent, 10] | max | int }}\n"
       alias: Reset Octopus Usage Limits
     - conditions:
       - condition: trigger
@@ -864,10 +864,10 @@
           value: "{# --- Battery sizes --- #} \n{% set cap = state_attr('sensor.connected_ev_battery_size','registered_ev_size')|float
             %} \n{% set cap_ev = states('sensor.connected_ev_battery_size')|float
             %}  \n{# --- Max energy allowed per 24hrs 12:00 to 12:00 --- #}  {# ---
-            Max energy allowed logic --- #} {% set ignore = is_state('input_boolean.ignore_6hr',
-            'on') %} {% set max_kwh = cap if ignore else states('sensor.octopus_intelligent_remaining_today')|float
-            %}\n{% set max_percent_ev = (max_kwh / cap_ev) * 100 %}  \n{# --- Which
-            car is currently plugged in? --- #} \n{% set active_car = state_attr('binary_sensor.ev_currently_plugged_in','ev_name')
+            Max energy allowed logic --- #} \n{% set ignore = is_state('input_boolean.ignore_6hr',
+            'on') %} \n{% set max_kwh = cap if ignore else states('sensor.octopus_intelligent_remaining_today')|float
+            * 0.93 %}\n{% set max_percent_ev = (max_kwh / cap_ev) * 100 %}  \n{# ---
+            Which car is currently plugged in? --- #} \n{% set active_car = state_attr('binary_sensor.ev_currently_plugged_in','ev_name')
             %}  \n\n{# --- Current battery levels --- #} \n{% set current_ev_level
             = state_attr('binary_sensor.ev_currently_plugged_in','battery_level')
             | float %} \n\n{# --- Desired target % --- #} \n{% set target = 100 %}
@@ -887,6 +887,12 @@
           entity_id: sensor.zappi_time_spent_charging
         data:
           value: '0'
+      - action: input_number.set_value
+        metadata: {}
+        target:
+          entity_id: input_number.zappi_charging_minutes
+        data:
+          value: 0
     enabled: true
   mode: parallel
   trace:
@@ -1180,6 +1186,15 @@
     - input_button.solax_submit_settings
     id: Submit Settings
     alias: Submit Settings
+  - trigger: state
+    entity_id:
+    - sensor.solax_rest_local_settings
+    to:
+    - unknown
+    - unavailable
+    - None
+    id: SOLAX SENSOR FAILED
+    alias: SOLAX SENSORS FAILED
   conditions: []
   actions:
   - condition: template
@@ -1373,24 +1388,27 @@
               - action: script.solax_set_mode_and_settings
                 data:
                   mode: '{{default_mode}}'
-        - conditions:
-          - condition: state
-            entity_id: input_boolean.zappi_eco_always
-            state: ''
-          sequence:
+        default:
+        - choose:
+          - conditions:
+            - condition: state
+              entity_id: input_boolean.zappi_eco_always
+              state:
+              - 'on'
+            sequence:
+            - action: select.select_option
+              metadata: {}
+              data:
+                option: Eco+
+              target:
+                entity_id: select.zappi_charge_mode
+          default:
           - action: select.select_option
             metadata: {}
             data:
-              option: Eco+
+              option: Stopped
             target:
               entity_id: select.zappi_charge_mode
-        default:
-        - action: select.select_option
-          metadata: {}
-          data:
-            option: Stopped
-          target:
-            entity_id: select.zappi_charge_mode
       - if:
         - condition: numeric_state
           entity_id: sensor.octopus_total_planned_dispatch
@@ -1404,12 +1422,6 @@
               {% endif %}
             title: EV Connected - Waiting for Octopus schedule
             class: normal
-      - action: input_number.set_value
-        metadata: {}
-        target:
-          entity_id: input_number.zappi_charging_minutes
-        data:
-          value: 0
       alias: EV Connected
     - conditions:
       - condition: trigger
@@ -1627,6 +1639,7 @@
           != default_mode) \nor (state_attr('sensor.solax_local_settings', 'Data')[0]
           != min_soc) \nor (state_attr('sensor.solax_local_settings', 'Data')[12]
           != min_soc)\n}}"
+        enabled: false
       sequence:
       - action: script.solax_set_mode_and_settings
         data:
@@ -1907,6 +1920,41 @@
               else 0 }}'
             system_state: '{{ 1 if is_state(''input_boolean.solax_system_enable'',''on'')
               else 0 }}'
+    - conditions:
+      - condition: trigger
+        id:
+        - SOLAX SENSOR FAILED
+      sequence:
+      - variables:
+          max_loops: 6
+          loop: 0
+          base_delay: 30
+          max_delay: 300
+      - repeat:
+          until:
+          - condition: template
+            value_template: "{{ loop >= max_loops\n   or not state_attr('sensor.solax_local_settings',
+              'using_cache') }}\n"
+          sequence:
+          - variables:
+              loop: '{{ loop + 1 }}'
+          - action: rest_command.solax_local_set_manual_mode_behaviour
+            data:
+              value: 0
+          - delay:
+              seconds: 30
+          - action: rest_command.solax_local_set_inverter_mode
+            data:
+              value: 0
+          - delay:
+              seconds: 30
+          - action: homeassistant.update_entity
+            data:
+              entity_id: sensor.solax_rest_local_settings
+          - delay:
+              seconds: '{{ [base_delay * (2 ** (loop - 1)), max_delay] | min }}
+
+                '
     enabled: true
   - action: input_boolean.turn_off
     metadata: {}

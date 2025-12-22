@@ -255,6 +255,7 @@ solax_loads_template_solax_extras:
         unique_id: solax_discharge_capacity
         unit_of_measurement: "kWh"
         device_class: "energy"
+        state_class: total
         state: >
           {% set soc = states('sensor.solax_local_battery_soc') %}
           {% set limit = states('input_number.solax_default_discharge_limit_soc') %}

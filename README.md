@@ -14,7 +14,7 @@ Main features:
 8. User notifications to mobile devices.
 9. Handles Free Electric Sessions from Octoplus. 
 10. ~~Handles Saving Sessions~~. Removed
-11. Calculates Capacity SoH on each full recharge.
+11. Calculates $Capacity Factor = Grid Stored/Theoretical Capacity $ on each full recharge.
 12. Sets Octopus Intelligent Charge Target based on EV SoC and based on 6hr charge limit rules coming in Jan 2026
 
 ![delme](https://github.com/user-attachments/assets/c2eb91f9-8c83-4f31-8a76-75df950f1d05)
@@ -123,7 +123,7 @@ automation: !include automations.yaml
     - default inverter mode.
     - default charge to level
     - default min_soc
-    - Solax Battery SoH Stored initial value to 100 (it will recalucate each time a full charge cycle 10-100%)
+    - Solax Battery Capacity Factor Stored initial value to 100 (it will recalucate each time a full charge cycle 10-100%)
 <img width="468" height="477" alt="Screenshot 2025-11-21 at 13 01 20" src="https://github.com/user-attachments/assets/18159443-f912-4622-ae40-0ed0ebff5422" />  
 
 19. On the dashboard select/set:
@@ -145,7 +145,7 @@ automation: !include automations.yaml
 	<img width="1223" height="742" alt="Screenshot 2025-11-21 at 13 20 49" src="https://github.com/user-attachments/assets/aaae398c-23a8-4de2-8192-109c38fa3309" />
 
 21. # Configuring Solax Inverter - IMPORTANT
-    - **Note the "Battery Start Charge Time". To get the best SoH results the battery must be left to settle (the longer the better) after a discharging.**
+    - **Note the "Battery Start Charge Time". To get the best Capacity Factor results the battery must be left to settle (the longer the better) after a discharging.**
     - Recommended settings are as follows:
     <img width="444" height="727" alt="Screenshot 2025-11-30 at 06 47 43" src="https://github.com/user-attachments/assets/421e3e4e-7efd-4c64-8856-8ad51fadab7c" />
 
@@ -192,6 +192,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v9.4.0|**22/12/26**| Solax & Octopus Settings.yaml (dashboard) <br> automations_5000-5005.yaml <br> packages\octopus_renamed_entities\templates.yaml<br> packages\solax_loads\*| More template and autmation hardening <br> renamed the SoH calculations as Capacity Indicator as it's not really a true SoH. I've left the underlying entitity identifiers alone for now|
 | v9.3.0|**16/12/26**| automations_5000-5005.yaml <br> packages\octopus_dispatches\template_octopus_dispatch.yaml <br> packages\octopus_renamed_entities\templates.yaml| Hardening for when Octopus api becomes flakey |
 | v9.0.0|**10/12/25**| All | Dashboard and template updates to support changes to IOG to limit total charge time to 6hr + a host of bug fixes and tweeks<br> Automation and template hardening <br> Allocator improvements (HA restart required) <br> Fixed bug with template_get_octopus_schedule |
 | v8.1.0|**01/12/25**| Solax & Octopus Settings.yaml (dashboard) <br> packages\octopus_dispatches\template_octopus_dispatch.yaml| Dashboard refinement around octopus dispatches |

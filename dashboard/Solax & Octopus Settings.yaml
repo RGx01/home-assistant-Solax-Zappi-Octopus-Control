@@ -1,4 +1,4 @@
-# v9.3.0
+# v9.4.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -2118,7 +2118,7 @@ sections:
   - type: grid
     cards:
       - type: heading
-        heading: " Grid Stored/Theoretical Grid Stored= Capacity SoH"
+        heading: " Grid Stored/Theoretical Grid Stored= Capacity Factor"
         heading_style: title
       - type: history-graph
         hours_to_show: 1500
@@ -2128,6 +2128,7 @@ sections:
           - entity: sensor.solax_local_min_soc
           - entity: sensor.solax_local_max_soc
           - entity: sensor.solax_local_battery_temperature
+          - entity: sensor.solax_discharge_capacity
         fit_y_data: false
         grid_options:
           columns: 36
@@ -2164,6 +2165,7 @@ sections:
         hours_to_show: 36
         entities:
           - entity: sensor.octopus_total_planned_dispatch
+          - entity: sensor.zappi_power_ct_internal_load
           - entity: sensor.octopus_intelligent_remaining_dispatch
           - entity: sensor.octopus_intelligent_time_allowance_remaining
           - entity: sensor.zappi_charge_added_session
@@ -2171,12 +2173,12 @@ sections:
             name: Vehicle
           - entity: sensor.zappi_plug_status
             name: Plug
-          - entity: sensor.zappi_power_ct_internal_load
           - entity: sensor.octopus_intelligent_remaining_today
           - entity: sensor.time_spent_charging_ev
+          - entity: input_boolean.ignore_6hr
         grid_options:
           columns: full
-          rows: 14
+          rows: 15
         title: Octopus Dispatch vs Zappi Charge Added
       - chart_type: bar
         period: day

@@ -1,13 +1,13 @@
 ########################################
-# v1.0 template to estimate remaining energy required to survive the day
+# v9.4.0 template to estimate remaining energy required to survive the day
 #
-# Battery must be charged from grid ideally from 10-100% to get a good read on SoH
-# 15-100% is the absolute threshold for getting a reading but obviously less accurate.
+# Battery must be charged from grid ideally from 10-100% to get a good read on usable capacity factor
+# 20-100% is the absolute threshold for getting a reading but obviously less accurate.
 # True SoH can't be calculated in the traditional way as we don't have access to enough info
 # from the cells (internal resistance etc). Charging from min to max gives us how much was 
-# stored against the theoretical max and is a reasonable replacement to true SoH
-# It's import to know the SoH so that we can reasonbly know how much is left in the battery 
-# at any time.
+# stored against the theoretical max and is a reasonable replacement to SoH
+# It's import to know the capacity factor so that we can reasonbly know how much is left in the battery 
+# at any time. It turns out that battery temperature massively impacts the calculated factor
 ########################################
 solax_loads_template_battery_soh:
   template:
@@ -108,7 +108,7 @@ solax_loads_template_battery_soh:
               {% endif %}
             {% endif %}
       sensor:
-        - name: Solax Local Battery SoH
+        - name: Solax Capacity Factor
           unique_id: solax_local_battery_soh
           unit_of_measurement: "%"
           state_class: measurement
@@ -126,6 +126,8 @@ solax_loads_template_battery_soh:
 
             {# Calculate SoH if charge window is meaningful, else use persisted value #}
             {% if delta_soc >= 80 and capacity > 0 and grid_stored > 0 %}
+
+
               {{ [ ((grid_stored / ((delta_soc / 100) * capacity)) * 100) | round(1), 100 ] | min }}
             {% else %}
               {{ stored|float }}

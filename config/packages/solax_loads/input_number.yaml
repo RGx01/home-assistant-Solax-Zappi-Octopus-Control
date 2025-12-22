@@ -65,7 +65,7 @@ solax_loads_input_number:
       icon: mdi:home-lightning-bolt-outline
 
     solax_battery_soh_stored:
-      name: Solax Battery SoH Stored
+      name: Solax Capacity Factor
       min: 0
       max: 100
       step: 0.1
