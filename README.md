@@ -14,7 +14,7 @@ Main features:
 8. User notifications to mobile devices.
 9. Handles Free Electric Sessions from Octoplus. 
 10. ~~Handles Saving Sessions~~. Removed
-11. Calculates $Capacity Factor = Grid Stored/Theoretical Capacity $ on each full recharge.
+11. Calculates $Capacity\ Factor = \frac{\text{Grid Stored}}{\text{Theoretical Capacity}}$ on each full recharge.
 12. Sets Octopus Intelligent Charge Target based on EV SoC and based on 6hr charge limit rules coming in Jan 2026
 
 ![delme](https://github.com/user-attachments/assets/c2eb91f9-8c83-4f31-8a76-75df950f1d05)
