@@ -4,7 +4,24 @@
 ###############################################
 zappi_renamed_entities_templates:
   template:
-
+    ######################################################
+    # Zappi base entity (auto-discover serial)
+    ######################################################
+    - sensor:
+        - name: "Zappi Base Entity"
+          unique_id: zappi_base_entity
+          state: >
+            {% set matches =
+              states
+              | selectattr('entity_id', 'match', '^sensor\.myenergi_zappi_.*_status$')
+              | map(attribute='entity_id')
+              | list
+            %}
+            {% if matches | length > 0 %}
+              {{ matches[0].replace('sensor.', '').replace('_status', '') }}
+            {% else %}
+              unknown
+            {% endif %}
     ######################################################
     # Zappi plug status avoiding unknown when cloud response is not available
     ######################################################
