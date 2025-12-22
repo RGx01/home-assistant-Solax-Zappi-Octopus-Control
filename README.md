@@ -105,16 +105,6 @@ Rather than putting all the config in the single '\config\configuration.yaml fil
 In the example below see the use of the homeassistant: tag. The directory referenced under homeassistant: tag is the packages directory where we've already stored all the new config. You must also add the script directory. if you already have a scripts.yaml that should be moved to the scripts directory.
 
 ```yaml
-default_config:
-
-logger:
-  default: info
-  logs:
-    homeassistant.components.rest: info
-
-frontend:
-  themes: !include_dir_merge_named themes
-
 homeassistant:
   packages: !include_dir_merge_named packages
 script: !include_dir_merge_named scripts  
