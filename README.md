@@ -65,8 +65,8 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
      - Find and replace YYYYYYYYYY with your registration number (found on the devices page on the solax cloud)
      - Find http://192.168.xxx.xxx and replace with http://192.168.1.fixed_ip
 7. .\config\packages\octopus_renamed_entities\template.yaml
-     - Find and replace all METER_MPAN with your own
-     - Find and replace all L_O_N_G_ZAPPIID with your own
+     - ~~Find and replace all METER_MPAN with your own~~
+     - ~~Find and replace all L_O_N_G_ZAPPIID with your own~~
 8. .\config\packages\solax_loads\utility_meters.yaml
     - Find and set the billing period offsets you require
 9. .\config\packages\zappi_loads\utility_meters.yaml
@@ -80,7 +80,7 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
         - binary_sensor.'EV1'_plugged_in e.g. binary_sensor.tesla_model_3_plugged_in
         - sensor.'EV1'_battery_level e.g. sensor.tesla_model_3_battery_level
 12. .\config\packages\zappi_renamed_entities\template.yaml
-    - Find and replace all zappi serial numbers zappi_XXXXXXXX with your own i.e. zappi_12345678
+    - ~~Find and replace all zappi serial numbers zappi_XXXXXXXX with your own i.e. zappi_12345678~~
 13. Copy the contents of automations_5000-5005.yaml to the bottom of .\config automations.yaml
 14. Edit your configuration.yaml to pick up the new packages.
 
@@ -152,7 +152,7 @@ automation: !include automations.yaml
 22. # Configuring IOG 6hr Charge Limit
     - <img width="386" height="572" alt="Screenshot 2025-12-13 at 07 45 55" src="https://github.com/user-attachments/assets/b6bda1b3-2105-4d97-ba15-52b1eed7aff7" /><img width="384" height="448" alt="Screenshot 2025-12-13 at 07 47 05" src="https://github.com/user-attachments/assets/fee12bbb-6701-4eb8-b0ad-aa209f73f43e" />
 
-    - Set an approximate limit of 42kWh (set it to whatever you want, remember that 42kWh would be the batterys charge target but Octopus will dispatch more to account for AC to DC losses and other factors. I'm using ~38). There is a fall back that will turn off charging at 6hr's. If you don't care about paying more for exceeding then turn the switch to on to ignore the limiting.
+    - Set an approximate limit of 42kWh. Set Charging Loss Factor to something like 8% to account for AC to DC losses for your EV and Charger (set it to whatever you want, remember that 42kWh would be the batterys charge target but Octopus will dispatch more to account for AC to DC losses and other factors.). There is a fall back that will turn off charging at 6hr's. If you don't care about paying more for exceeding then turn the switch to on to ignore the limiting.
     - **WARNING - if you do not configure the plugged_in or battery_level sensor required to drive the Charge Target you must set the Charge Target manually in the Octopus App or in the area of this dashboard.**
     - Charting screen shot missing
 
@@ -192,7 +192,8 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
-| v9.4.0|**22/12/26**| Solax & Octopus Settings.yaml (dashboard) <br> automations_5000-5005.yaml <br> packages\octopus_renamed_entities\templates.yaml<br> packages\solax_loads\*| More template and autmation hardening <br> renamed the SoH calculations as Capacity Indicator as it's not really a true SoH. I've left the underlying entitity identifiers alone for now|
+| v9.5.0|**22/12/26**| Solax & Octopus Settings.yaml (dashboard) <br> automations_5000-5005.yaml <br> packages\octopus_renamed_entities\templates.yaml<br> packages\octopus_renamed_entities\templates.yaml<br>packages\octopus_dispatches\input_number.yaml | Renamed entities for Zappi and Octopus are now guessed so no need to modify templates <be> Added charging losses for estimating octopus dispatch|
+| v9.4.0|**22/12/26**| Solax & Octopus Settings.yaml (dashboard) <br> automations_5000-5005.yaml <br> packages\octopus_renamed_entities\templates.yaml<br> packages\solax_loads\*| More template and automation hardening <br> renamed the SoH calculations as Capacity Indicator as it's not really a true SoH. I've left the underlying entitity identifiers alone for now|
 | v9.3.0|**16/12/26**| automations_5000-5005.yaml <br> packages\octopus_dispatches\template_octopus_dispatch.yaml <br> packages\octopus_renamed_entities\templates.yaml| Hardening for when Octopus api becomes flakey |
 | v9.0.0|**10/12/25**| All | Dashboard and template updates to support changes to IOG to limit total charge time to 6hr + a host of bug fixes and tweeks<br> Automation and template hardening <br> Allocator improvements (HA restart required) <br> Fixed bug with template_get_octopus_schedule |
 | v8.1.0|**01/12/25**| Solax & Octopus Settings.yaml (dashboard) <br> packages\octopus_dispatches\template_octopus_dispatch.yaml| Dashboard refinement around octopus dispatches |

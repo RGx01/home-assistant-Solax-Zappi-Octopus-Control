@@ -9,13 +9,21 @@ octopus_dispatches_input_number:
       icon: mdi:ev-station
       unit_of_measurement: "kWh"
     limit_ev_kwh_charge_target:
-      name: Limit EV Charge Target
+      name: Limit EV Dispatch Target
       unit_of_measurement: "kWh"
       min: 20
       max: 42
       mode: box
       step: 0.5
       icon: mdi:meter-electric-outline
+    estimated_charging_losses:
+      name: Charging Loss Factor
+      unit_of_measurement: "%"
+      max: 15
+      min: 0
+      step: 0.5
+      mode: box
+      icon: mdi:percent
     zappi_charging_minutes:
       name: Zappi Charging Minutes
       min: 0

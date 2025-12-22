@@ -1,4 +1,4 @@
-# v9.4.0
+# v9.5.0
 type: sections
 max_columns: 3
 title: Solax & Octopus Settings
@@ -118,6 +118,12 @@ sections:
                 state: "off"
             row:
               entity: input_number.limit_ev_kwh_charge_target
+          - type: conditional
+            conditions:
+              - entity: input_boolean.ignore_6hr
+                state: "off"
+            row:
+              entity: input_number.estimated_charging_losses
           - type: conditional
             conditions:
               - entity: input_boolean.ignore_6hr
