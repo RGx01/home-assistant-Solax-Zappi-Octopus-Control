@@ -64,9 +64,7 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
 6. .\config\packages\solax_control\secrets.yaml
      - Find and replace YYYYYYYYYY with your registration number (found on the devices page on the solax cloud)
      - Find http://192.168.xxx.xxx and replace with http://192.168.1.fixed_ip
-7. .\config\packages\octopus_renamed_entities\template.yaml
-     - ~~Find and replace all METER_MPAN with your own~~
-     - ~~Find and replace all L_O_N_G_ZAPPIID with your own~~
+7. 
 8. .\config\packages\solax_loads\utility_meters.yaml
     - Find and set the billing period offsets you require
 9. .\config\packages\zappi_loads\utility_meters.yaml
@@ -76,11 +74,30 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
     - Find ev_charging_monthly_vehicle and replace the vehicle names and set them as you wish
 11. .\config\packages\connected_ev_tracking\template_ev_mapper.yaml
     - Modify connected_ev_battery_size to match the utility meter tariffs in connected_ev_tracking\utility_meters.yaml
-    - Create binary_sensors representing the EV('s) connected status and battery level in the format: 
+    - Create a binary_sensors representing the EV('s) connected status and a sensor representing the battery level in the format: 
         - binary_sensor.'EV1'_plugged_in e.g. binary_sensor.tesla_model_3_plugged_in
         - sensor.'EV1'_battery_level e.g. sensor.tesla_model_3_battery_level
-12. .\config\packages\zappi_renamed_entities\template.yaml
-    - ~~Find and replace all zappi serial numbers zappi_XXXXXXXX with your own i.e. zappi_12345678~~
+        Examples
+```yaml
+template:
+  - sensor:
+    - name: Tesla Model 3 Battery Level
+      unique_id: tesla_model_3_battery_level
+      state: >-
+        {# represent you battery level here #}
+        {{ states('sensor.tesla_battery_level') }} 
+      unit_of_measurement: "%"
+      device_class: battery
+-  binary_sensor:
+    - name: Tesla Model 3 Plugged In
+      unique_id: tesla_model_3_plugged_in
+      state: >-
+        {# represent you plugged in status here #}
+        {{ states('binary_sensor.tesla_plugged_in') }}
+      device_class: connectivity
+```
+
+12. 
 13. Copy the contents of automations_5000-5005.yaml to the bottom of .\config automations.yaml
 14. Edit your configuration.yaml to pick up the new packages.
 
