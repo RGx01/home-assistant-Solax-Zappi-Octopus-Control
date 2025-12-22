@@ -77,7 +77,7 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
     - Create a binary_sensors representing the EV('s) connected status and a sensor representing the battery level in the format: 
         - binary_sensor.'EV1'_plugged_in e.g. binary_sensor.tesla_model_3_plugged_in
         - sensor.'EV1'_battery_level e.g. sensor.tesla_model_3_battery_level
-        Examples
+        - Examples
 ```yaml
 template:
   - sensor:
