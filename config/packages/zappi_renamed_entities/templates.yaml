@@ -26,45 +26,63 @@ zappi_renamed_entities_templates:
     # Zappi plug status avoiding unknown when cloud response is not available
     ######################################################
     - trigger:
-        - trigger: state
-          entity_id: >
-            {% set base = states('sensor.zappi_base_entity') %}
-            {{ 'sensor.' ~ base ~ '_plug_status' }}
-          not_to:
-            - unavailable
-            - unknown
+        - trigger: event
+          event_type: state_changed
       sensor:
         - name: Zappi Plug Status
           unique_id: zappi_plug_status
           state: >
             {% set base = states('sensor.zappi_base_entity') %}
-            {{ states('sensor.' ~ base ~ '_plug_status') }}
+            {% set eid = 'sensor.' ~ base ~ '_plug_status' %}
+
+            {% if trigger.event.data.entity_id == eid
+              and trigger.event.data.new_state is not none
+              and trigger.event.data.new_state.state not in ['unknown', 'unavailable'] %}
+              {{ trigger.event.data.new_state.state }}
+            {% else %}
+              {{ states('sensor.zappi_plug_status') }}
+            {% endif %}
           icon: mdi:ev-plug-type2
           attributes:
             changes: >
-              {% set current = this.attributes.get('changes', {}) %}
-              {% set new =
-                { trigger.entity_id:
-                  {
-                    'datetime': trigger.to_state.last_changed.isoformat(),
-                    'from': trigger.from_state.state,
-                    'to': trigger.to_state.state
+              {% set base = states('sensor.zappi_base_entity') %}
+              {% set eid = 'sensor.' ~ base ~ '_plug_status' %}
+
+              {% if trigger.event.data.entity_id == eid
+                and trigger.event.data.new_state is not none
+                and trigger.event.data.new_state.state not in ['unknown', 'unavailable'] %}
+                {% set current = this.attributes.get('changes', {}) %}
+                {% set new =
+                  { eid:
+                    {
+                      'datetime': trigger.event.data.new_state.last_changed.isoformat(),
+                      'from': trigger.event.data.old_state.state if trigger.event.data.old_state else none,
+                      'to': trigger.event.data.new_state.state
+                    }
                   }
-                }
-              %}
-              {{ dict(current, **new) }}
+                %}
+                {{ dict(current, **new) }}
+              {% else %}
+                {{ this.attributes.get('changes', {}) }}
+              {% endif %}
+
 
     ######################################################
     # Zappi status avoiding unknown when cloud response is not available
     ######################################################
     - trigger:
-        - trigger: state
-          entity_id: >
+        - platform: event
+          event_type: state_changed
+      condition:
+        - condition: template
+          value_template: >
             {% set base = states('sensor.zappi_base_entity') %}
-            {{ 'sensor.' ~ base ~ '_status' }}
-          not_to:
-            - unavailable
-            - unknown
+            {{
+              base not in ['unknown','unavailable','']
+              and trigger.event.data.entity_id == 'sensor.' ~ base ~ '_status'
+              and trigger.event.data.new_state is not none
+              and trigger.event.data.new_state.state not in ['unknown','unavailable']
+            }}
       sensor:
         - name: Zappi Status
           unique_id: zappi_status
@@ -76,15 +94,16 @@ zappi_renamed_entities_templates:
             changes: >
               {% set current = this.attributes.get('changes', {}) %}
               {% set new =
-                { trigger.entity_id:
+                { trigger.event.data.entity_id:
                   {
-                    'datetime': trigger.to_state.last_changed.isoformat(),
-                    'from': trigger.from_state.state,
-                    'to': trigger.to_state.state
+                    'datetime': trigger.event.data.new_state.last_changed.isoformat(),
+                    'from': trigger.event.data.old_state.state if trigger.event.data.old_state else none,
+                    'to': trigger.event.data.new_state.state
                   }
                 }
               %}
               {{ dict(current, **new) }}
+
 
     ######################################################
     # for when zappi cloud sensor dips out
