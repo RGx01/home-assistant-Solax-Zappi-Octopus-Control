@@ -88,7 +88,7 @@ template:
         {{ states('sensor.tesla_battery_level') }} 
       unit_of_measurement: "%"
       device_class: battery
--  binary_sensor:
+  - binary_sensor:
     - name: Tesla Model 3 Plugged In
       unique_id: tesla_model_3_plugged_in
       state: >-
