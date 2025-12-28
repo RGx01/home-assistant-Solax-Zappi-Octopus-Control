@@ -38,6 +38,7 @@ octopus_renamed_entities_templates:
             {% set matches =
               states
               | selectattr('entity_id', 'match', '^binary_sensor\.octopus_energy_electricity_.*_off_peak$')
+              | rejectattr('entity_id', 'search', '_export_')
               | map(attribute='entity_id')
               | list
             %}

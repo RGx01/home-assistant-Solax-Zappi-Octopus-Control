@@ -513,7 +513,7 @@ solax_export_template_discharge_magic:
               return_to_min_soc,
               states('input_number.solax_manual_forced_discharge_limit_soc') | int(default=20)
             ] | max %}
-            {% set soc_window = states('input_number.battery_discharge_soc_window_limit') | float(6) %}
+            {% set soc_window = states('input_number.manual_battery_discharge_soc_window_limit') | float(6) %}
             {% set soc = states('sensor.solax_local_battery_soc') | float(0) %}
             {% set ev_status = states('sensor.zappi_plug_status') | string %}
             {% set manual_discharge = is_state('input_boolean.export_battery_manual', 'on') %}

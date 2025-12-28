@@ -1,9 +1,10 @@
 - id: '5000'
   alias: 5000 - Solax Zappi Octopus Control - House Keeping
-  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v9.3.0
-    General hardening of dispatch tracking\n---\n- v9.0.0 Changes to IOG 6hr limit\n---\n-
-    v8.0.0 Minor updates to triggers\n---\n- v7.0.0 New function Battery Budget\n---\n-
-    v1.0.0 Initial \nSee documentation in repo"
+  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v9.5.0
+    Account for charging losses in EV limiting\n---\n- v9.3.0 General hardening of
+    dispatch tracking\n---\n- v9.0.0 Changes to IOG 6hr limit\n---\n- v8.0.0 Minor
+    updates to triggers\n---\n- v7.0.0 New function Battery Budget\n---\n- v1.0.0
+    Initial \nSee documentation in repo"
   triggers:
   - trigger: state
     entity_id:
@@ -1948,6 +1949,13 @@
           - action: rest_command.solax_local_set_inverter_mode
             data:
               value: 0
+          - delay:
+              seconds: 30
+          - action: rest_command.solax_local_set_selfuse_battery_min_soc
+            data:
+              value: '{{min_soc}}
+
+                '
           - delay:
               seconds: 30
           - action: homeassistant.update_entity

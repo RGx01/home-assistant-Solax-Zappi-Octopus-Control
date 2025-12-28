@@ -23,6 +23,9 @@ solax_zappi_octopus_ui_input_boolean:
     battery_reserve_show_hide:
       name: Show/Hide Info
       icon: mdi:eye-off
+    battery_export_show_hide:
+      name: Export Details Show/Hide
+      icon: mdi:eye-off
     daily_export_show_hide:
       name: Daily Show/Hide
       icon: mdi:eye-off

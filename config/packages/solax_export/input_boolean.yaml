@@ -9,7 +9,7 @@ solax_export_input_boolean:
       icon: mdi:light-switch
     #Export battery switch is used to determine if the remainder of solax battery can be dumped back to the grid during off peak
     export_battery_nightly:
-      name: Nightly Battery Export (EV Disconnected)
+      name: Nightly Battery Export
       icon: mdi:light-switch 
     #Manual Export
     export_battery_manual:

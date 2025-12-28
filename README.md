@@ -1,5 +1,5 @@
 # Solax-Zappi-Octopus-Control
-## Version 9.0.0 is here. Big Changes to support IOG 6hr charge limits
+## Version 10.0.0 is here. Big Changes to Dashboard
 
 Written specifically for IOG Zappi and Solax X1-G4 Inverter and TP3.0 Battery - MAY NOT BE COMPATIBLE WITH YOUR SYSTEM
 If unsure if your inverter can be controlled try using https://github.com/RGx01/Solax-Local-Control-Using-REST if successful control can be established then proceed with companion https://github.com/RGx01/Solax-Local-Realtime-Using-REST. This repo bundles those but in the future they will become pre requiste. (Ideally if others contribute with other inverters.)
@@ -113,14 +113,17 @@ automation: !include automations.yaml
 15. Check all the steps above have been done.
 16. Restart Home Assistant.
 17. Adding the dashboad.
-    - Copy the contents of Solax & Octopus Settings.yaml in the repo
-    - Open Home Assistant
-    - Open Overview dashboard
-    - Click Pencil icon in top left
-    - Click + to add a new dashboard
-    - New window opens, click the 3 dots in top left corner
-    - Select Edit in Yaml
-    - Replace the contents with your prepared yaml
+    - Create a new Dashboard by
+        - Settings > Dasboards > Add Dashboard
+        - New Dashboard From Scratch
+        - Title > Home Energy
+        - Create
+    - Select the new Home Energy Dashboard
+    - Click Pencil Icon ✏️ in top right corner
+    - Select the ⋮ in top right corner
+    - Select {} raw configuation editor
+    - ctrl + A to select all
+    - paste the contents of Solax & Octopus Settings.yaml into the raw configuration editor
     - Click Save
     - Click Done
 # Configuring
