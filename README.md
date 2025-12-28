@@ -127,22 +127,35 @@ automation: !include automations.yaml
     - Click Save
     - Click Done
 # Configuring
-18. On the dashboard select/set:
-    - solax battery size,
-    - solax inverter size,
-    - default inverter mode.
-    - default charge to level
-    - default min_soc
-    - Solax Battery Capacity Factor Stored initial value to 100 (it will recalucate each time a full charge cycle 10-100%)
+18. On the dashboard press <img width="106" height="34" alt="Screenshot 2025-12-28 at 15 34 28" src="https://github.com/user-attachments/assets/58a3f4c7-9bf1-4750-8fe2-ccad9702c8b8" />
+    - **Note the "Battery Start Charge Time". To get the best Capacity Factor results the battery must be left to settle (the longer the better) after a discharging.**
+    - Recommended settings are as follows:
+    <img width="444" height="727" alt="Screenshot 2025-11-30 at 06 47 43" src="https://github.com/user-attachments/assets/421e3e4e-7efd-4c64-8856-8ad51fadab7c" />
+19. - set:
+    	- solax battery size,
+    	- solax inverter size,
+    	- default inverter mode.
+    	- default charge to level
+    	- default min_soc
+    	- Solax Battery Capacity Factor Stored initial value to 100 (it will recalucate each time a full charge cycle 10-100%)
 <img width="468" height="477" alt="Screenshot 2025-11-21 at 13 01 20" src="https://github.com/user-attachments/assets/18159443-f912-4622-ae40-0ed0ebff5422" />  
 
-19. On the dashboard select/set:
+20. EV Charging <img width="89" height="28" alt="Screenshot 2025-12-28 at 16 03 58" src="https://github.com/user-attachments/assets/e3eee962-2738-4ce4-9a07-0607d24e7229" />
+
     - select Octopus schedule type
     - EV ready time
     - EV charge %
 <img width="461" height="555" alt="Screenshot 2025-11-21 at 13 03 47" src="https://github.com/user-attachments/assets/4d88a31e-6d0c-492d-9390-cf3526036ce4" />
 
-20. Battery Reserves
+21. # Configuring IOG 6hr Charge Limit
+    - <img width="391" height="321" alt="Screenshot 2025-12-28 at 17 20 49" src="https://github.com/user-attachments/assets/71f4055f-6668-4a5f-a347-fa4a40018342" /><img width="386" height="489" alt="Screenshot 2025-12-28 at 17 21 09" src="https://github.com/user-attachments/assets/a10e9ca5-e4b6-4954-b7f8-d54aaf6bee07" />
+
+
+    - Set an approximate limit of 42kWh. Set Charging Loss Factor to something like 8% to account for AC to DC losses for your EV and Charger (set it to whatever you want, remember that 42kWh would be the batterys charge target but Octopus will dispatch more to account for AC to DC losses and other factors.). There is a fall back that will turn off charging at 6hr's. If you don't care about paying more for exceeding then turn the switch to on to ignore the limiting.
+    - **WARNING - if you do not configure the plugged_in or battery_level sensor required to drive the Charge Target you must set the Charge Target manually in the Octopus App or in the area of this dashboard.** see step 11
+    
+22. Battery Reserves <img width="108" height="31" alt="Screenshot 2025-12-28 at 16 05 42" src="https://github.com/user-attachments/assets/78926f42-b6c3-4212-bc87-3d378510f97b" />
+
     - In the Battery Reserve Section of the dashboard select:
        - Start Slot (time you start using your battery - e.g. 05:30)
        - End Slot (time you stop using your battery - e.g. 23:30)
@@ -154,19 +167,11 @@ automation: !include automations.yaml
  	<img width="1222" height="741" alt="Screenshot 2025-11-21 at 13 12 26" src="https://github.com/user-attachments/assets/3e2f5a50-50a0-4b70-ba92-8437021f772d" />
 	<img width="1223" height="742" alt="Screenshot 2025-11-21 at 13 20 49" src="https://github.com/user-attachments/assets/aaae398c-23a8-4de2-8192-109c38fa3309" />
 
-21. # Configuring Solax Inverter - IMPORTANT
-    - **Note the "Battery Start Charge Time". To get the best Capacity Factor results the battery must be left to settle (the longer the better) after a discharging.**
-    - Recommended settings are as follows:
-    <img width="444" height="727" alt="Screenshot 2025-11-30 at 06 47 43" src="https://github.com/user-attachments/assets/421e3e4e-7efd-4c64-8856-8ad51fadab7c" />
 
-22. # Configuring IOG 6hr Charge Limit
-    - <img width="386" height="572" alt="Screenshot 2025-12-13 at 07 45 55" src="https://github.com/user-attachments/assets/b6bda1b3-2105-4d97-ba15-52b1eed7aff7" /><img width="384" height="448" alt="Screenshot 2025-12-13 at 07 47 05" src="https://github.com/user-attachments/assets/fee12bbb-6701-4eb8-b0ad-aa209f73f43e" />
 
-    - Set an approximate limit of 42kWh. Set Charging Loss Factor to something like 8% to account for AC to DC losses for your EV and Charger (set it to whatever you want, remember that 42kWh would be the batterys charge target but Octopus will dispatch more to account for AC to DC losses and other factors.). There is a fall back that will turn off charging at 6hr's. If you don't care about paying more for exceeding then turn the switch to on to ignore the limiting.
-    - **WARNING - if you do not configure the plugged_in or battery_level sensor required to drive the Charge Target you must set the Charge Target manually in the Octopus App or in the area of this dashboard.**
-    - Charting screen shot missing
 
-23. Done.
+
+24. Done.
 
 # Notification Management
 
@@ -202,6 +207,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v10.0.0|**28/12/25**| Solax & Octopus Settings.yaml (dashboard) <br>  automations_5000-5005.yaml <br> packages\octopus_dispatches\input_number.yaml<br> packages\octopus_dispatches\template_octopus_dispatch.yaml<br> packages\octopus_renamed_entities\templates.yaml<br> packages\solax_export\input_boolean.yaml<br> packages\solax_export\input_number.yaml<br> packages\solax_export\template_discharge_magic.yaml<br> packages\solax_zappi_octopus\input_boolean.yaml| New Dashboard and bug fixes|
 | v9.5.0|**22/12/26**| Solax & Octopus Settings.yaml (dashboard) <br> automations_5000-5005.yaml <br> packages\octopus_renamed_entities\templates.yaml<br> packages\octopus_renamed_entities\templates.yaml<br>packages\octopus_dispatches\input_number.yaml | Renamed entities for Zappi and Octopus are now guessed so no need to modify templates <br> Added charging losses for estimating octopus dispatch|
 | v9.4.0|**22/12/26**| Solax & Octopus Settings.yaml (dashboard) <br> automations_5000-5005.yaml <br> packages\octopus_renamed_entities\templates.yaml<br> packages\solax_loads\*| More template and automation hardening <br> renamed the SoH calculations as Capacity Indicator as it's not really a true SoH. I've left the underlying entitity identifiers alone for now|
 | v9.3.0|**16/12/26**| automations_5000-5005.yaml <br> packages\octopus_dispatches\template_octopus_dispatch.yaml <br> packages\octopus_renamed_entities\templates.yaml| Hardening for when Octopus api becomes flakey |
