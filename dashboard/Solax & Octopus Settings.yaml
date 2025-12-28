@@ -1,4 +1,4 @@
-#v10.0.0
+#v10.0.1
 views:
   - badges:
       - type: entity
@@ -1491,11 +1491,9 @@ views:
               - entity: sensor.battery_exportable_allowance_soc
               - entity: input_number.solax_default_charge_to_limit_soc
               - entity: input_number.solax_default_discharge_limit_soc
-              - entity: select.daily_grid_import
-                name: Log
             grid_options:
-              columns: 36
-              rows: 9
+              columns: full
+              rows: auto
         column_span: 1
     cards: []
     subview: true
@@ -2483,6 +2481,7 @@ views:
           - type: entities
             entities:
               - type: section
+              - entity: select.octopus_intelligent_target_time
               - type: conditional
                 conditions:
                   - entity: binary_sensor.ev_currently_plugged_in
@@ -2527,19 +2526,7 @@ views:
               - entity: sensor.zappi_charge_mode
             show_header_toggle: false
             state_color: true
-            title: Octopus IOG
-          - type: entities
-            entities:
-              - type: section
-              - entity: input_boolean.zappi_eco_always
-              - entity: number.zappi_minimum_green_level
-            show_header_toggle: false
-            state_color: true
-            title: Eco Settings
-            visibility:
-              - condition: state
-                entity: input_boolean.solax_octopus_hide_settings
-                state: 'on'
+            title: Octopus IOG Charge Targets
           - type: conditional
             conditions:
               - condition: state
@@ -2557,7 +2544,6 @@ views:
                   format: datetime
                 - entity: input_number.sun_degrees_above_horizon
                 - entity: number.octopus_intelligent_charge_target
-                - entity: select.octopus_intelligent_target_time
                 - entity: switch.octopus_intelligent_smart_charge
                 - entity: select.zappi_charge_mode
               title: Smart Charge After Sunset
@@ -2583,7 +2569,6 @@ views:
                   format: datetime
                 - entity: input_datetime.don_t_charge_ev_before_time
                 - entity: number.octopus_intelligent_charge_target
-                - entity: select.octopus_intelligent_target_time
                 - entity: switch.octopus_intelligent_smart_charge
                 - entity: select.zappi_charge_mode
               title: Smart Charge After Fixed Time
@@ -2603,10 +2588,21 @@ views:
                   name: Smart Charge After
                   format: datetime
                 - entity: number.octopus_intelligent_charge_target
-                - entity: select.octopus_intelligent_target_time
                 - entity: switch.octopus_intelligent_smart_charge
                 - entity: select.zappi_charge_mode
               title: Smart Charge Anytime
+          - type: entities
+            entities:
+              - type: section
+              - entity: input_boolean.zappi_eco_always
+              - entity: number.zappi_minimum_green_level
+            show_header_toggle: false
+            state_color: true
+            title: Eco Settings
+            visibility:
+              - condition: state
+                entity: input_boolean.solax_octopus_hide_settings
+                state: 'on'
       - type: grid
         cards:
           - type: heading
