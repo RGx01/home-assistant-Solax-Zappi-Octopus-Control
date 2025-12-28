@@ -1,4 +1,4 @@
-#v10.0.1
+#v10.0.2
 views:
   - badges:
       - type: entity
@@ -1925,11 +1925,9 @@ views:
               - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
               - entity: input_number.solax_default_charge_to_limit_soc
               - entity: input_number.solax_default_discharge_limit_soc
-              - entity: select.daily_grid_import
-                name: Log
             grid_options:
               columns: 36
-              rows: 8
+              rows: 7
           - title: Energy
             type: history-graph
             hours_to_show: 36
@@ -1948,7 +1946,7 @@ views:
               - entity: sensor.battery_exportable_allowance_kwh
             grid_options:
               columns: 36
-              rows: 8
+              rows: 7
             fit_y_data: true
         column_span: 2
     cards: []
@@ -2622,6 +2620,7 @@ views:
               - entity: sensor.octopus_intelligent_remaining_today
               - entity: sensor.time_spent_charging_ev
               - entity: input_boolean.ignore_6hr
+                name: 6hr limit
             grid_options:
               columns: full
               rows: 15
