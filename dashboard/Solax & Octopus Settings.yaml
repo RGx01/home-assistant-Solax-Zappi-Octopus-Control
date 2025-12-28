@@ -1,4 +1,4 @@
-#v10.1.0
+#v10.1.1
 views:
   - badges:
       - type: entity
@@ -151,6 +151,8 @@ views:
                 show_icon: true
                 entity: input_boolean.solax_automation_running
                 color: pink
+                tap_action:
+                  action: more-info
               - type: entity
                 show_state: true
                 show_icon: true
@@ -547,6 +549,22 @@ views:
             grid_options:
               columns: 36
               rows: 8
+          - title: Log
+            type: history-graph
+            hours_to_show: 36
+            entities:
+              - entity: sensor.solax_local_inverter_mode
+              - entity: sensor.solax_local_manual_mode_behaviour
+              - entity: binary_sensor.solax_local_battery_charging_period
+              - entity: select.daily_grid_import
+                name: Log
+              - entity: binary_sensor.octopus_energy_electricity_off_peak
+              - entity: binary_sensor.octopus_intelligent_dispatching
+              - entity: sensor.zappi_plug_status
+              - entity: sensor.solax_runmode
+            grid_options:
+              columns: 36
+              rows: auto
         column_span: 3
     title: Dashboard
     cards: []
@@ -754,22 +772,6 @@ views:
                 tap_action:
                   action: more-info
                 name: Grid Power
-          - title: Log
-            type: history-graph
-            hours_to_show: 36
-            entities:
-              - entity: sensor.solax_local_inverter_mode
-              - entity: sensor.solax_local_manual_mode_behaviour
-              - entity: binary_sensor.solax_local_battery_charging_period
-              - entity: select.daily_grid_import
-                name: Log
-              - entity: binary_sensor.octopus_energy_electricity_off_peak
-              - entity: binary_sensor.octopus_intelligent_dispatching
-              - entity: sensor.zappi_plug_status
-              - entity: sensor.solax_runmode
-            grid_options:
-              columns: 36
-              rows: auto
           - title: SoC
             type: history-graph
             hours_to_show: 36
