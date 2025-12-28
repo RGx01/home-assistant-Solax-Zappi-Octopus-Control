@@ -1,7 +1,7 @@
 octopus_dispatches_input_boolean:
   input_boolean:
     ignore_6hr:
-      name: 6hr Limit (on to ignore)
+      name: 6hr Limit
       icon: mdi:timer-cog-outline
     #octopus schedule anytime switch if you switch this on automations will ignore other criteria like scheduled charge time and allow Octopus to create schedules during the day
     #Use this when you want to charge the car during the day when octopus has surplus.

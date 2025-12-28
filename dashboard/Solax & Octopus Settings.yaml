@@ -1,4 +1,4 @@
-#v10.0.2
+#v10.1.0
 views:
   - badges:
       - type: entity
@@ -2496,26 +2496,26 @@ views:
               - type: conditional
                 conditions:
                   - entity: input_boolean.ignore_6hr
-                    state: 'off'
+                    state: 'on'
                 row:
                   entity: sensor.octopus_intelligent_time_allowance_remaining
                   format: datetime
               - type: conditional
                 conditions:
                   - entity: input_boolean.ignore_6hr
-                    state: 'off'
+                    state: 'on'
                 row:
                   entity: input_number.limit_ev_kwh_charge_target
               - type: conditional
                 conditions:
                   - entity: input_boolean.ignore_6hr
-                    state: 'off'
+                    state: 'on'
                 row:
                   entity: input_number.estimated_charging_losses
               - type: conditional
                 conditions:
                   - entity: input_boolean.ignore_6hr
-                    state: 'off'
+                    state: 'on'
                 row:
                   entity: sensor.octopus_intelligent_remaining_today
               - type: section
