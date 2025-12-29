@@ -1,4 +1,4 @@
-#v10.1.1
+#v10.1.3
 views:
   - badges:
       - type: entity
@@ -127,6 +127,24 @@ views:
               - type: entity
                 show_state: true
                 show_icon: true
+                entity: sensor.solax_local_inverter_mode
+                tap_action:
+                  action: navigate
+                  navigation_path: /home-energy/solax-local-settings
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: input_select.solax_manual_modes
+                visibility:
+                  - condition: state
+                    entity: sensor.solax_local_inverter_mode
+                    state: Manual
+                tap_action:
+                  action: navigate
+                  navigation_path: /home-energy/solax-local-settings
+              - type: entity
+                show_state: true
+                show_icon: true
                 entity: sensor.zappi_plug_status
                 color: green
                 visibility:
@@ -240,6 +258,18 @@ views:
                   rate changes by controlling the Minimum SoC. It also handles
                   exporting and Free Electric Sessions.
               - entity: automation.solax_zappi_octopus_control
+              - type: conditional
+                conditions:
+                  - entity: sensor.solax_local_settings
+                    type: attribute
+                    attribute: using_cache
+                    state: true
+                row:
+                  entity: sensor.solax_local_settings
+                  type: attribute
+                  attribute: using_cache
+                  name: Solax Settings Using Cache (true = bad)
+                  icon: mdi:briefcase-check
             show_header_toggle: false
             state_color: true
             title: Automation On/Off
@@ -247,6 +277,54 @@ views:
               - condition: state
                 entity: input_boolean.solax_octopus_hide_settings
                 state: 'on'
+          - type: gauge
+            entity: sensor.export_daily
+            needle: false
+            severity:
+              green: 0
+              yellow: 450
+              red: 500
+            max: 40
+            grid_options:
+              columns: 3
+              rows: 2
+            name: Exported
+          - type: gauge
+            entity: sensor.daily_grid_stored
+            needle: false
+            severity:
+              green: 0
+              yellow: 450
+              red: 500
+            max: 40
+            grid_options:
+              columns: 3
+              rows: 2
+            name: Grid Stored
+          - type: gauge
+            entity: sensor.daily_grid_import_peak
+            needle: false
+            severity:
+              green: 0
+              yellow: 0
+              red: 0
+            max: 40
+            grid_options:
+              columns: 3
+              rows: 2
+            name: Peak Rate Import
+          - type: gauge
+            entity: sensor.zappi_charge_added_session
+            needle: false
+            severity:
+              green: 0
+              yellow: 450
+              red: 500
+            max: 40
+            grid_options:
+              columns: 3
+              rows: 2
+            name: 'Last Zappi '
       - type: grid
         cards:
           - type: custom:power-flow-card-plus
@@ -307,17 +385,6 @@ views:
               rows: 6
       - type: grid
         cards:
-          - type: entities
-            entities:
-              - type: section
-              - entity: sensor.solax_local_inverter_mode
-              - type: conditional
-                conditions:
-                  - entity: sensor.solax_local_manual_mode_behaviour
-                    state_not: Do Nothing
-                row:
-                  entity: sensor.solax_local_manual_mode_behaviour
-            title: Inverter Current Mode
           - type: entities
             entities:
               - type: section
@@ -476,6 +543,37 @@ views:
                     entity: binary_sensor.ev_gap_discharge_allowed
                     state: 'on'
             state_color: true
+          - type: entities
+            entities:
+              - type: section
+              - entity: sensor.battery_exportable_allowance_soc
+                secondary_info: none
+              - entity: sensor.battery_budget_reserve_soc
+                name: Additional Reserve SoC
+                type: attribute
+                attribute: additional_reserve_soc
+                suffix: '%'
+              - entity: sensor.battery_budget_reserve_soc
+                name: Total Reserved
+              - entity: sensor.battery_budget_reserve_soc
+                name: Required SoC to get to E.O.D
+                type: attribute
+                attribute: reserve_soc_eod
+                suffix: '%'
+              - entity: sensor.battery_budget_reserve_soc
+                name: Deficit (SoC below Reserve)
+                type: attribute
+                attribute: deficit
+                suffix: '%'
+              - entity: sensor.solax_local_battery_soh
+                secondary_info: last-updated
+            show_header_toggle: false
+            title: Battery Reserves
+            state_color: true
+            visibility:
+              - condition: state
+                entity: sensor.zappi_charge_mode
+                state: Stopped
           - type: markdown
             content: >-
               {% if states('sensor.zappi_plug_status') != 'EV Disconnected' and
@@ -697,6 +795,8 @@ views:
                 show_icon: true
                 entity: input_boolean.solax_automation_running
                 color: pink
+                tap_action:
+                  action: more-info
               - type: entity
                 show_state: true
                 show_icon: true
@@ -3847,7 +3947,7 @@ views:
               - sensor.monthly_manual_battery_export
               - sensor.export_monthly
             stat_types:
-              - state
+              - change
             days_to_show: 365
             title: House Battery Export
             grid_options:
@@ -3857,6 +3957,7 @@ views:
             type: statistics-graph
             entities:
               - sensor.daily_house_load
+              - sensor.daily_battery_use
             stat_types:
               - change
             days_to_show: 365
