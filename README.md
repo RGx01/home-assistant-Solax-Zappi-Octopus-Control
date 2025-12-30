@@ -161,13 +161,13 @@ automation: !include automations.yaml
 
 21. # Configuring IOG 6hr Charge Limit
     
-	- 6hr limit resets at 12 noon. In the screen shot it has calculated how much would be requested if plugged in and allowed a schedule before 12 noon. The remaining kWh is: 42 - how much was delivered since 12 noon. It is assumed your charge power is 7kW. The ultimate limit is the 6hr limit at which point the automation will stop the charging. The kWh remaining alowence is used to set the charge target % and get you in the ballpark of the 6hr usage limit.
+	- 6hr limit resets at 12 noon. In the screen shot it has calculated how much would be requested if plugged in and allowed a schedule before 12 noon. The remaining kWh is: 42 - how much was delivered since 12 noon. 42kWh (6hrs*7kW) is configurable in "Limit EV Dispatch Target". The ultimate limit is the 6hr limit at which point the automation will stop the charging. The kWh remaining alowence is used to set the charge target % and get you in the ballpark of the 6hr usage limit.
   	- <img width="390" height="537" alt="Screenshot 2025-12-30 at 11 28 36" src="https://github.com/user-attachments/assets/bf79f80f-0a78-4110-8d91-005bd256e709" />
 	- <img width="385" height="368" alt="Screenshot 2025-12-30 at 11 29 31" src="https://github.com/user-attachments/assets/2c82afa6-5e48-4102-bc07-ddb26931cd04" />
-
-
     - Set an approximate limit of 42kWh. Set Charging Loss Factor to something like 9% to account for AC to DC losses for your EV and Charger (set it to whatever you want, remember that 42kWh would be the batterys charge target but Octopus will dispatch more to account for AC to DC losses and other factors.). There is a fall back that will turn off charging at 6hr's. If you don't care about paying more for exceeding then turn the switch to on to ignore the limiting.
     - **WARNING - if you do not configure the plugged_in or battery_level sensor required to drive the Charge Target you must set the Charge Target manually in the Octopus App or in the area of this dashboard.** see step 11
+    - If configured correctly, when the smart charge gets turned on you should see:
+    - <img width="386" height="255" alt="Screenshot 2025-12-29" src="https://github.com/user-attachments/assets/4c02b72c-822e-4353-a21a-0b1aea9e1a79" />
     
 22. Battery Reserves <img width="108" height="31" alt="Screenshot 2025-12-28 at 16 05 42" src="https://github.com/user-attachments/assets/78926f42-b6c3-4212-bc87-3d378510f97b" />
 
