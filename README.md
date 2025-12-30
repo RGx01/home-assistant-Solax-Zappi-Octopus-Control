@@ -19,8 +19,9 @@ Main features:
 
 
 <img alt="Screenshot 2025-12-30 at 09 04 41" src="https://github.com/user-attachments/assets/667bde96-4197-423d-80dc-707538df08fd" width="20%"/></img> 
-<img alt="Screenshot 2025-12-30 at 09 01 58" src="https://github.com/user-attachments/assets/69bbc5ed-a7f7-4f5c-b3d4-c5e5f8cdc695" width="20%"/></img> 
-<img alt="Screenshot 2025-12-30 at 09 02 29" src="https://github.com/user-attachments/assets/e46dfd25-989f-44eb-937b-92c627203b4d" width="20%"/></img> 
+<img alt="Screenshot 2025-12-30 at 09 01 58" src="https://github.com/user-attachments/assets/69bbc5ed-a7f7-4f5c-b3d4-c5e5f8cdc695" width="20%"/></img>
+<img src="https://github.com/user-attachments/assets/8b04828c-4791-4668-ace4-e39bd01ba0b5" width="20%"/></img> 
+<img alt="Screenshot 2025-12-30 at 09 02 29" src="https://github.com/user-attachments/assets/e46dfd25-989f-44eb-937b-92c627203b4d" width="20%"/></img>
 <img alt="Screenshot 2025-12-30 at 09 02 44" src="https://github.com/user-attachments/assets/33eac03f-5043-4d3a-b03a-c3dcb83ec57a" width="20%"/></img> 
 <img alt="Screenshot 2025-12-30 at 09 03 10" src="https://github.com/user-attachments/assets/1faeac4e-87f8-4d0b-9ac9-e73e70322156" width="20%"/></img> 
 <img alt="Screenshot 2025-12-30 at 09 03 33" src="https://github.com/user-attachments/assets/0516234f-c96b-42e2-9c68-e09d14042687" width="20%"/></img> 
