@@ -66,7 +66,7 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
 1. Navigate to the home assistant config directory where configuration.yaml resides, create a two new directories
    - packages
    - scripts
-2. Copy repo 'package' directory contents to your package directory (6 new directories each with yaml files)
+2. Copy repo 'package' directory contents to your package directory (13 new directories each with yaml files)
 3. Copy repo 'script' contents to your script directory (two yaml files)
 4. Copy repo 'pyscript' contents to your pyscript directory (pyscript must be added first via HACS and added as an integration first)
 5. .\config\packages\solax_realtime\secrets.yaml
