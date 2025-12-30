@@ -17,7 +17,18 @@ Main features:
 11. Calculates $Capacity\ Factor = \frac{\text{Grid Stored}}{\text{Theoretical Capacity}}$ on each full recharge.
 12. Sets Octopus Intelligent Charge Target based on EV SoC and based on 6hr charge limit rules coming in Jan 2026
 
-![delme](https://github.com/user-attachments/assets/c2eb91f9-8c83-4f31-8a76-75df950f1d05)
+
+<img alt="Screenshot 2025-12-30 at 09 04 41" src="https://github.com/user-attachments/assets/667bde96-4197-423d-80dc-707538df08fd" width="20%"/></img> 
+<img alt="Screenshot 2025-12-30 at 09 01 58" src="https://github.com/user-attachments/assets/69bbc5ed-a7f7-4f5c-b3d4-c5e5f8cdc695" width="20%"/></img> 
+<img alt="Screenshot 2025-12-30 at 09 02 29" src="https://github.com/user-attachments/assets/e46dfd25-989f-44eb-937b-92c627203b4d" width="20%"/></img> 
+<img alt="Screenshot 2025-12-30 at 09 02 44" src="https://github.com/user-attachments/assets/33eac03f-5043-4d3a-b03a-c3dcb83ec57a" width="20%"/></img> 
+<img alt="Screenshot 2025-12-30 at 09 03 10" src="https://github.com/user-attachments/assets/1faeac4e-87f8-4d0b-9ac9-e73e70322156" width="20%"/></img> 
+<img alt="Screenshot 2025-12-30 at 09 03 33" src="https://github.com/user-attachments/assets/0516234f-c96b-42e2-9c68-e09d14042687" width="20%"/></img> 
+<img alt="Screenshot 2025-12-30 at 09 03 54" src="https://github.com/user-attachments/assets/a7d1648e-7376-4695-99e5-1a2116d4dd85" width="20%"/></img> 
+<img alt="Screenshot 2025-12-30 at 09 16 33" src="https://github.com/user-attachments/assets/b4878f1d-dc1b-444b-b4b1-3f88eb8f5a4c" width="20%"/></img> 
+<img alt="Screenshot 2025-12-30 at 09 04 10" src="https://github.com/user-attachments/assets/53f83fb9-cc26-4c5b-addf-06eed23cf150" width="20%"/></img> 
+
+
 
 
 * [INSTALL INSTRUCTIONS](#install-instructions)
