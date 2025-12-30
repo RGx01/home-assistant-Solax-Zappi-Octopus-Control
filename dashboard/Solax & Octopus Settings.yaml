@@ -1,4 +1,4 @@
-#v10.1.4
+#v10.1.5
 views:
   - badges:
       - type: entity
@@ -131,6 +131,7 @@ views:
                 tap_action:
                   action: navigate
                   navigation_path: /home-energy/solax-local-settings
+                color: primary
               - type: entity
                 show_state: true
                 show_icon: true
@@ -142,6 +143,7 @@ views:
                 tap_action:
                   action: navigate
                   navigation_path: /home-energy/solax-local-settings
+                color: red
               - type: entity
                 show_state: true
                 show_icon: true
@@ -182,7 +184,8 @@ views:
                   - state
                 color: green
                 tap_action:
-                  action: more-info
+                  action: navigate
+                  navigation_path: /home-energy/octopus-ev-charging
               - type: entity
                 show_state: false
                 show_icon: true
@@ -308,6 +311,9 @@ views:
               columns: 3
               rows: 2
             name: Exported
+            tap_action:
+              action: navigate
+              navigation_path: /home-energy/Battery_Exports
           - type: gauge
             entity: sensor.daily_grid_stored
             needle: false
@@ -320,6 +326,9 @@ views:
               columns: 3
               rows: 2
             name: Grid Stored
+            tap_action:
+              action: navigate
+              navigation_path: /home-energy/stats
           - type: gauge
             entity: sensor.daily_grid_import_peak
             needle: false
@@ -332,6 +341,9 @@ views:
               columns: 3
               rows: 2
             name: Peak Rate Import
+            tap_action:
+              action: navigate
+              navigation_path: /home-energy/stats
           - type: gauge
             entity: sensor.zappi_charge_added_session
             needle: false
@@ -344,6 +356,9 @@ views:
               columns: 3
               rows: 2
             name: 'Last Zappi '
+            tap_action:
+              action: navigate
+              navigation_path: /home-energy/octopus-ev-charging
       - type: grid
         cards:
           - type: custom:power-flow-card-plus
@@ -356,6 +371,9 @@ views:
                 entity:
                   consumption: sensor.solax_local_grid_used_power
                   production: sensor.solax_local_grid_export_power
+                tap_action:
+                  action: more-info
+                secondary_info: {}
               home:
                 entity: sensor.solax_local_load_power
                 color_value: true
@@ -402,6 +420,35 @@ views:
             grid_options:
               columns: 12
               rows: 6
+      - type: grid
+        cards:
+          - type: entities
+            entities:
+              - type: section
+              - entity: sensor.battery_exportable_allowance_soc
+                secondary_info: none
+              - entity: sensor.battery_budget_reserve_soc
+                name: Additional Reserve SoC
+                type: attribute
+                attribute: additional_reserve_soc
+                suffix: '%'
+              - entity: sensor.battery_budget_reserve_soc
+                name: Total Reserved
+              - entity: sensor.battery_budget_reserve_soc
+                name: Required SoC to get to E.O.D
+                type: attribute
+                attribute: reserve_soc_eod
+                suffix: '%'
+              - entity: sensor.battery_budget_reserve_soc
+                name: Deficit (SoC below Reserve)
+                type: attribute
+                attribute: deficit
+                suffix: '%'
+              - entity: sensor.solax_local_battery_soh
+                secondary_info: none
+            show_header_toggle: false
+            title: Battery Reserves
+            state_color: true
       - type: grid
         cards:
           - type: entities
@@ -562,37 +609,6 @@ views:
                     entity: binary_sensor.ev_gap_discharge_allowed
                     state: 'on'
             state_color: true
-          - type: entities
-            entities:
-              - type: section
-              - entity: sensor.battery_exportable_allowance_soc
-                secondary_info: none
-              - entity: sensor.battery_budget_reserve_soc
-                name: Additional Reserve SoC
-                type: attribute
-                attribute: additional_reserve_soc
-                suffix: '%'
-              - entity: sensor.battery_budget_reserve_soc
-                name: Total Reserved
-              - entity: sensor.battery_budget_reserve_soc
-                name: Required SoC to get to E.O.D
-                type: attribute
-                attribute: reserve_soc_eod
-                suffix: '%'
-              - entity: sensor.battery_budget_reserve_soc
-                name: Deficit (SoC below Reserve)
-                type: attribute
-                attribute: deficit
-                suffix: '%'
-              - entity: sensor.solax_local_battery_soh
-                secondary_info: last-updated
-            show_header_toggle: false
-            title: Battery Reserves
-            state_color: true
-            visibility:
-              - condition: state
-                entity: sensor.zappi_charge_mode
-                state: Stopped
           - type: markdown
             content: >-
               {% if states('sensor.zappi_plug_status') != 'EV Disconnected' and
@@ -647,6 +663,17 @@ views:
               - condition: numeric_state
                 entity: sensor.octopus_total_planned_dispatch
                 above: 0
+          - type: markdown
+            content: >
+              Octopus Completed Dispatches Since EV Last Connected
+
+
+              {% set current =
+              state_attr('sensor.octopus_total_completed_dispatch','completed_dispatches_kwh')|list|
+              map(attribute='dispatch') | list %}
+                {% for completed in current%}
+                  {{completed}}
+                {% endfor %}
       - type: grid
         cards:
           - title: SoC
@@ -664,8 +691,8 @@ views:
               - entity: input_number.solax_default_charge_to_limit_soc
               - entity: input_number.solax_default_discharge_limit_soc
             grid_options:
-              columns: 36
-              rows: 8
+              columns: full
+              rows: 7
           - title: Log
             type: history-graph
             hours_to_show: 36
@@ -682,9 +709,411 @@ views:
             grid_options:
               columns: 36
               rows: auto
-        column_span: 3
+        column_span: 2
     title: Dashboard
     cards: []
+  - badges:
+      - type: entity
+        show_name: false
+        show_state: false
+        show_icon: true
+        color: pink
+        entity: input_boolean.solax_automation_running
+        name: Automations Running
+        tap_action:
+          action: none
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.summary_page
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/Summary
+        color: teal
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.ev_charging_settings
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/octopus-ev-charging
+        color: green
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.power_energy_charts
+        color: deep-orange
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/energy-power-charts
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.inverter_settings
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/solax-local-settings
+        color: green
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.battery_reserve_settings
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/Battery_Reserves
+        color: deep-purple
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.battery_export_settings_charts
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/Battery_Exports
+        color: brown
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.battery_voltage_charts
+        color: yellow
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/battery-voltage
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.battery_capacity_charts
+        color: green
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/battery-capacity
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.octoplus
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/octoplus
+        color: accent
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.stats
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/stats
+        color: deep-orange
+        show_entity_picture: false
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.notifications
+        tap_action:
+          action: navigate
+          navigation_path: /home-energy/notifications
+        color: lime
+    header:
+      layout: center
+      badges_position: top
+      badges_wrap: wrap
+    type: sections
+    max_columns: 3
+    title: Octopus EV Charging
+    path: octopus-ev-charging
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            badges:
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.zappi_plug_status
+                color: green
+                visibility:
+                  - condition: state
+                    entity: sensor.zappi_plug_status
+                    state_not: EV Disconnected
+                tap_action:
+                  action: more-info
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.octopus_total_planned_dispatch
+                name: Planned Dispatch
+                state_content:
+                  - name
+                  - state
+                color: green
+                tap_action:
+                  action: more-info
+          - type: entities
+            entities:
+              - type: section
+                label: Select when an octopus shedule can be requested.
+              - entity: input_boolean.octopus_schedule_anytime
+                state_color: true
+                name: Smart Charge On Plugin
+              - entity: input_boolean.use_fixed_time
+                state_color: true
+                name: Smart Charge at Fixed Time
+              - entity: input_boolean.solar_export_priority
+                state_color: true
+                name: Smart Charge after Sunset
+            show_header_toggle: false
+            state_color: true
+            title: EV Schedule Type
+            visibility:
+              - condition: state
+                entity: input_boolean.solax_octopus_hide_settings
+                state: 'on'
+          - type: entities
+            entities:
+              - type: section
+              - entity: select.octopus_intelligent_target_time
+              - type: conditional
+                conditions:
+                  - entity: binary_sensor.ev_currently_plugged_in
+                    state: 'off'
+                  - entity: sensor.zappi_plug_status
+                    state_not: EV Disconnected
+                row:
+                  entity: number.octopus_intelligent_charge_target
+              - entity: binary_sensor.ev_currently_plugged_in
+                type: attribute
+                attribute: ev_name
+              - entity: input_number.delay_when_ev_connected
+              - entity: input_boolean.ignore_6hr
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.ignore_6hr
+                    state: 'on'
+                row:
+                  entity: sensor.octopus_intelligent_time_allowance_remaining
+                  format: datetime
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.ignore_6hr
+                    state: 'on'
+                row:
+                  entity: input_number.limit_ev_kwh_charge_target
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.ignore_6hr
+                    state: 'on'
+                row:
+                  entity: input_number.estimated_charging_losses
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.ignore_6hr
+                    state: 'on'
+                row:
+                  entity: sensor.octopus_intelligent_remaining_today
+              - type: section
+              - entity: sensor.octopus_total_planned_dispatch
+              - entity: binary_sensor.octopus_smart_charge
+              - entity: sensor.zappi_charge_mode
+            show_header_toggle: false
+            state_color: true
+            title: Octopus IOG Charge Targets
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_boolean.solar_export_priority
+                state: 'on'
+              - condition: state
+                entity: input_boolean.solax_octopus_hide_settings
+                state: 'on'
+            card:
+              type: entities
+              entities:
+                - type: section
+                - entity: sensor.octopus_schedule_time
+                  name: Smart Charge After
+                  format: datetime
+                - entity: input_number.sun_degrees_above_horizon
+                - entity: number.octopus_intelligent_charge_target
+                - entity: switch.octopus_intelligent_smart_charge
+                - entity: select.zappi_charge_mode
+              title: Smart Charge After Sunset
+          - type: conditional
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: input_boolean.solar_export_priority
+                    state: 'off'
+                  - condition: state
+                    entity: input_boolean.octopus_schedule_anytime
+                    state: 'off'
+              - condition: state
+                entity: input_boolean.solax_octopus_hide_settings
+                state: 'on'
+            card:
+              type: entities
+              entities:
+                - type: section
+                - entity: sensor.octopus_schedule_time
+                  name: Smart Charge After
+                  format: datetime
+                - entity: input_datetime.don_t_charge_ev_before_time
+                - entity: number.octopus_intelligent_charge_target
+                - entity: switch.octopus_intelligent_smart_charge
+                - entity: select.zappi_charge_mode
+              title: Smart Charge After Fixed Time
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_boolean.octopus_schedule_anytime
+                state: 'on'
+              - condition: state
+                entity: input_boolean.solax_octopus_hide_settings
+                state: 'on'
+            card:
+              type: entities
+              entities:
+                - type: section
+                - entity: sensor.octopus_schedule_time
+                  name: Smart Charge After
+                  format: datetime
+                - entity: number.octopus_intelligent_charge_target
+                - entity: switch.octopus_intelligent_smart_charge
+                - entity: select.zappi_charge_mode
+              title: Smart Charge Anytime
+          - type: entities
+            entities:
+              - type: section
+              - entity: input_boolean.zappi_eco_always
+              - entity: number.zappi_minimum_green_level
+            show_header_toggle: false
+            state_color: true
+            title: Eco Settings
+            visibility:
+              - condition: state
+                entity: input_boolean.solax_octopus_hide_settings
+                state: 'on'
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+          - type: history-graph
+            hours_to_show: 36
+            entities:
+              - entity: sensor.octopus_total_planned_dispatch
+              - entity: sensor.zappi_power_ct_internal_load
+              - entity: sensor.octopus_intelligent_remaining_dispatch
+              - entity: sensor.octopus_intelligent_time_allowance_remaining
+              - entity: sensor.zappi_charge_added_session
+              - entity: select.ev_charging_daily_vehicle
+                name: Vehicle
+              - entity: sensor.zappi_plug_status
+                name: Plug
+              - entity: sensor.octopus_intelligent_remaining_today
+              - entity: sensor.time_spent_charging_ev
+              - entity: input_boolean.ignore_6hr
+                name: 6hr limit
+            grid_options:
+              columns: full
+              rows: 14
+            title: Octopus Dispatch vs Zappi Charge Added
+          - type: markdown
+            content: >-
+              {% if states('sensor.zappi_plug_status') != 'EV Disconnected' and
+              state_attr('binary_sensor.ev_currently_plugged_in','ev_name') !=
+              'Unknown' %}
+
+              Charge Target:
+              {{states('number.octopus_intelligent_charge_target')|int}}% of
+              {{state_attr('sensor.connected_ev_battery_size','registered_ev_size')}}
+              kWh =
+              {{((states('number.octopus_intelligent_charge_target')|int/100)*
+
+              state_attr('sensor.connected_ev_battery_size','registered_ev_size')|int)|round(1)}}
+              kWh
+
+              Total Dispatch Provided:
+              {{states('input_number.octopus_intelligent_total_dispatch')|round(1)}}
+              kWh
+
+              **EV Details**
+
+              EV:
+              {{state_attr('binary_sensor.ev_currently_plugged_in','ev_name')}}
+
+              EV  Size: {{states('sensor.connected_ev_battery_size')}} kWh
+
+              EV SoC: {{states('sensor.ev_active_battery_level')|int}}%
+
+
+              Registered EV Size:
+              {{state_attr('sensor.connected_ev_battery_size','registered_ev_size')}}
+              kWh
+
+
+
+              {% endif %}
+
+              {% if
+              state_attr('sensor.octopus_total_planned_dispatch','dispatches')
+              != None%}    
+
+              Planned Dispatches
+
+              {% set current =
+              state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh')|list|
+              map(attribute='dispatch') | list %}
+                {% for dispatch in current%}
+                  {{dispatch}}
+                {% endfor %}
+              {%endif%}
+            visibility:
+              - condition: numeric_state
+                entity: sensor.octopus_total_planned_dispatch
+                above: 0
+          - type: markdown
+            content: >
+              Octopus Completed Dispatches Since EV Last Connected
+
+              {% set current =
+              state_attr('sensor.octopus_total_completed_dispatch','completed_dispatches_kwh')|list|
+              map(attribute='dispatch') | list %}
+                {% for completed in current%}
+                  {{completed}}
+                {% endfor %}
+        column_span: 2
+      - type: grid
+        cards:
+          - type: heading
+            heading: Charging Stats
+            heading_style: title
+          - chart_type: bar
+            period: day
+            type: statistics-graph
+            entities:
+              - sensor.zappi_charging
+              - sensor.ev_charging_monthly_vehicle_car2
+              - sensor.ev_charging_monthly_vehicle_car1
+            stat_types:
+              - state
+            days_to_show: 366
+            title: Car Charging
+            grid_options:
+              columns: full
+        column_span: 3
+    cards: []
+    subview: true
+    dense_section_placement: true
   - badges:
       - type: entity
         show_name: false
@@ -810,6 +1239,68 @@ views:
             heading_style: title
             badges:
               - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.solax_local_inverter_mode
+                tap_action:
+                  action: navigate
+                  navigation_path: /home-energy/solax-local-settings
+                color: primary
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: input_select.solax_manual_modes
+                visibility:
+                  - condition: state
+                    entity: sensor.solax_local_inverter_mode
+                    state: Manual
+                tap_action:
+                  action: navigate
+                  navigation_path: /home-energy/solax-local-settings
+                color: red
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.solcast_pv_forecast_forecast_tomorrow
+                name:
+                  type: entity
+                color: deep-orange
+                tap_action:
+                  action: more-info
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.solcast_pv_forecast_forecast_remaining_today
+                name:
+                  type: entity
+                icon: mdi:solar-power
+                color: amber
+                tap_action:
+                  action: more-info
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.zappi_plug_status
+                color: green
+                visibility:
+                  - condition: state
+                    entity: sensor.zappi_plug_status
+                    state_not: EV Disconnected
+                tap_action:
+                  action: more-info
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.octopus_total_planned_dispatch
+                name: Planned Dispatch
+                state_content:
+                  - name
+                  - state
+                color: green
+                tap_action:
+                  action: navigate
+                  navigation_path: /home-energy/octopus-ev-charging
+              - type: entity
                 show_state: false
                 show_icon: true
                 entity: input_boolean.solax_automation_running
@@ -905,6 +1396,10 @@ views:
               - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
               - entity: input_number.solax_default_charge_to_limit_soc
               - entity: input_number.solax_default_discharge_limit_soc
+              - entity: select.daily_grid_import
+                name: Log
+              - entity: sensor.solax_local_inverter_mode
+              - entity: sensor.zappi_plug_status
             grid_options:
               columns: 36
               rows: auto
@@ -912,8 +1407,6 @@ views:
             type: history-graph
             hours_to_show: 36
             entities:
-              - entity: select.daily_grid_import
-                name: Log
               - entity: sensor.daily_total_stored
               - entity: sensor.daily_grid_stored
               - entity: sensor.daily_solar_stored
@@ -926,6 +1419,10 @@ views:
               - entity: sensor.solcast_pv_forecast_forecast_remaining_today
               - entity: sensor.battery_budget_reserve_kwh
               - entity: sensor.battery_exportable_allowance_kwh
+              - entity: select.daily_grid_import
+                name: Log
+              - entity: sensor.solax_local_inverter_mode
+              - entity: sensor.zappi_plug_status
             grid_options:
               columns: 36
               rows: auto
@@ -945,6 +1442,8 @@ views:
               - entity: sensor.solax_local_battery_dump_power
               - entity: sensor.solax_local_grid_export_power
               - entity: sensor.solax_local_inverter_in_power
+              - entity: sensor.solax_local_inverter_mode
+              - entity: sensor.zappi_plug_status
             grid_options:
               columns: 36
               rows: auto
@@ -961,6 +1460,8 @@ views:
               - entity: sensor.zappi_power_ct_grid_load
               - entity: select.daily_grid_import
                 name: Log
+              - entity: sensor.solax_local_inverter_mode
+              - entity: sensor.zappi_plug_status
             grid_options:
               columns: 36
               rows: auto
@@ -2336,10 +2837,74 @@ views:
             heading_style: title
             badges:
               - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.solax_local_inverter_mode
+                tap_action:
+                  action: navigate
+                  navigation_path: /home-energy/solax-local-settings
+                color: primary
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: input_select.solax_manual_modes
+                visibility:
+                  - condition: state
+                    entity: sensor.solax_local_inverter_mode
+                    state: Manual
+                tap_action:
+                  action: navigate
+                  navigation_path: /home-energy/solax-local-settings
+                color: red
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.solcast_pv_forecast_forecast_tomorrow
+                name:
+                  type: entity
+                color: deep-orange
+                tap_action:
+                  action: more-info
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.solcast_pv_forecast_forecast_remaining_today
+                name:
+                  type: entity
+                icon: mdi:solar-power
+                color: amber
+                tap_action:
+                  action: more-info
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.zappi_plug_status
+                color: green
+                visibility:
+                  - condition: state
+                    entity: sensor.zappi_plug_status
+                    state_not: EV Disconnected
+                tap_action:
+                  action: more-info
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.octopus_total_planned_dispatch
+                name: Planned Dispatch
+                state_content:
+                  - name
+                  - state
+                color: green
+                tap_action:
+                  action: navigate
+                  navigation_path: /home-energy/octopus-ev-charging
+              - type: entity
                 show_state: false
                 show_icon: true
                 entity: input_boolean.solax_automation_running
                 color: pink
+                tap_action:
+                  action: more-info
               - type: entity
                 show_state: true
                 show_icon: true
@@ -2415,426 +2980,26 @@ views:
                 tap_action:
                   action: more-info
                 name: Grid Power
-            heading: Cell Voltage (Pack Voltage/X cells)
           - type: history-graph
             hours_to_show: 36
-            entities:
-              - entity: sensor.solax_local_battery_cell_voltage
-              - entity: sensor.solax_local_battery_temperature
-              - entity: sensor.solax_local_battery_power_adjusted
-            grid_options:
-              columns: 36
-          - type: history-graph
             entities:
               - entity: sensor.solax_local_battery_voltage
+              - entity: sensor.solax_local_battery_temperature
+              - entity: sensor.solax_discharge_capacity
+              - entity: sensor.solax_local_battery_power_adjusted
+              - entity: sensor.daily_battery_use
             grid_options:
-              columns: full
-            hours_to_show: 36
-        column_span: 3
-    cards: []
-  - badges:
-      - type: entity
-        show_name: false
-        show_state: false
-        show_icon: true
-        color: pink
-        entity: input_boolean.solax_automation_running
-        name: Automations Running
-        tap_action:
-          action: none
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.summary_page
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/Summary
-        color: teal
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.ev_charging_settings
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/octopus-ev-charging
-        color: green
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.power_energy_charts
-        color: deep-orange
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/energy-power-charts
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.inverter_settings
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/solax-local-settings
-        color: green
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.battery_reserve_settings
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/Battery_Reserves
-        color: deep-purple
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.battery_export_settings_charts
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/Battery_Exports
-        color: brown
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.battery_voltage_charts
-        color: yellow
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/battery-voltage
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.battery_capacity_charts
-        color: green
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/battery-capacity
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.octoplus
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/octoplus
-        color: accent
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.stats
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/stats
-        color: deep-orange
-        show_entity_picture: false
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.notifications
-        tap_action:
-          action: navigate
-          navigation_path: /home-energy/notifications
-        color: lime
-    header:
-      layout: center
-      badges_position: top
-      badges_wrap: wrap
-    type: sections
-    max_columns: 3
-    title: Octopus EV Charging
-    path: octopus-ev-charging
-    sections:
-      - type: grid
-        cards:
-          - type: heading
-            heading_style: title
-            badges:
-              - type: entity
-                show_state: true
-                show_icon: true
-                entity: sensor.zappi_plug_status
-                color: green
-                visibility:
-                  - condition: state
-                    entity: sensor.zappi_plug_status
-                    state_not: EV Disconnected
-                tap_action:
-                  action: more-info
-              - type: entity
-                show_state: true
-                show_icon: true
-                entity: sensor.octopus_total_planned_dispatch
-                name: Planned Dispatch
-                state_content:
-                  - name
-                  - state
-                color: green
-                tap_action:
-                  action: more-info
-          - type: entities
-            entities:
-              - type: section
-                label: Select when an octopus shedule can be requested.
-              - entity: input_boolean.octopus_schedule_anytime
-                state_color: true
-                name: Smart Charge On Plugin
-              - entity: input_boolean.use_fixed_time
-                state_color: true
-                name: Smart Charge at Fixed Time
-              - entity: input_boolean.solar_export_priority
-                state_color: true
-                name: Smart Charge after Sunset
-            show_header_toggle: false
-            state_color: true
-            title: EV Schedule Type
-            visibility:
-              - condition: state
-                entity: input_boolean.solax_octopus_hide_settings
-                state: 'on'
-          - type: entities
-            entities:
-              - type: section
-              - entity: select.octopus_intelligent_target_time
-              - type: conditional
-                conditions:
-                  - entity: binary_sensor.ev_currently_plugged_in
-                    state: 'off'
-                  - entity: sensor.zappi_plug_status
-                    state_not: EV Disconnected
-                row:
-                  entity: number.octopus_intelligent_charge_target
-              - entity: binary_sensor.ev_currently_plugged_in
-                type: attribute
-                attribute: ev_name
-              - entity: input_number.delay_when_ev_connected
-              - entity: input_boolean.ignore_6hr
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.ignore_6hr
-                    state: 'on'
-                row:
-                  entity: sensor.octopus_intelligent_time_allowance_remaining
-                  format: datetime
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.ignore_6hr
-                    state: 'on'
-                row:
-                  entity: input_number.limit_ev_kwh_charge_target
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.ignore_6hr
-                    state: 'on'
-                row:
-                  entity: input_number.estimated_charging_losses
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.ignore_6hr
-                    state: 'on'
-                row:
-                  entity: sensor.octopus_intelligent_remaining_today
-              - type: section
-              - entity: sensor.octopus_total_planned_dispatch
-              - entity: binary_sensor.octopus_smart_charge
-              - entity: sensor.zappi_charge_mode
-            show_header_toggle: false
-            state_color: true
-            title: Octopus IOG Charge Targets
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: input_boolean.solar_export_priority
-                state: 'on'
-              - condition: state
-                entity: input_boolean.solax_octopus_hide_settings
-                state: 'on'
-            card:
-              type: entities
-              entities:
-                - type: section
-                - entity: sensor.octopus_schedule_time
-                  name: Smart Charge After
-                  format: datetime
-                - entity: input_number.sun_degrees_above_horizon
-                - entity: number.octopus_intelligent_charge_target
-                - entity: switch.octopus_intelligent_smart_charge
-                - entity: select.zappi_charge_mode
-              title: Smart Charge After Sunset
-          - type: conditional
-            conditions:
-              - condition: and
-                conditions:
-                  - condition: state
-                    entity: input_boolean.solar_export_priority
-                    state: 'off'
-                  - condition: state
-                    entity: input_boolean.octopus_schedule_anytime
-                    state: 'off'
-              - condition: state
-                entity: input_boolean.solax_octopus_hide_settings
-                state: 'on'
-            card:
-              type: entities
-              entities:
-                - type: section
-                - entity: sensor.octopus_schedule_time
-                  name: Smart Charge After
-                  format: datetime
-                - entity: input_datetime.don_t_charge_ev_before_time
-                - entity: number.octopus_intelligent_charge_target
-                - entity: switch.octopus_intelligent_smart_charge
-                - entity: select.zappi_charge_mode
-              title: Smart Charge After Fixed Time
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: input_boolean.octopus_schedule_anytime
-                state: 'on'
-              - condition: state
-                entity: input_boolean.solax_octopus_hide_settings
-                state: 'on'
-            card:
-              type: entities
-              entities:
-                - type: section
-                - entity: sensor.octopus_schedule_time
-                  name: Smart Charge After
-                  format: datetime
-                - entity: number.octopus_intelligent_charge_target
-                - entity: switch.octopus_intelligent_smart_charge
-                - entity: select.zappi_charge_mode
-              title: Smart Charge Anytime
-          - type: entities
-            entities:
-              - type: section
-              - entity: input_boolean.zappi_eco_always
-              - entity: number.zappi_minimum_green_level
-            show_header_toggle: false
-            state_color: true
-            title: Eco Settings
-            visibility:
-              - condition: state
-                entity: input_boolean.solax_octopus_hide_settings
-                state: 'on'
-      - type: grid
-        cards:
-          - type: heading
-            heading_style: title
-          - type: history-graph
-            hours_to_show: 36
-            entities:
-              - entity: sensor.octopus_total_planned_dispatch
-              - entity: sensor.zappi_power_ct_internal_load
-              - entity: sensor.octopus_intelligent_remaining_dispatch
-              - entity: sensor.octopus_intelligent_time_allowance_remaining
-              - entity: sensor.zappi_charge_added_session
-              - entity: select.ev_charging_daily_vehicle
-                name: Vehicle
-              - entity: sensor.zappi_plug_status
-                name: Plug
-              - entity: sensor.octopus_intelligent_remaining_today
-              - entity: sensor.time_spent_charging_ev
-              - entity: input_boolean.ignore_6hr
-                name: 6hr limit
-            grid_options:
-              columns: full
+              columns: 36
               rows: 15
-            title: Octopus Dispatch vs Zappi Charge Added
-          - type: markdown
-            content: >-
-              {% if states('sensor.zappi_plug_status') != 'EV Disconnected' and
-              state_attr('binary_sensor.ev_currently_plugged_in','ev_name') !=
-              'Unknown' %}
-
-              Charge Target:
-              {{states('number.octopus_intelligent_charge_target')|int}}% of
-              {{state_attr('sensor.connected_ev_battery_size','registered_ev_size')}}
-              kWh =
-              {{((states('number.octopus_intelligent_charge_target')|int/100)*
-
-              state_attr('sensor.connected_ev_battery_size','registered_ev_size')|int)|round(1)}}
-              kWh
-
-              Total Dispatch Provided:
-              {{states('input_number.octopus_intelligent_total_dispatch')|round(1)}}
-              kWh
-
-              **EV Details**
-
-              EV:
-              {{state_attr('binary_sensor.ev_currently_plugged_in','ev_name')}}
-
-              EV  Size: {{states('sensor.connected_ev_battery_size')}} kWh
-
-              EV SoC: {{states('sensor.ev_active_battery_level')|int}}%
-
-
-              Registered EV Size:
-              {{state_attr('sensor.connected_ev_battery_size','registered_ev_size')}}
-              kWh
-
-
-
-              {% endif %}
-
-              {% if
-              state_attr('sensor.octopus_total_planned_dispatch','dispatches')
-              != None%}    
-
-              Planned Dispatches
-
-              {% set current =
-              state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh')|list|
-              map(attribute='dispatch') | list %}
-                {% for dispatch in current%}
-                  {{dispatch}}
-                {% endfor %}
-              {%endif%}
-            visibility:
-              - condition: numeric_state
-                entity: sensor.octopus_total_planned_dispatch
-                above: 0
-          - type: markdown
-            content: >
-              Completed Dispatches Since Last Connected
-
-
-              {% set current =
-              state_attr('sensor.octopus_total_completed_dispatch','completed_dispatches_kwh')|list|
-              map(attribute='dispatch') | list %}
-                {% for completed in current%}
-                  {{completed}}
-                {% endfor %}
-        column_span: 2
-      - type: grid
-        cards:
-          - type: heading
-            heading: Charging Stats
-            heading_style: title
-          - chart_type: bar
-            period: day
-            type: statistics-graph
+          - type: history-graph
             entities:
-              - sensor.ev_charging_monthly_vehicle_car2
-              - sensor.ev_charging_monthly_vehicle_car1
-              - sensor.zappi_charging
-            stat_types:
-              - state
-            days_to_show: 366
-            title: Car Charging
+              - entity: sensor.solax_local_battery_cell_voltage
             grid_options:
               columns: full
+            hours_to_show: 36
+            title: Cell Voltage (Pack Voltage/X cells)
         column_span: 3
     cards: []
-    subview: true
-    dense_section_placement: true
   - badges:
       - type: entity
         show_name: false
