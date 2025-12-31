@@ -663,9 +663,11 @@
               \         )\n        )\n      )\n}}\n"
             enabled: false
           - condition: template
-            value_template: "{{ trigger.entity_id == 'sensor.octopus_total_planned_dispatch'\n
-              \  and (trigger.from_state.state | float) == 0\n   and (trigger.to_state.state
-              | float) != 0\n}}\n"
+            value_template: "{{\n  trigger.entity_id == 'sensor.octopus_total_planned_dispatch'\n
+              \ and (\n    (\n      trigger.from_state.state | float(0) == 0\n      and
+              trigger.to_state.state | float(0) != 0\n    )\n    or\n    (\n      trigger.to_state.state
+              | float(0)\n      > states('input_number.octopus_intelligent_total_dispatch')
+              | float(0)\n    )\n  )\n}}"
           sequence:
           - action: input_number.set_value
             metadata: {}
