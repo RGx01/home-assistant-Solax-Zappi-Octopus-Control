@@ -222,6 +222,7 @@ The Solax interactions are possible due to work published by @Colin Robbins and 
 # Revision Log
 | Version | Date | Files updated |Description |
 |:------|:--------:|:------|:------|
+| v10.1.5|**31/12/25**| Solax & Octopus Settings.yaml (dashboard) <br>  automations_5000-5005.yam | Changes to dashboard and small bug fix to make sure max 6hr allowance is used if the EV was connected prior to 12 noon|
 | v10.1.5|**30/12/25**| Solax & Octopus Settings.yaml (dashboard) | Changes to dashboard|
 | v10.1.4|**29/12/25**| Solax & Octopus Settings.yaml (dashboard) | Changes to dashboard|
 | v10.1.0|**28/12/25**| Solax & Octopus Settings.yaml (dashboard) <br>  automations_5000-5005.yaml <br> packages\octopus_dispatches\input_boolean.yaml| Change to 6hr limit input_boolean|

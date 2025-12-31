@@ -1,4 +1,4 @@
-#v10.1.5
+#v10.1.6
 views:
   - badges:
       - type: entity
@@ -122,7 +122,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading_style: title
+            heading_style: subtitle
             badges:
               - type: entity
                 show_state: true
@@ -674,6 +674,7 @@ views:
                 {% for completed in current%}
                   {{completed}}
                 {% endfor %}
+            text_only: true
       - type: grid
         cards:
           - title: SoC
@@ -834,7 +835,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading_style: title
+            heading_style: subtitle
             badges:
               - type: entity
                 show_state: true
@@ -1006,7 +1007,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading_style: title
+            heading_style: subtitle
           - type: history-graph
             hours_to_show: 36
             entities:
@@ -1236,7 +1237,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading_style: title
+            heading_style: subtitle
             badges:
               - type: entity
                 show_state: true
@@ -1399,7 +1400,9 @@ views:
               - entity: select.daily_grid_import
                 name: Log
               - entity: sensor.solax_local_inverter_mode
+                name: Inverter Mode
               - entity: sensor.zappi_plug_status
+                name: Plug Status
             grid_options:
               columns: 36
               rows: auto
@@ -1422,7 +1425,9 @@ views:
               - entity: select.daily_grid_import
                 name: Log
               - entity: sensor.solax_local_inverter_mode
+                name: Inverter Mode
               - entity: sensor.zappi_plug_status
+                name: Plug Status
             grid_options:
               columns: 36
               rows: auto
@@ -1441,9 +1446,12 @@ views:
               - entity: sensor.solax_local_house_load_power
               - entity: sensor.solax_local_battery_dump_power
               - entity: sensor.solax_local_grid_export_power
-              - entity: sensor.solax_local_inverter_in_power
+              - entity: select.daily_grid_import
+                name: Log
               - entity: sensor.solax_local_inverter_mode
+                name: Inverter Mode
               - entity: sensor.zappi_plug_status
+                name: Plug Status
             grid_options:
               columns: 36
               rows: auto
@@ -1461,7 +1469,9 @@ views:
               - entity: select.daily_grid_import
                 name: Log
               - entity: sensor.solax_local_inverter_mode
+                name: Inverter Mode
               - entity: sensor.zappi_plug_status
+                name: Plug Status
             grid_options:
               columns: 36
               rows: auto
@@ -2241,24 +2251,13 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading_style: title
+            heading_style: subtitle
             badges:
               - type: entity
                 show_state: false
                 show_icon: true
                 entity: input_boolean.solax_automation_running
                 color: pink
-                tap_action:
-                  action: more-info
-              - type: entity
-                show_state: true
-                show_icon: true
-                entity: sensor.solax_local_house_load_power
-                state_content:
-                  - name
-                  - state
-                name: House Load
-                color: light-green
                 tap_action:
                   action: more-info
               - type: entity
@@ -2269,13 +2268,11 @@ views:
               - type: entity
                 show_state: true
                 show_icon: true
-                entity: sensor.solax_local_battery_temperature
+                entity: sensor.battery_exportable_allowance_soc
+                name: Exportable Allowance
+                color: deep-purple
                 tap_action:
                   action: more-info
-                name: Battery Temp
-                state_content:
-                  - name
-                  - state
           - type: entities
             entities:
               - type: section
@@ -2532,24 +2529,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading_style: title
-          - title: SoC
-            type: history-graph
-            hours_to_show: 36
-            entities:
-              - entity: sensor.solax_local_feed_in_battery_min_soc
-              - entity: sensor.solax_local_selfuse_battery_min_soc
-              - entity: sensor.solax_local_battery_soc
-              - entity: sensor.battery_budget_reserve_soc
-              - entity: input_number.solax_manual_forced_discharge_limit_soc
-              - entity: sensor.battery_exportable_allowance_soc
-              - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to
-              - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
-              - entity: input_number.solax_default_charge_to_limit_soc
-              - entity: input_number.solax_default_discharge_limit_soc
-            grid_options:
-              columns: 36
-              rows: 7
+            heading_style: subtitle
           - title: Energy
             type: history-graph
             hours_to_show: 36
@@ -2566,9 +2546,23 @@ views:
               - entity: sensor.solcast_pv_forecast_forecast_remaining_today
               - entity: sensor.battery_budget_reserve_kwh
               - entity: sensor.battery_exportable_allowance_kwh
+              - entity: sensor.zappi_plug_status
+                name: Plug Status
+              - entity: sensor.solax_local_manual_mode_behaviour
+                name: Mode
+              - entity: sensor.solax_local_feed_in_battery_min_soc
+              - entity: sensor.solax_local_selfuse_battery_min_soc
+              - entity: sensor.solax_local_battery_soc
+              - entity: sensor.battery_budget_reserve_soc
+              - entity: input_number.solax_manual_forced_discharge_limit_soc
+              - entity: sensor.battery_exportable_allowance_soc
+              - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to
+              - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
+              - entity: input_number.solax_default_charge_to_limit_soc
+              - entity: input_number.solax_default_discharge_limit_soc
             grid_options:
               columns: 36
-              rows: 7
+              rows: 15
             fit_y_data: true
         column_span: 2
     cards: []
@@ -2834,7 +2828,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading_style: title
+            heading_style: subtitle
             badges:
               - type: entity
                 show_state: true
@@ -2988,6 +2982,12 @@ views:
               - entity: sensor.solax_discharge_capacity
               - entity: sensor.solax_local_battery_power_adjusted
               - entity: sensor.daily_battery_use
+              - entity: select.daily_grid_import
+                name: Log
+              - entity: sensor.solax_local_inverter_mode
+                name: Inverter Mode
+              - entity: sensor.zappi_plug_status
+                name: Plug Status
             grid_options:
               columns: 36
               rows: 15
@@ -3497,7 +3497,7 @@ views:
         cards:
           - type: heading
             heading: Energy Stats
-            heading_style: title
+            heading_style: subtitle
           - type: vertical-stack
             cards:
               - type: statistic

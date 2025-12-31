@@ -1,10 +1,12 @@
 - id: '5000'
   alias: 5000 - Solax Zappi Octopus Control - House Keeping
-  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v10.1.0
-    Update to 6hr limit input_boolean\n---\n- v9.5.0 Account for charging losses in
-    EV limiting\n---\n- v9.3.0 General hardening of dispatch tracking\n---\n- v9.0.0
-    Changes to IOG 6hr limit\n---\n- v8.0.0 Minor updates to triggers\n---\n- v7.0.0
-    New function Battery Budget\n---\n- v1.0.0 Initial \nSee documentation in repo"
+  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v10.1.6
+    Update to 6hr limit if EV plugged in before 12, @ 12 a new charge target is computed
+    to ensure max allowance.\n---\n- v10.1.0 Update to 6hr limit input_boolean\n---\n-
+    v9.5.0 Account for charging losses in EV limiting\n---\n- v9.3.0 General hardening
+    of dispatch tracking\n---\n- v9.0.0 Changes to IOG 6hr limit\n---\n- v8.0.0 Minor
+    updates to triggers\n---\n- v7.0.0 New function Battery Budget\n---\n- v1.0.0
+    Initial \nSee documentation in repo"
   triggers:
   - trigger: state
     entity_id:
@@ -812,14 +814,14 @@
               %} \n{% set cap_ev = states('sensor.connected_ev_battery_size')|float
               %}  \n{# --- Max energy allowed per 24hrs 12:00 to 12:00 --- #}  {#
               --- Max energy allowed logic --- #} \n{% set ignore = is_state('input_boolean.ignore_6hr',
-              'off') %} \n{% set max_kwh = cap if ignore else states('input_number.limit_ev_kwh_charge_target')|float
-              * ((100-states('input_number.estimated_charging_losses')|float)/100)
-              %}\n{% set max_percent_ev = (max_kwh / cap_ev) * 100 %}  \n{# --- Which
-              car is currently plugged in? --- #} \n{% set active_car = state_attr('binary_sensor.ev_currently_plugged_in','ev_name')
+              'off') %} \n\n{% set max_kwh = cap if ignore else [states('input_number.limit_ev_kwh_charge_target')|float
+              * ((100-states('input_number.estimated_charging_losses')|float)/100),states('sensor.octopus_intelligent_remaining_today')|float(42)]|min
+              %}\n\n{% set max_percent_ev = (max_kwh / cap_ev) * 100 %}  \n{# ---
+              Which car is currently plugged in? --- #} \n{% set active_car = state_attr('binary_sensor.ev_currently_plugged_in','ev_name')
               %}  \n\n{# --- Current battery levels --- #}\n{% set battery_entity
               = state_attr('binary_sensor.ev_currently_plugged_in','battery_entity')%}\n{%
-              set current_ev_level = states(battery_entity) %} \n\n{# --- Desired
-              target % --- #} \n{% set target = 100 %}  \n \n\n{% set percent_needed
+              set current_ev_level = states(battery_entity)|float(0)  %} \n\n{# ---
+              Desired target % --- #} \n{% set target = 100 %}  \n \n\n{% set percent_needed
               = target - current_ev_level %}     \n{% set kwh_needed = (percent_needed
               / 100) * cap_ev %}     \n{% set percent_equiv = (kwh_needed / cap) *
               100 %}     \n{% set limited_percent = [percent_equiv, max_percent_ev]
@@ -867,10 +869,10 @@
             %} \n{% set cap_ev = states('sensor.connected_ev_battery_size')|float
             %}  \n{# --- Max energy allowed per 24hrs 12:00 to 12:00 --- #}  {# ---
             Max energy allowed logic --- #} \n{% set ignore = is_state('input_boolean.ignore_6hr',
-            'off') %} \n{% set max_kwh = cap if ignore else states('input_number.limit_ev_kwh_charge_target')|float
-            * ((100-states('input_number.estimated_charging_losses')|float)/100) %}\n{%
-            set max_percent_ev = (max_kwh / cap_ev) * 100 %}  \n{# --- Which car is
-            currently plugged in? --- #} \n{% set active_car = state_attr('binary_sensor.ev_currently_plugged_in','ev_name')
+            'off') %} \n{% set max_kwh = cap if ignore else [states('input_number.limit_ev_kwh_charge_target')|float
+            * ((100-states('input_number.estimated_charging_losses')|float)/100),states('sensor.octopus_intelligent_remaining_today')|float(42)]|min
+            %}\n{% set max_percent_ev = (max_kwh / cap_ev) * 100 %}  \n{# --- Which
+            car is currently plugged in? --- #} \n{% set active_car = state_attr('binary_sensor.ev_currently_plugged_in','ev_name')
             %}  \n\n{# --- Current battery levels --- #} \n{% set current_ev_level
             = state_attr('binary_sensor.ev_currently_plugged_in','battery_level')
             | float %} \n\n{# --- Desired target % --- #} \n{% set target = 100 %}
