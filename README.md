@@ -4,6 +4,7 @@
 ## Planned for up coming releases
 	- Battery heating kWh costs
 	- IOG £ Costs
+	- Dynamic Charging & Exporting based on anticipated end to 15p export rate in 2026 
 	
 ## Introduction
 Written specifically for IOG Zappi and Solax X1-G4 Inverter and TP3.0 Battery - MAY NOT BE COMPATIBLE WITH YOUR SYSTEM
