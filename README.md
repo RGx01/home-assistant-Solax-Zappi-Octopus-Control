@@ -57,7 +57,8 @@ Main features:
 * Pyscript Python scripting https://github.com/custom-components/pyscript/wiki
   	- https://hacs-pyscript.readthedocs.io/en/latest/installation.html
   	- https://github.com/custom-components/pyscript/releases/
-  	- <img alt="Screenshot 2026-01-01 at 08 33 08" src="https://github.com/user-attachments/assets/7771bbab-7757-46d0-81d4-72e6a98d3351" width="20%"/></img> <img alt="Screenshot 2026-01-01 at 08 34 16" src="https://github.com/user-attachments/assets/2471bf90-716d-47b2-ace2-02ef6bdeb53c" width="20%"/></img> 
+  	- <img alt="Screenshot 2026-01-01 at 08 33 08" src="https://github.com/user-attachments/assets/7771bbab-7757-46d0-81d4-72e6a98d3351" width="20%"/></img> <img alt="Screenshot 2026-01-01 at 08 34 16" src="https://github.com/user-attachments/assets/2471bf90-716d-47b2-ace2-02ef6bdeb53c" width="20%"/></img>
+  	- https://hacs-pyscript.readthedocs.io/en/latest/configuration.html
 
 * Power Flow Card Plus https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.2.0
 * Solcast https://github.com/BJReplay/ha-solcast-solar?tab=readme-ov-file#configuration
@@ -74,6 +75,7 @@ First back up your Home Assistant. Make sure you are familar with Developer Tool
 2. Copy repo 'package' directory contents to your package directory (13 new directories each with yaml files)
 3. Copy repo 'script' contents to your script directory (two yaml files)
 4. Copy repo 'pyscript' contents to your pyscript directory (pyscript must be added first via HACS and added as an integration first)
+	- create directory ..\config\pyscript and place battery_budget_allocator.py and battery_budget_schedule.py
 5. .\config\packages\solax_realtime\secrets.yaml
      - Find and replace YYYYYYYYYY with your registration number (found on the devices page on the solax cloud)
      - Find http://192.168.xxx.xxx and replace with http://192.168.1.fixed_ip
