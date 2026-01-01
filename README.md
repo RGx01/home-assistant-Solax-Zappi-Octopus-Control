@@ -54,7 +54,11 @@ Main features:
     - must be configured
 * Uptime https://www.home-assistant.io/integrations/uptime/
 * Powercalc https://docs.powercalc.nl/quick-start/
-* Pyscript Python scripting https://github.com/custom-components/pyscript/wiki 
+* Pyscript Python scripting https://github.com/custom-components/pyscript/wiki
+  	- https://hacs-pyscript.readthedocs.io/en/latest/installation.html
+  	- https://github.com/custom-components/pyscript/releases/
+  	- <img alt="Screenshot 2026-01-01 at 08 33 08" src="https://github.com/user-attachments/assets/7771bbab-7757-46d0-81d4-72e6a98d3351" width="20%"/></img> <img alt="Screenshot 2026-01-01 at 08 34 16" src="https://github.com/user-attachments/assets/2471bf90-716d-47b2-ace2-02ef6bdeb53c" width="20%"/></img> 
+
 * Power Flow Card Plus https://github.com/flixlix/power-flow-card-plus/releases/tag/v0.2.0
 * Solcast https://github.com/BJReplay/ha-solcast-solar?tab=readme-ov-file#configuration
     - must be configured
