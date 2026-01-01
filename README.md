@@ -1,6 +1,11 @@
 # Solax-Zappi-Octopus-Control
 ## Version 10.0.0 is here. Big Changes to Dashboard
 
+## Planned for up coming releases
+	- Battery heating kWh costs
+	- IOG £ Costs
+	
+## Introduction
 Written specifically for IOG Zappi and Solax X1-G4 Inverter and TP3.0 Battery - MAY NOT BE COMPATIBLE WITH YOUR SYSTEM
 If unsure if your inverter can be controlled try using https://github.com/RGx01/Solax-Local-Control-Using-REST if successful control can be established then proceed with companion https://github.com/RGx01/Solax-Local-Realtime-Using-REST. This repo bundles those but in the future they will become pre requiste. (Ideally if others contribute with other inverters.)
 Main features:
