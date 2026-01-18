@@ -1,4 +1,5 @@
 ########################################
+# v10.2.0 Battery Heating Power
 # v8.2.0 powercalc deprication of force update.
 # v1.0.0 solax_additions_powercalc
 ########################################
@@ -91,5 +92,11 @@ solax_loads_powercalc:
         name: Solax Local Battery Dump Aggregated
         fixed:
           power: "{{states('sensor.solax_local_battery_dump_power')}}"
+
+      - entity_id: sensor.solax_local_battery_heating_power
+        power_sensor_id: sensor.solax_local_battery_heating_power
+        name: Solax Local Battery Heating Aggregated
+        fixed:
+          power: "{{states('sensor.solax_local_battery_heating_power')}}"
 
 

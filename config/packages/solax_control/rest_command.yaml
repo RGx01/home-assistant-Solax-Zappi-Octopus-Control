@@ -9,107 +9,127 @@ solax_control_rest_command:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_selfuse_battery_min_soc_payload
+      timeout: 30
 
     solax_local_set_selfuse_charge_battery_from_grid:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_selfuse_battery_grid_charge_level_payload
+      timeout: 30
 
     solax_local_set_selfuse_charge_from_grid_enable:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_selfuse_charge_from_grid_enable_payload
+      timeout: 30
 
     solax_local_set_forced_charge_start:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_battery_forced_charge_start
+      timeout: 30
 
     solax_local_set_forced_charge_stop:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_battery_forced_charge_stop
+      timeout: 30
 
     solax_local_set_allowed_discharge_start:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_allowed_discharge_start
+      timeout: 30
 
     solax_local_set_allowed_discharge_end:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_allowed_discharge_end
+      timeout: 30
 
     solax_local_set_period2_enable:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_period2_enable_payload
+      timeout: 30
 
     solax_local_set_forced_charge_start2:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_battery_forced_charge_start2
+      timeout: 30
 
     solax_local_set_forced_charge_stop2:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_battery_forced_charge_stop2
+      timeout: 30
 
     solax_local_set_feedin_battery_min_soc:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_feedin_battery_min_soc_payload
+      timeout: 30
 
     solax_local_set_feedin_charge_battery_from_grid:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_feedin_battery_grid_charge_level_payload
+      timeout: 30
 
     solax_local_heat_enable:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_heat_enable_payload
+      timeout: 30
 
     solax_local_set_heat_start:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_heat_start_payload
+      timeout: 30
 
     solax_local_set_heat_stop:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_heat_stop_payload
+      timeout: 30
 
     solax_local_set_heat_start2:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_heat_start2_payload
+      timeout: 30
 
     solax_local_set_heat_stop2:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_heat_stop2_payload
+      timeout: 30
 
     solax_local_set_system_state:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_system_state_payload
+      timeout: 30
 
     solax_local_set_battery_heat_level:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_battery_heat_level_payload
+      timeout: 30
 
     solax_local_set_inverter_mode:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_inverter_mode
+      timeout: 30
 
     solax_local_set_manual_mode_behaviour:
       url: !secret solax_local_ip
       method: post
       payload: !secret solax_local_set_manual_mode_behaviour
-
+      timeout: 30
 
 
 

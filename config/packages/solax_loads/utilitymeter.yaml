@@ -4,6 +4,7 @@
 #   days: 2 <---- update to your billing day (2 if your bills start on the 3rd)
 #
 ##############################################################
+# v10.2.0 Battery heating power
 # v6.0.0 utility meter for solax
 ##############################################################
 
@@ -261,4 +262,24 @@ solax_zappi_octopus_utilitymeter:
         days: 2
     ##########################################################
 
+    battery_heating_daily:
+      unique_id: 0c931384-f9b5-4b4b-ade5-3f3a896e4836
+      source: sensor.solax_local_battery_heating_aggregated_energy
+      name: Daily Battery Heating
+      cycle: daily
+      net_consumption: false
+      delta_values: false
+      periodically_resetting: true
+      always_available: false
 
+    battery_heating_monthly:
+      unique_id: b7a2a01a-6d4f-46df-9b26-5fd212ce1d69
+      source: sensor.solax_local_battery_heating_aggregated_energy
+      name: Monthly Battery Heating
+      cycle: monthly
+      net_consumption: false
+      delta_values: false
+      periodically_resetting: true
+      always_available: false
+      offset:
+        days: 2

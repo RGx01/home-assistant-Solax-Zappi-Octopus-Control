@@ -1,3 +1,7 @@
+
+##############################################################
+# v10.2.0 Delay ev_currently_plugged_in off in the event any api glitches
+##############################################################
 connected_ev_tracking_template_ev_mapper:
   template:
     ###############################################
@@ -40,6 +44,8 @@ connected_ev_tracking_template_ev_mapper:
         - name: "EV Currently Plugged In"
           unique_id: ev_currently_plugged_in
           device_class: plug
+          delay_off:
+            minutes: 1 
           state: >
             {% set plug_status = states('sensor.zappi_plug_status') %}
             {% if plug_status == 'EV Disconnected' %}

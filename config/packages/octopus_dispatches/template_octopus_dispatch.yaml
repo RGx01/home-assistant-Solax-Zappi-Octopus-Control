@@ -22,15 +22,32 @@ octopus_dispatches_template_octopus_dispatch:
           state_class: total
           state: >
             {% set planned = state_attr('binary_sensor.octopus_intelligent_dispatching', 'planned_dispatches') %}
+            {% set disconnected_raw = states('sensor.zappi_last_disconnected') %}
+            {% set connected_raw = states('sensor.zappi_last_connected') %}
 
+            {% set disconnected = (
+              disconnected_raw
+              if disconnected_raw not in ['unknown', 'unavailable', '']
+              else '1970-01-01 00:00:00'
+            ) | as_datetime | as_local %}
+
+            {% set connected = (
+              connected_raw
+              if connected_raw not in ['unknown', 'unavailable', '']
+              else '1970-01-01 00:00:00'
+            ) | as_datetime | as_local %}
+            
             {# --- CASE 1: Data unavailable -> return last state --- #}
             {% if planned is none or planned in ['unknown', 'unavailable'] %}
               {{ states('sensor.octopus_total_planned_dispatch')|float(0) }}
             
             {# --- CASE 2: Data available but empty -> return last state --- #}
             {% elif planned == [] %}
-              {{ states('sensor.octopus_total_planned_dispatch') | float(0) }}
-
+              {% if disconnected > connected %}
+                {{0}}
+              {% else %}
+                {{ states('sensor.octopus_total_planned_dispatch') | float(0) }}
+              {% endif %}
             {# --- CASE 3: Calculate remaining dispatch --- #}
             {% else %}
               {% set ns2 = namespace(total_dispatch=0.0) %}
@@ -171,16 +188,23 @@ octopus_dispatches_template_octopus_dispatch:
           icon: mdi:flash
           unit_of_measurement: "kWh"
           device_class: energy
-          state_class: total
+          state_class: measurement
           state: >
             {% set total = states('input_number.octopus_intelligent_total_dispatch') %}
             {% set session = states('sensor.zappi_charge_added_session') %}
+            {% set prev = this.state %}
 
-            {# If either value is not numeric, keep the previous state #}
-            {% if not is_number(total) or not is_number(session) %}
-              {{ this.state }}
+            {# If either input is invalid, use previous state or 0 #}
+            {% if total in ['unknown','unavailable','',none] or session in ['unknown','unavailable','',none] %}
+              {% if prev not in ['unknown','unavailable','',none] %}
+                {{ prev }}
+              {% else %}
+                0
+              {% endif %}
             {% else %}
-              {{ [ (total|float - session|float), 0 ] | max }}
+              {% set total_f = total | float %}
+              {% set session_f = session | float %}
+              {{ max(total_f - session_f, 0) | round(3) }}
             {% endif %}
 
 

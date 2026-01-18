@@ -1,6 +1,7 @@
     ######################################################
     # Change log - this may only work for X1 hybrid g4
     ######################################################
+    # v1.3.0     Added Battery power from VxA
     # v1.2.1     Changed Device Class to Battery for SoC
     # v1.2.0     Increased reliabilty
     # v1.1.0     Further Refactoring/tidy
@@ -199,6 +200,16 @@ solax_realtime_templates:
           unit_of_measurement: "A"
           state_class: measurement
           device_class: "current"
+
+        - name: "Solax Local Battery Power DC"
+          unique_id: solax_local_battery_power_dc
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: power
+          state: >
+            {% set v = states('sensor.solax_local_battery_voltage') | float(0) %}
+            {% set i = states('sensor.solax_local_battery_current') | float(0) %}
+            {{ (v * i) | round(0) }}
 
         - name: "Solax Local Battery Temperature"
           unique_id: solax_local_battery_temp

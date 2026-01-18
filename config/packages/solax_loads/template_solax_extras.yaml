@@ -1,7 +1,10 @@
 solax_loads_template_solax_extras:
   template:
     - sensor:
+      
     ######################################################
+    # v10.2.0 Battery Heating binary sensor and power calc
+    # v1.0.0
     # Extended Solax realtime data    
     # new experimental sensors have been added:
     # - name: "Solax Local Self Consumption Power"
@@ -11,7 +14,7 @@ solax_loads_template_solax_extras:
     ######################################################
         - name: "Solax Local House Load Power"
           unique_id: solax_local_house_load_power
-          # if your solax system can see load from zappi then set solax_can_see_zappi_load =1 elso set it to 0
+          # if your solax system can see load from zappi then set solax_can_see_zappi_load =1 else set it to 0
           state: >
             {% set solax_can_see_zappi_load = states('input_boolean.solax_can_see_zappi_loads') %}
             {% set zappi_raw = states('sensor.zappi_power_ct_internal_load') %}
@@ -168,7 +171,87 @@ solax_loads_template_solax_extras:
           state_class: measurement
           device_class: power
           icon: mdi:battery
-          
+
+
+        # Ball park numbers
+        - name: "Solax Local Battery unknown"
+          unique_id: solax_local_battery_unknown
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: power
+          icon: mdi:battery
+          state: >
+            {% set B = states('sensor.solax_local_battery_power')|float(0) %}
+            {% set I = states('sensor.solax_local_inverter_power')|float(0) %}
+            {% set P = states('sensor.solax_local_pv_output')|float(0) %}
+
+            {% set B_dis = (-B) if B < 0 else 0 %}
+            {% set PV_ac = P * 0.95 %}
+            {% set B_req = (I - PV_ac)|clamp(0, I) %}
+
+            {{ (B_dis - B_req) if (B_dis - B_req) > 0 else 0 }}
+
+        # Heater power estimated from DC balance:
+        # PV_ac − inverter_AC − battery_power
+        # Assumes ~95% PV→DC efficiency
+        # Includes both PV-fed and battery-fed heater load
+        - name: "Solax Local Battery Heating Power"
+          unique_id: solax_local_battery_heating_power
+          unit_of_measurement: "W"
+          state_class: measurement
+          device_class: power
+          icon: mdi:heating-coil
+          state: >
+            {% set P = states('sensor.solax_local_pv_output')|float(0) * 0.95 %}
+            {% set I = states('sensor.solax_local_inverter_power')|float(0) %}
+            {% set B = states('sensor.solax_local_battery_power')|float(0) %}
+
+            {% set raw = max(0, P - I - B) %}
+
+            {# Ignore heater inference during strong charge or discharge #}
+            {% set BUS_DOMINANT_TH = 2000 %}
+
+            {% if B | abs > BUS_DOMINANT_TH %}
+              0
+            {% else %}
+              {{ raw }}
+            {% endif %}
+
+
+    ##############################################################      
+    # delay on/off is set to 2 minutes to prevent false positives.
+    ##############################################################   
+    - binary_sensor:
+        - name: "Solax Local Battery Heating"
+          unique_id: solax_local_battery_heating
+          icon: mdi:heating-coil
+          state: >
+            {% set capacity = states('input_number.solax_battery_capacity')|float(0) %}
+            {% set pack_count = (capacity / 3)|int(1) %}
+
+            {% set heating_power =
+              states('sensor.solax_local_battery_heating_power')|float(0)
+            %}
+
+            {% set ON_TH  = pack_count * 100 %}
+            {% set OFF_TH = pack_count * 60 %}
+
+            {% set prev =
+              is_state('binary_sensor.solax_local_battery_heating','on')
+            %}
+
+            {{
+              (not prev and heating_power > ON_TH)
+              or
+              (prev and heating_power > OFF_TH)
+            }}
+          delay_on:
+            minutes: 2
+          delay_off:
+            minutes: 2
+
+
+    - sensor:
         ### Inverter default working mode
         - name: "Solax Default Operation Mode"
           unique_id: solax_default_operation_mode
@@ -180,6 +263,8 @@ solax_loads_template_solax_extras:
             {% set state =  states('input_select.solax_default_mode')  %}
             {{ mapper[state] if state in mapper else '0' }}
           icon: mdi:cursor-default-outline
+
+      
 
     ######################################################
     # Binary sensor for when house battery is supposed to be charging
@@ -226,26 +311,6 @@ solax_loads_template_solax_extras:
               {{ trigger.to_state.last_changed if trigger is defined else states.binary_sensor.solax_local_battery_charging_period.last_changed }}
           availability: >
             true
-
-    ######################################################
-    # Currently a 20 min window to protect the system from trying to enter a force discharge
-    # just before or during the chargeing window
-    # Sometimes the inverter can take a while to get into force discharge mode and it may take several iterations
-    # in the automations. 20 mins seems a fair window to avoid scenarios described above
-    # not used due for deleteions
-    ######################################################
-    - sensor:
-      - name: Discharge Window Closed
-        unique_id: solax_discharge_window_closed
-        state: >
-          {% set seconds_to_discharge = 20*60 %}
-          {% if now() > today_at(states('input_datetime.solax_battery_stop_charge_time')) %}
-            {{ ((today_at(states('input_datetime.solax_battery_start_charge_time'))|as_timestamp-seconds_to_discharge+86400)|as_datetime|as_local)}}
-          {% else %}
-            {{ ((today_at(states('input_datetime.solax_battery_start_charge_time'))|as_timestamp-seconds_to_discharge)|as_datetime|as_local)}}
-          {% endif%}
-        icon: mdi:clock-end
-        device_class: "timestamp"
 
     ######################################################
     # discharge capacity solax battery

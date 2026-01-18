@@ -1,12 +1,13 @@
 - id: '5000'
   alias: 5000 - Solax Zappi Octopus Control - House Keeping
-  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v10.1.6
-    Update to 6hr limit if EV plugged in before 12, @ 12 a new charge target is computed
-    to ensure max allowance.\n---\n- v10.1.0 Update to 6hr limit input_boolean\n---\n-
-    v9.5.0 Account for charging losses in EV limiting\n---\n- v9.3.0 General hardening
-    of dispatch tracking\n---\n- v9.0.0 Changes to IOG 6hr limit\n---\n- v8.0.0 Minor
-    updates to triggers\n---\n- v7.0.0 New function Battery Budget\n---\n- v1.0.0
-    Initial \nSee documentation in repo"
+  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v10.2.0
+    Improved dispatch tracking\n---\n- v10.1.6 Update to 6hr limit if EV plugged in
+    before 12, @ 12 a new charge target is computed to ensure max allowance.\n---\n-
+    v10.1.0 Update to 6hr limit input_boolean\n---\n- v9.5.0 Account for charging
+    losses in EV limiting\n---\n- v9.3.0 General hardening of dispatch tracking\n---\n-
+    v9.0.0 Changes to IOG 6hr limit\n---\n- v8.0.0 Minor updates to triggers\n---\n-
+    v7.0.0 New function Battery Budget\n---\n- v1.0.0 Initial \nSee documentation
+    in repo"
   triggers:
   - trigger: state
     entity_id:
@@ -280,6 +281,16 @@
     - EV Connected
     id: EV First Connect
     alias: EV First Connected
+  - trigger: state
+    entity_id:
+    - input_boolean.solax_automation_running
+    to:
+    - 'on'
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
+    id: Long Running Automation
   conditions: []
   actions:
   - choose:
@@ -652,55 +663,47 @@
       - choose:
         - conditions:
           - condition: template
-            value_template: "{{ \n  trigger.entity_id == 'sensor.octopus_total_planned_dispatch'\n
-              \ and trigger.from_state is not none\n  and (trigger.from_state.state
-              | float(0)) == 0\n  and (trigger.to_state.state | float(0)) != 0\n  and
-              ((trigger.from_state.state | float) != (trigger.to_state.state | float))\n
-              \ and (\n        (states('input_number.octopus_intelligent_total_dispatch')
-              | float(0)) == 0 or (\n          states['number.octopus_intelligent_charge_target']
-              is not none\n          and (\n            as_timestamp(states['number.octopus_intelligent_charge_target'].last_changed)\n
-              \           >= (as_timestamp(trigger.to_state.last_changed) - 60)\n
-              \         )\n        )\n      )\n}}\n"
-            enabled: false
-          - condition: template
-            value_template: "{{\n  trigger.entity_id == 'sensor.octopus_total_planned_dispatch'\n
-              \ and (\n    (\n      trigger.from_state.state | float(0) == 0\n      and
-              trigger.to_state.state | float(0) != 0\n    )\n    or\n    (\n      trigger.to_state.state
-              | float(0)\n      > states('input_number.octopus_intelligent_total_dispatch')
-              | float(0)\n    )\n  )\n}}"
+            value_template: "{{\n  trigger is not none\n  and trigger.entity_id ==
+              'sensor.octopus_total_planned_dispatch'\n  and (\n    (\n      (trigger.from_state.state
+              | default('0') | float) == 0\n      and (trigger.to_state.state | default('0')
+              | float) != 0\n    )\n    or\n    (\n      (trigger.to_state.state |
+              default('0') | float(0) | round(3))\n      > (((states('input_number.octopus_intelligent_total_dispatch')
+              | float(0)| round(3)) + 0.001))\n    )\n  )\n}}"
           sequence:
           - action: input_number.set_value
             metadata: {}
             data:
-              value: '{{ states(''sensor.octopus_total_planned_dispatch'') | float(0)
-                }}
+              value: '{% set new = states(''sensor.octopus_total_planned_dispatch'')
+                | float(0) | round(3) %}
+
+                {{ new }}
 
                 '
             target:
               entity_id: input_number.octopus_intelligent_total_dispatch
         - conditions:
           - condition: template
-            value_template: '{{ trigger.entity_id == ''number.octopus_intelligent_charge_target''
-              and (states(''input_number.octopus_intelligent_total_dispatch'') | float(0))
-              != 0 }}
-
-              '
+            value_template: "{{\n  trigger is not none\n  and trigger.entity_id ==
+              'number.octopus_intelligent_charge_target'\n  and (states('input_number.octopus_intelligent_total_dispatch')
+              | float(0)) != 0\n  and trigger.from_state is not none\n  and trigger.to_state
+              is not none\n  and (trigger.from_state.state | default('none')) not
+              in ['unavailable','unknown','none']\n  and (trigger.to_state.state |
+              default('none')) not in ['unavailable','unknown','none']\n}}"
           sequence:
           - action: input_number.set_value
             metadata: {}
             data:
-              value: '{{ states(''sensor.octopus_total_planned_dispatch'') | float(0)
-                }}
+              value: '{% set new = states(''sensor.octopus_total_planned_dispatch'')
+                | float(0) | round(3) %}
 
-                '
+                {{ new }}'
             target:
               entity_id: input_number.octopus_intelligent_total_dispatch
         - conditions:
           - condition: template
-            value_template: '{{ trigger.entity_id == ''switch.octopus_intelligent_smart_charge''
-              and trigger.to_state.state == ''off'' }}
-
-              '
+            value_template: "{{\n  trigger is not none\n  and trigger.entity_id ==
+              'switch.octopus_intelligent_smart_charge'\n  and trigger.to_state is
+              not none\n  and trigger.to_state.state == 'off'\n}}\n  "
           sequence:
           - action: input_number.set_value
             metadata: {}
@@ -900,6 +903,21 @@
           entity_id: input_number.zappi_charging_minutes
         data:
           value: 0
+    - conditions:
+      - condition: trigger
+        id:
+        - Long Running Automation
+      sequence:
+      - action: input_boolean.turn_off
+        metadata: {}
+        target:
+          entity_id: input_boolean.solax_automation_running
+        data: {}
+      - event: Solax Zappi Octopus Control
+        event_data:
+          message: 5001 has run for a long time @ {{now().strftime('%H:%M')}}.
+          title: Long Running Automation
+          class: high
     enabled: true
   mode: parallel
   trace:
