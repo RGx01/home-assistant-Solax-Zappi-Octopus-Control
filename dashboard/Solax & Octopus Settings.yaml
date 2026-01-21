@@ -1,4 +1,4 @@
-#v10.3.0
+#v10.3.1
 views:
   - badges:
       - type: entity
@@ -649,8 +649,8 @@ views:
               float(0) | round(1) }} kWh
 
               Total Remaining Dispatch: {{
-              state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh')
-              | float(0) | round(1) }} kWh
+              states('sensor.octopus_intelligent_remaining_dispatch') | float(0)
+              | round(1) }} kWh
 
               {%endif%}
 
@@ -1107,8 +1107,8 @@ views:
               float(0) | round(1) }} kWh
 
               Total Remaining Dispatch: {{
-              state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh')
-              | float(0) | round(1) }} kWh
+              states('sensor.octopus_intelligent_remaining_dispatch') | float(0)
+              | round(1) }} kWh
 
               {%endif%}
 
