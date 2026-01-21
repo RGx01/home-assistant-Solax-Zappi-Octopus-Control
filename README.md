@@ -153,7 +153,8 @@ automation: !include automations.yaml
 18. On the dashboard press <img width="106" height="34" alt="Screenshot 2025-12-28 at 15 34 28" src="https://github.com/user-attachments/assets/58a3f4c7-9bf1-4750-8fe2-ccad9702c8b8" />
     - **Note the "Battery Start Charge Time". To get the best Capacity Factor results the battery must be left to settle (the longer the better) after a discharging.**
     - Recommended settings are as follows:
-    <img width="444" height="727" alt="Screenshot 2025-11-30 at 06 47 43" src="https://github.com/user-attachments/assets/421e3e4e-7efd-4c64-8856-8ad51fadab7c" />
+	<img width="261" height="684" alt="Screenshot 2026-01-21 at 08 47 58" src="https://github.com/user-attachments/assets/95eec5fb-73df-4899-bc38-a2fd1b2343fd" />
+
 19. - set:
     	- solax battery size,
     	- solax inverter size,
