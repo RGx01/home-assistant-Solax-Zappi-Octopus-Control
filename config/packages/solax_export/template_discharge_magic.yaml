@@ -43,20 +43,24 @@ solax_export_template_discharge_magic:
 
           # Numeric state calculation, only runs when available
           state: >
-            {% set soc = states('sensor.solax_local_battery_soc') | float %}
-            {% set op_mode = states('sensor.solax_default_operation_mode') | int %}
-            {% set min_selfuse = states('sensor.solax_local_selfuse_battery_min_soc') | int %}
-            {% set min_feed_in = states('sensor.solax_local_feed_in_battery_min_soc') | int %}
-            {% set reserve_soc = states('sensor.battery_budget_reserve_soc') | int %}
-            {% set usable = state_attr('sensor.solax_discharge_capacity','usable_capacity') | float %}
-
-            {% set return_to_min_soc = min_selfuse if op_mode == 0 else min_feed_in %}
-            {% set denom = 100 - return_to_min_soc %}
-            {% if denom <= 0 %}
+            {% if is_state('binary_sensor.solax_local_battery_charging_period', 'on') %}
               0
             {% else %}
-              {% set target_soc = [return_to_min_soc, reserve_soc] | max %}
-              {{ ([usable * ((soc - target_soc) / denom), 0] | max) | round(2) }}
+              {% set soc = states('sensor.solax_local_battery_soc') | float %}
+              {% set op_mode = states('sensor.solax_default_operation_mode') | int %}
+              {% set min_selfuse = states('sensor.solax_local_selfuse_battery_min_soc') | int %}
+              {% set min_feed_in = states('sensor.solax_local_feed_in_battery_min_soc') | int %}
+              {% set reserve_soc = states('sensor.battery_budget_reserve_soc') | int %}
+              {% set usable = state_attr('sensor.solax_discharge_capacity','usable_capacity') | float %}
+
+              {% set return_to_min_soc = min_selfuse if op_mode == 0 else min_feed_in %}
+              {% set denom = 100 - return_to_min_soc %}
+              {% if denom <= 0 %}
+                0
+              {% else %}
+                {% set target_soc = [return_to_min_soc, reserve_soc] | max %}
+                {{ ([usable * ((soc - target_soc) / denom), 0] | max) | round(2) }}
+              {% endif %}
             {% endif %}
 
           attributes:
@@ -91,19 +95,23 @@ solax_export_template_discharge_magic:
 
           # Numeric state calculation, only runs when available
           state: >
-            {% set soc = states('sensor.solax_local_battery_soc') | float %}
-            {% set op_mode = states('sensor.solax_default_operation_mode') | int %}
-            {% set min_selfuse = states('sensor.solax_local_selfuse_battery_min_soc') | int %}
-            {% set min_feed_in = states('sensor.solax_local_feed_in_battery_min_soc') | int %}
-            {% set reserve_soc = states('sensor.battery_budget_reserve_soc') | int %}
-            
-            {% set return_to_min_soc = min_selfuse if op_mode == 0 else min_feed_in %}
-            {% set denom = 100 - return_to_min_soc %}
-            {% if denom <= 0 %}
+            {% if is_state('binary_sensor.solax_local_battery_charging_period', 'on') %}
               0
             {% else %}
-              {% set target_soc = [return_to_min_soc, reserve_soc] | max %}
-              {{ ([(soc - target_soc), 0] | max) | round(2) }}
+              {% set soc = states('sensor.solax_local_battery_soc') | float %}
+              {% set op_mode = states('sensor.solax_default_operation_mode') | int %}
+              {% set min_selfuse = states('sensor.solax_local_selfuse_battery_min_soc') | int %}
+              {% set min_feed_in = states('sensor.solax_local_feed_in_battery_min_soc') | int %}
+              {% set reserve_soc = states('sensor.battery_budget_reserve_soc') | int %}
+
+              {% set return_to_min_soc = min_selfuse if op_mode == 0 else min_feed_in %}
+              {% set denom = 100 - return_to_min_soc %}
+              {% if denom <= 0 %}
+                0
+              {% else %}
+                {% set target_soc = [return_to_min_soc, reserve_soc] | max %}
+                {{ ([(soc - target_soc), 0] | max) | round(2) }}
+              {% endif %}
             {% endif %}
 
 

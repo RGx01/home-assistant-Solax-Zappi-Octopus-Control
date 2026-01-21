@@ -52,3 +52,21 @@ octopus_dispatches_input_number:
       step: 1
       mode: box
       icon: mdi:car-clock
+    # SoC must be less than to engage companion charge
+    companion_charge_soc_distance_lte:
+      name: SoC Distance is L.T.E
+      unit_of_measurement: "%"
+      min: 5
+      max: 95
+      step: 1
+      mode: box
+      icon: mdi:battery-10
+    # SoC must be less than to engage companion charge
+    companion_worth_it:
+      name: Worth IT - Time left in HH
+      unit_of_measurement: "minutes"
+      min: 5
+      max: 25
+      step: 1
+      mode: box
+      icon: mdi:timer-plus

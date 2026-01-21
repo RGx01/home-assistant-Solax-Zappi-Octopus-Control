@@ -925,22 +925,22 @@
   max: 20
 - id: '5001'
   alias: 5001 - Solax Zappi Octopus Control
-  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v10.1.0 Update to 6hr
-    limit input_boolean\n---\n- v9.3.0 Added addition case for 6hr limit trigger in
-    the min_soc calculation. Moved time spent charging to house keeping automation.
-    Added a separate option for 6hr limit. This forces zappi to stopped and ignores
-    always in eco mode. Bit lazy as always in ECO+ when connected is now in the correct
-    state. We need to force 'stopped' as turning off smart charge isn't enough to
-    reliably end the charge. \n---\n- v9.0.0  tweaks to triggers and bug fixes\n---\n-
-    v8.2.0 tweaked the EV Ready logic in variables block, sometime EV charging bumps
-    into the target time and so min_soc doesn't return to default\n---\n- v8.0.0 Attempt
-    at trying to stop flip flopping around tiny Octopus dispatches and pauses\n---\n-
-    v7.3.2 Logic changed around EV pause logic to stop flip flopping the min_soc when
-    octopus does these small charges or small gaps between charges. Hopefully they
-    sort it out.\n---\n- v7.0.0 New function Battery Budget\n---\n- v1.0.2 Minor bug
-    fix to stop 'Finished Charge Message' when smart charge switch was off to begin
-    with\n---\n-  v1.0.0 \n + Indent-potent handling of inverter mode and settings\n
-    + Zappi and Octopus handling\n---\n\n"
+  description: "# 5001 - Solax Zappi Octopus Control\n---\n- v10.3.0 Companion Charging\n----\n-
+    v10.1.0 Update to 6hr limit input_boolean\n---\n- v9.3.0 Added addition case for
+    6hr limit trigger in the min_soc calculation. Moved time spent charging to house
+    keeping automation. Added a separate option for 6hr limit. This forces zappi to
+    stopped and ignores always in eco mode. Bit lazy as always in ECO+ when connected
+    is now in the correct state. We need to force 'stopped' as turning off smart charge
+    isn't enough to reliably end the charge. \n---\n- v9.0.0  tweaks to triggers and
+    bug fixes\n---\n- v8.2.0 tweaked the EV Ready logic in variables block, sometime
+    EV charging bumps into the target time and so min_soc doesn't return to default\n---\n-
+    v8.0.0 Attempt at trying to stop flip flopping around tiny Octopus dispatches
+    and pauses\n---\n- v7.3.2 Logic changed around EV pause logic to stop flip flopping
+    the min_soc when octopus does these small charges or small gaps between charges.
+    Hopefully they sort it out.\n---\n- v7.0.0 New function Battery Budget\n---\n-
+    v1.0.2 Minor bug fix to stop 'Finished Charge Message' when smart charge switch
+    was off to begin with\n---\n-  v1.0.0 \n + Indent-potent handling of inverter
+    mode and settings\n + Zappi and Octopus handling\n---\n\n"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -1070,17 +1070,19 @@
       hours: 0
       minutes: 0
       seconds: 30
-  - trigger: state
+  - alias: Solax Discharge - End
+    trigger: state
     entity_id:
     - input_boolean.battery_discharge_now
     id: Finished discharge
-    from: 'on'
-    to: 'off'
+    from:
+    - 'on'
+    to:
+    - 'off'
     for:
       hours: 0
       minutes: 0
-      seconds: 5
-    alias: Solax Discharge - End
+      seconds: 15
   - alias: Solax Discharge - End Secondary
     trigger: state
     entity_id:
@@ -1221,6 +1223,19 @@
     - None
     id: SOLAX SENSOR FAILED
     alias: SOLAX SENSORS FAILED
+  - alias: Companion Charge
+    trigger: state
+    entity_id:
+    - binary_sensor.octopus_energy_electricity_off_peak_companion
+    - input_boolean.companion_charging
+    to:
+    - 'on'
+    - 'off'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 15
+    id: Companion Charge
   conditions: []
   actions:
   - condition: template
@@ -1232,18 +1247,28 @@
         is_state('binary_sensor.free_electricity_today', 'on'))\nelse states('sensor.solax_default_operation_mode'))
         | int }}\n"
       min_soc: "{# ===============================================================\n
-        \  min_soc decision rules\n\n   Special triggers:\n     - 2330:\n         →
-        If prevent_ev_drain and (not charging OR use_grid): hold current SoC\n         →
-        Else: default_soc\n\n   Charging period (binary_sensor.solax_local_battery_charging_period
-        = on):\n     → Always default_soc\n\n   Charging→Disconnected transition (05:30–23:30):\n
-        \    → Always default_soc\n\n   NEW: Daytime dispatch exception (05:30–23:30):\n
-        \    - If dispatch_on = true AND ev_charging != charging:\n         → Force
-        default_soc\n\n   Normal conditions:\n     EV charging:\n       - If prevent_ev_drain
-        OR use_grid: hold current SoC\n       - Else: default_soc\n\n     EV not charging:\n
-        \      - If dispatch_on AND prevent_ev_drain AND use_grid: hold current SoC\n
-        \      - Else: default_soc\n\n   Summary:\n     → Two possible outputs: current_soc
-        (discharge blocked) OR default_soc (discharge allowed)\n   ===============================================================
-        #}\n\n  {% set ev_charging = is_state('sensor.zappi_plug_status','Charging')
+        \  min_soc decision rules\n\n   GLOBAL CONSTRAINT:\n     Discharge is only
+        permitted within the configured discharge window:\n       - input_datetime.solax_battery_start_discharge_time\n
+        \      - input_datetime.solax_battery_stop_discharge_time\n     The window
+        may cross midnight.\n     Outside this window:\n       → min_soc is ALWAYS
+        default_soc\n       → All other rules are ignored (including EV, dispatch,
+        and 2330)\n\n   Special trigger:\n     - 2330:\n         - If battery is already
+        discharging:\n             → default_soc\n         - If outside discharge
+        window:\n             → default_soc\n         - If use_grid is enabled:\n
+        \            → hold current SoC\n         - If prevent_ev_drain AND EV is
+        charging:\n             → hold current SoC\n         - Else:\n             →
+        default_soc\n\n   Local battery charging period\n   OR final 2 minutes before
+        charge stop:\n     → Always default_soc\n\n   Charging → Disconnected transitions
+        (05:30–23:30):\n     → Always default_soc\n\n   Daytime dispatch rule (05:30–23:30):\n
+        \    - If dispatch_on AND EV is NOT charging:\n         → Force default_soc\n\n
+        \  Normal conditions (only evaluated inside discharge window):\n\n     EV
+        charging:\n       - If prevent_ev_drain OR use_grid:\n           → hold current
+        SoC\n       - Else:\n           → default_soc\n\n     EV not charging:\n       -
+        If dispatch_on AND prevent_ev_drain AND use_grid:\n           → hold current
+        SoC\n       - Else:\n           → default_soc\n\n   Summary:\n     → Two possible
+        outputs:\n         - current_soc  → discharge blocked\n         - default_soc
+        \ → discharge allowed\n   ===============================================================
+        #}\n\n\n  {% set ev_charging = is_state('sensor.zappi_plug_status','Charging')
         -%}  \n  {% set dispatch_on = is_state('binary_sensor.octopus_intelligent_dispatching','on')
         or is_state('binary_sensor.octopus_energy_electricity_off_peak','on') -%}\n
         \ {% set use_grid = is_state('input_boolean.use_grid_during_octopus_dispatch','on')
@@ -1254,26 +1279,46 @@
         -%} \n  {% set discharging = is_state('binary_sensor.battery_discharge_now',
         'on') -%} \n  {% set target_time = states('sensor.octopus_intelligent_target_time')
         | as_datetime -%}\n  {% set today_0530 = now().replace(hour=5, minute=30,
-        second=0, microsecond=0) -%}\n  \n  {# --- PRECOMPUTE STOP TIMES + FINAL WINDOW
-        (works across midnight) --- #}\n\n  {% set stop1_raw = states('input_datetime.solax_battery_stop_charge_time')
+        second=0, microsecond=0) -%}\n\n  {# --- DISCHARGE ALLOWED WINDOW (can cross
+        midnight) --- #}\n\n  {% set discharge_start_raw = states('input_datetime.solax_battery_start_discharge_time')
+        -%}\n  {% set discharge_stop_raw  = states('input_datetime.solax_battery_stop_discharge_time')
+        -%}\n  \n  {% set discharge_start = today_at(discharge_start_raw) -%}\n  {%
+        set discharge_stop  = today_at(discharge_stop_raw) -%}\n  \n  {# If stop <=
+        start, window crosses midnight #}\n  {% if discharge_stop <= discharge_start
+        -%}\n    {% set in_discharge_window =\n          now() >= discharge_start
+        or now() < discharge_stop %}\n  {% else -%}\n    {% set in_discharge_window
+        =\n          now() >= discharge_start and now() < discharge_stop %}\n  {%
+        endif -%}\n  \n  {# --- PRECOMPUTE STOP TIMES + FINAL WINDOW (works across
+        midnight) --- #}\n  {% set turning_off = false %}\n  {% if trigger is defined
+        and trigger.to_state is defined and trigger.to_state %}\n    {% set turning_off
+        =\n      trigger.to_state.state == 'off'\n      and (\n        (\n          trigger.entity_id
+        ==\n            'binary_sensor.octopus_energy_electricity_off_peak_companion'\n
+        \         and trigger.from_state is defined\n          and trigger.from_state\n
+        \         and trigger.from_state.state == 'on'\n        )\n        or\n        (\n
+        \         trigger.entity_id == 'input_boolean.companion_charging'\n        )\n
+        \     )\n    %}\n  {% endif %}\n\n  {% set stop1_raw = states('input_datetime.solax_battery_stop_charge_time')
         -%} \n  {% set stop1 = today_at(stop1_raw) %} {% if stop1 < now() -%}\n    {%
-        set stop1 = stop1 + timedelta(days=1) -%}\n  {% endif -%}\n\n  {% if is_state('input_boolean.solaxchargeperiod2',
-        'on') -%}\n      {% set stop2_raw = states('input_datetime.solax_stop_charge_2')
-        -%}\n      {% set stop2 = today_at(stop2_raw) -%}\n      {% if stop2 < now()
-        -%}\n        {% set stop2 = stop2 + timedelta(days=1) -%}\n      {% endif
-        -%}\n  {% else -%}\n      {# If period2 is OFF, ignore stop2 by making it
-        \"far in future\" #}\n      {% set stop2 = stop1 + timedelta(days=9999) -%}\n
-        \ {% endif -%}\n\n  {# Determine which stop is next #} \n  {% if stop1 <=
-        stop2 -%}\n      {% set stop_time = stop1 -%}\n  {% else %}\n      {% set
-        stop_time = stop2 -%}\n  {% endif -%}\n\n  {# Are we in the final 2-minute
-        window before the upcoming stop? #} \n  {% set final_window = now() >= (stop_time
-        - timedelta(minutes=2)) and now() < stop_time -%}\n\n\n  {# --- Special triggers
-        override everything. --- #}\n  {% if trigger.id in ['2330'] -%}\n    {% if
-        discharging -%}\n      {{ default_soc }}\n    {% elif use_grid -%}\n      {{
-        current_soc }}\n    {% elif prevent_ev_drain and ev_charging -%}\n      {{
-        current_soc }}\n    {% else -%}\n      {{ default_soc }}\n    {% endif -%}\n\n\n
-        \ {# --- Local battery charging period OR final 2 minutes before stop ---
-        #}\n  {% elif is_state('binary_sensor.solax_local_battery_charging_period','on')
+        set stop1 = stop1 + timedelta(days=1) -%}\n  {% endif -%}\n\n  {# Treat chargeperiod2
+        as OFF if we're on the turning-off path #}\n  {% set chargeperiod2_effective
+        =\n       is_state('input_boolean.solaxchargeperiod2', 'on')\n       and not
+        turning_off\n  %}\n  \n  {% if chargeperiod2_effective -%}\n      {% set stop2_raw
+        = states('input_datetime.solax_stop_charge_2') -%}\n      {% set stop2 = today_at(stop2_raw)
+        -%}\n      {% if stop2 < now() -%}\n        {% set stop2 = stop2 + timedelta(days=1)
+        -%}\n      {% endif -%}\n  {% else -%}\n      {# Ignore stop2 completely #}\n
+        \     {% set stop2 = stop1 + timedelta(days=9999) -%}\n  {% endif -%}\n\n
+        \ {# Determine which stop is next #} \n  {% if stop1 <= stop2 -%}\n      {%
+        set stop_time = stop1 -%}\n  {% else %}\n      {% set stop_time = stop2 -%}\n
+        \ {% endif -%}\n\n  {# Are we in the final 2-minute window before the upcoming
+        stop? #} \n  {% set final_window = now() >= (stop_time - timedelta(minutes=2))
+        and now() < stop_time -%}\n\n\n  {# --- Special triggers override everything.
+        --- #}\n  {% if trigger.id in ['2330'] -%}\n    {% if discharging -%}\n      {{
+        default_soc }}\n    {% elif not in_discharge_window -%}\n      {{ default_soc
+        }}\n    {% elif use_grid -%}\n      {{ current_soc }}\n    {% elif prevent_ev_drain
+        and ev_charging -%}\n      {{ current_soc }}\n    {% else -%}\n      {{ default_soc
+        }}\n    {% endif -%}\n\n  {# --- OUTSIDE DISCHARGE WINDOW → FORCE DEFAULT
+        SOC --- #}      \n  {% elif not in_discharge_window -%}\n    {{ default_soc
+        }}\n\n  {# --- Local battery charging period OR final 2 minutes before stop
+        --- #}\n  {% elif is_state('binary_sensor.solax_local_battery_charging_period','on')
         or final_window -%}\n\n    {% if final_window and target_time.timestamp()
         > today_0530.timestamp() -%}\n        {# Use normal EV logic during final
         2 minutes when target_time > 05:30 #}\n        {# to avoid a second trigger
@@ -1292,12 +1337,12 @@
         default_soc }}\n    {% endif -%}\n\n\n    \n  {# --- Daytime Charging→Disconnected
         transition → allow discharge --- #}  \n  {% elif trigger.id in ['Charging
         to Disconnected','Connected to Disconnected','6h Limit'] and now() >= today_at(\"05:30\")
-        and now() <= today_at(\"23:30\") -%}\n    {{ default_soc }}\n\n  {# --- NEW:
-        Daytime dispatch, ev chargin OFF → force default discharge ---#}  \n  {% elif
-        dispatch_on and not ev_charging and now() >= today_at(\"05:30\") and now()
-        <= today_at(\"23:30\") -%}\n    {{ default_soc }}\n  {# --- Normal conditions
-        --- #}  \n  {% else -%}\n    {% if ev_charging -%}\n      {% if prevent_ev_drain
-        or use_grid %}\n        {% if ev_charging and ((target_time- timedelta(minutes=1))|as_timestamp
+        and now() <= today_at(\"23:30\") -%}\n    {{ default_soc }}\n\n  {# --- Daytime
+        dispatch, ev chargin OFF → force default discharge ---#}  \n  {% elif dispatch_on
+        and not ev_charging and now() >= today_at(\"05:30\") and now() <= today_at(\"23:30\")
+        -%}\n    {{ default_soc }}\n  {# --- Normal conditions --- #}  \n  {% else
+        -%}\n    {% if ev_charging -%}\n      {% if prevent_ev_drain or use_grid %}\n
+        \       {% if ev_charging and ((target_time- timedelta(minutes=1))|as_timestamp
         - now()|as_timestamp) <120 -%}\n          {{ default_soc }}\n        {% else
         %}\n          {{ current_soc }}\n        {% endif %}\n      {% else %}\n        {{
         default_soc }}\n      {% endif %}\n    {% else -%}\n      {% if dispatch_on
@@ -1988,6 +2033,87 @@
               seconds: '{{ [base_delay * (2 ** (loop - 1)), max_delay] | min }}
 
                 '
+    - conditions:
+      - condition: trigger
+        id:
+        - Companion Charge
+      - condition: state
+        entity_id: binary_sensor.free_electricity_today
+        state:
+        - 'off'
+      sequence:
+      - choose:
+        - conditions:
+          - alias: ON TEMPLATE
+            condition: template
+            value_template: "{{\n  (\n    trigger.entity_id ==\n      'binary_sensor.octopus_energy_electricity_off_peak_companion'\n
+              \   and trigger.from_state is not none\n    and trigger.from_state.state
+              == 'off'\n    and trigger.to_state.state == 'on'\n    and states('input_boolean.companion_charging')
+              == 'on'\n  )\n  or\n  (\n    trigger.entity_id ==\n      'input_boolean.companion_charging'\n
+              \   and trigger.from_state is not none\n    and trigger.from_state.state
+              != trigger.to_state.state\n    and trigger.to_state.state == 'on'\n
+              \   and states('binary_sensor.octopus_energy_electricity_off_peak_companion')
+              == 'on'\n  )\n}}\n"
+          sequence:
+          - if:
+            - condition: template
+              value_template: '{% set companion_soc_distance = states(''sensor.companion_soc_distance'')|float(0)
+                %}
+
+                {% set companion_soc_distance_limit = states(''input_number.companion_charge_soc_distance_lte'')|float(0)
+                %}
+
+                {{companion_soc_distance<= companion_soc_distance_limit}}'
+            then:
+            - action: script.solax_set_mode_and_settings
+              data:
+                settings:
+                  forced_charge_start2: '{% set start_time = as_datetime(today_at(states(''input_select.slot_start'')))|as_local
+                    %} {{ start_time.hour + start_time.minute * 256 }}'
+                  forced_charge_end2: '{% set end_time = as_datetime(today_at(states(''input_select.slot_end'')))|as_local
+                    %} {{ end_time.hour + end_time.minute * 256 }}'
+                  period2_enabled: '{{1}}'
+          - if:
+            - condition: template
+              value_template: "{{ trigger.entity_id ==\n           'binary_sensor.octopus_energy_electricity_off_peak_companion'
+                }}"
+            then:
+            - event: Solax Zappi Octopus Control
+              event_data:
+                message: Companion charge started @ {{now().strftime('%H:%M')}}
+                title: Companion Charge Started
+                class: normal
+              enabled: true
+          alias: 'ON'
+        - conditions:
+          - alias: OFF TEMPLATE
+            condition: template
+            value_template: "{{\n  (\n    trigger.entity_id ==\n      'binary_sensor.octopus_energy_electricity_off_peak_companion'\n
+              \   and trigger.from_state is not none\n    and trigger.from_state.state
+              == 'on'\n    and trigger.to_state.state == 'off'\n  )\n  or\n  (\n    trigger.entity_id
+              ==\n      'input_boolean.companion_charging'\n    and trigger.from_state
+              is not none\n    and trigger.from_state.state != trigger.to_state.state\n
+              \   and trigger.to_state.state == 'off'\n  )\n}}"
+          sequence:
+          - action: script.solax_set_mode_and_settings
+            data:
+              settings:
+                selfuse_battery_min_soc: '{{min_soc}}'
+                feedin_battery_min_soc: '{{min_soc}}'
+                period2_enabled: '{{0}}'
+          - if:
+            - condition: template
+              value_template: "{{ trigger.entity_id ==\n           'binary_sensor.octopus_energy_electricity_off_peak_companion'
+                }}"
+            then:
+            - event: Solax Zappi Octopus Control
+              event_data:
+                message: Companion charge stopped @ {{now().strftime('%H:%M')}}
+                title: Companion Charge Stopped
+                class: normal
+              enabled: true
+          alias: 'OFF'
+      alias: Companion Charge
     enabled: true
   - action: input_boolean.turn_off
     metadata: {}

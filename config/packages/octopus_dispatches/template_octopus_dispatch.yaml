@@ -187,7 +187,7 @@ octopus_dispatches_template_octopus_dispatch:
           unique_id: octopus_intelligent_remaining_dispatch
           icon: mdi:flash
           unit_of_measurement: "kWh"
-          device_class: energy
+        #  device_class: energy
           state_class: measurement
           state: >
             {% set total = states('input_number.octopus_intelligent_total_dispatch') %}

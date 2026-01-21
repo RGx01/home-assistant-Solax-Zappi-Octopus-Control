@@ -8,7 +8,17 @@ octopus_dispatches_template_octopus_tariff:
         unique_id: octopus_tariff_state
         icon: mdi:list-status
         state: >
-          {{ 'free' if states.binary_sensor.free_electricity_today is not none
-                and now() | as_timestamp >= (state_attr('binary_sensor.free_electricity_today','session_start') | as_timestamp(default=0) - 120)
-                and now() | as_timestamp <= (state_attr('binary_sensor.free_electricity_today','session_end') | as_timestamp(default=0))
-            else 'offpeak' if (is_state('binary_sensor.octopus_energy_electricity_off_peak','on') or is_state('binary_sensor.octopus_intelligent_dispatching','on')) else 'peak'}}
+          {{ 'free' 
+            if 
+              states.binary_sensor.free_electricity_today is not none
+              and now() | as_timestamp >= (state_attr('binary_sensor.free_electricity_today','session_start') | as_timestamp(default=0) - 120)
+              and now() | as_timestamp <= (state_attr('binary_sensor.free_electricity_today','session_end') | as_timestamp(default=0))
+            else 'offpeak' 
+            if 
+              (
+                is_state('binary_sensor.octopus_energy_electricity_off_peak','on') or 
+                is_state('binary_sensor.octopus_intelligent_dispatching','on') or 
+                is_state('binary_sensor.octopus_energy_electricity_off_peak_companion','on')
+              )
+            else 'peak'
+          }}

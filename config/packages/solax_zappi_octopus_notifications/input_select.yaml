@@ -23,6 +23,8 @@ solax_zappi_octopus_notifications_input_select:
         - Battery Export in Dispatch Gap - Started
         - Battery Export in Dispatch Gap - Finished
         - Peak Rate
+        - Companion Charge Stopped
+        - Companion Charge Started
       icon: mdi:alert
 
 

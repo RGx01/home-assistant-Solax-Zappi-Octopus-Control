@@ -1,4 +1,4 @@
-#v10.2.0
+#v10.3.0
 views:
   - badges:
       - type: entity
@@ -644,9 +644,13 @@ views:
 
               {%else%}
 
-              Total Remaining Dispatch: {{
+              Total Planned Dispatch: {{
               states('input_number.octopus_intelligent_total_dispatch') |
               float(0) | round(1) }} kWh
+
+              Total Remaining Dispatch: {{
+              state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh')
+              | float(0) | round(1) }} kWh
 
               {%endif%}
 
@@ -701,29 +705,25 @@ views:
             type: history-graph
             hours_to_show: 36
             entities:
-              - entity: sensor.daily_total_stored
-              - entity: sensor.daily_grid_stored
-              - entity: sensor.daily_solar_stored
-              - entity: sensor.daily_battery_use
-              - entity: sensor.daily_self_consumed
               - entity: sensor.daily_house_load
-              - entity: sensor.daily_manual_battery_export
-              - entity: sensor.export_daily
-              - entity: sensor.solax_discharge_capacity
-              - entity: sensor.solcast_pv_forecast_forecast_remaining_today
+              - entity: sensor.daily_battery_use
               - entity: sensor.battery_budget_reserve_kwh
-              - entity: sensor.battery_exportable_allowance_kwh
+              - entity: sensor.daily_self_consumed
+              - entity: sensor.daily_manual_battery_export
+              - entity: sensor.daily_solar_stored
+              - entity: sensor.solax_discharge_capacity
+              - entity: sensor.export_daily
+              - entity: sensor.solcast_pv_forecast_forecast_remaining_today
+              - entity: sensor.daily_battery_heating
               - entity: sensor.solax_local_feed_in_battery_min_soc
               - entity: sensor.solax_local_selfuse_battery_min_soc
-              - entity: sensor.solax_local_battery_soc
               - entity: sensor.battery_budget_reserve_soc
               - entity: input_number.solax_manual_forced_discharge_limit_soc
-              - entity: sensor.battery_exportable_allowance_soc
               - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to
               - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
+              - entity: sensor.solax_local_battery_soc
               - entity: input_number.solax_default_charge_to_limit_soc
               - entity: input_number.solax_default_discharge_limit_soc
-              - entity: sensor.daily_battery_heating
             grid_options:
               columns: full
               rows: 14
@@ -1102,9 +1102,13 @@ views:
 
               {%else%}
 
-              Total Remaining Dispatch: {{
+              Total Planned Dispatch: {{
               states('input_number.octopus_intelligent_total_dispatch') |
               float(0) | round(1) }} kWh
+
+              Total Remaining Dispatch: {{
+              state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh')
+              | float(0) | round(1) }} kWh
 
               {%endif%}
 
@@ -2077,6 +2081,16 @@ views:
                 state: 'on'
       - type: grid
         cards:
+          - type: history-graph
+            hours_to_show: 36
+            entities:
+              - entity: sensor.solax_local_battery_soc
+              - entity: sensor.battery_budget_reserve_soc
+              - entity: sensor.battery_exportable_allowance_soc
+              - entity: input_number.solax_default_charge_to_limit_soc
+              - entity: input_number.solax_default_discharge_limit_soc
+            grid_options:
+              columns: full
           - type: entities
             entities:
               - type: section
@@ -2176,18 +2190,38 @@ views:
                 state: 'on'
       - type: grid
         cards:
-          - title: SoC
-            type: history-graph
-            hours_to_show: 36
+          - type: entities
             entities:
-              - entity: sensor.solax_local_battery_soc
-              - entity: sensor.battery_budget_reserve_soc
-              - entity: sensor.battery_exportable_allowance_soc
-              - entity: input_number.solax_default_charge_to_limit_soc
-              - entity: input_number.solax_default_discharge_limit_soc
-            grid_options:
-              columns: full
-              rows: auto
+              - type: section
+                label: >-
+                  Allow House Battery Charging whilst EV Charging. Whole half
+                  Hour(HH) Slots on IOG are billed at off peak rates whilst EV
+                  is charging (during normal peak rate hours). The HH includes
+                  house usage.
+              - entity: input_boolean.companion_charging
+              - type: section
+                label: >-
+                  Contiguous Mode Across HH's allows HH slots to transition
+                  without turning off (unless within grace period). Turning off
+                  will force companion sensor to 'off' state at the start of
+                  each HH until 'worth it' is re-evealuated.
+              - entity: input_boolean.companion_charging_contiguous_mode
+              - type: section
+                label: >-
+                  Worth it, this allows you to set the number of minutes left in
+                  the HH Slot where you deem it is still worth charging. You
+                  need to account for how long inverter modes take to switch.
+              - entity: input_number.companion_worth_it
+              - type: section
+                label: >-
+                  If the SoC distance from Battery Reserve Target is less than
+                  this then allow charging.
+              - entity: input_number.companion_charge_soc_distance_lte
+              - entity: sensor.companion_soc_distance
+                name: Current SoC Distance
+            title: Dispatch Companion Charging
+            show_header_toggle: false
+            state_color: true
         column_span: 1
     cards: []
     subview: true
@@ -2323,20 +2357,29 @@ views:
                 tap_action:
                   action: more-info
               - type: entity
+                show_state: true
                 show_icon: true
                 entity: sensor.solax_discharge_capacity
                 tap_action:
                   action: more-info
+                state_content:
+                  - name
+                  - state
+                name: Capacity
               - type: entity
                 show_state: true
                 show_icon: true
                 entity: sensor.battery_exportable_allowance_soc
-                name: Exportable Allowance
+                name: Exportable
                 color: deep-purple
                 tap_action:
                   action: more-info
+                state_content:
+                  - name
+                  - state
             grid_options:
               columns: full
+              rows: 1
           - type: entities
             entities:
               - type: section

@@ -15,3 +15,15 @@ octopus_dispatches_input_boolean:
     solar_export_priority:
       name: Smart Charge after Sun Elevation Threshold
       icon: mdi:solar-power
+    #Enable Companion Charging
+    companion_charging:
+      name: Companion Charge
+      icon: mdi:battery-charging-outline
+    #Enable Companion Charging
+    companion_charging_during_off_peak:
+      name: Companion Charge During Off-Peak
+      icon: mdi:timer
+    #Enable Companion Charging
+    companion_charging_contiguous_mode:
+      name: Contiguous Mode
+      icon: mdi:arrow-right

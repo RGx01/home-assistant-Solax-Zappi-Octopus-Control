@@ -209,12 +209,13 @@ solax_loads_template_solax_extras:
             {% set raw = max(0, P - I - B) %}
 
             {# Ignore heater inference during strong charge or discharge #}
-            {% set BUS_DOMINANT_TH = 2000 %}
+            {% set BUS_DOMINANT_TH = 4000 %}
+            {% set NOISE_FLOOR = 150 %}
 
             {% if B | abs > BUS_DOMINANT_TH %}
               0
             {% else %}
-              {{ raw }}
+              {{ raw if raw > NOISE_FLOOR else 0 }}
             {% endif %}
 
 
