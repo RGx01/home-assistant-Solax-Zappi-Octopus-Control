@@ -1,6 +1,7 @@
     ######################################################
     # Change log - this may only work for X1 hybrid g4
     ######################################################
+    # v1.4.0     Removed Battery Power Adjusted
     # v1.3.0     Added Battery power from VxA
     # v1.2.1     Changed Device Class to Battery for SoC
     # v1.2.0     Increased reliabilty
@@ -224,19 +225,6 @@ solax_realtime_templates:
           state: >
             {% if state_attr('sensor.solax_local', 'Data')[16] > 32767 %}{{ state_attr('sensor.solax_local', 'Data')[16] - 65536 }}
             {% else %}{{ state_attr('sensor.solax_local', 'Data')[16] }}{% endif %}
-          unit_of_measurement: "W"
-          state_class: measurement
-          device_class: "power"
-
-        # Assuming 75W for running inverter and battery plus 95% conversion efficiency; if above 1kW, trust the inverter
-        - name: "Solax Local Battery Power Adjusted"
-          unique_id: solax_local_battery_power_adjusted
-          state: >
-            {% set ac = states('sensor.solax_local_inverter_power')|int %}
-            {% set battery = states('sensor.solax_local_battery_power')|int %}
-            {% set pv = (states('sensor.solax_local_pv_output')|float * 0.95)| round(0) %}
-            {% set adjusted = (0 - ac + pv - 75) if (ac + pv != 0) else 0 %}
-            {{ adjusted if (adjusted < battery and adjusted < 1000) else battery }}
           unit_of_measurement: "W"
           state_class: measurement
           device_class: "power"

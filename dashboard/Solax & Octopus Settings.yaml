@@ -1,4 +1,4 @@
-#v10.3.1
+#v10.5
 views:
   - badges:
       - type: entity
@@ -271,6 +271,67 @@ views:
         column_span: 3
       - type: grid
         cards:
+          - type: custom:power-flow-card-plus
+            entities:
+              battery:
+                entity: sensor.solax_local_battery_power_adjusted
+                state_of_charge: sensor.solax_local_battery_soc
+                invert_state: true
+              grid:
+                entity:
+                  consumption: sensor.solax_local_grid_used_power
+                  production: sensor.solax_local_grid_export_power
+                tap_action:
+                  action: more-info
+                secondary_info: {}
+              home:
+                entity: sensor.solax_local_load_power
+                color_value: true
+                name: Home
+                use_metadata: true
+                override_state: true
+              individual:
+                - entity: sensor.zappi_power_ct_internal_load
+                  secondary_info: {}
+                  name: Zappi
+                  use_metadata: false
+                  display_zero: true
+              fossil_fuel_percentage:
+                state_type: power
+                entity: sensor.electricity_maps_grid_fossil_fuel_percentage
+                color_value: true
+                color_icon: true
+                display_zero: true
+                name: Low Carbon
+                unit_white_space: true
+                use_metadata: true
+                display_zero_state: false
+              solar:
+                entity: sensor.solax_local_pv_output
+                color_value: true
+                color_icon: true
+            clickable_entities: true
+            display_zero_lines:
+              mode: transparency
+              transparency: 50
+              grey_color:
+                - 189
+                - 189
+                - 189
+            use_new_flow_rate_model: true
+            w_decimals: 0
+            kw_decimals: 1
+            min_flow_rate: 0.75
+            max_expected_power: 6000
+            min_expected_power: 0.01
+            watt_threshold: 1000
+            transparency_zero_lines: 0
+            max_flow_rate: 10
+            grid_options:
+              columns: 12
+              rows: 6
+      - type: grid
+        cards:
           - type: entities
             entities:
               - type: section
@@ -359,67 +420,6 @@ views:
             tap_action:
               action: navigate
               navigation_path: /home-energy/octopus-ev-charging
-      - type: grid
-        cards:
-          - type: custom:power-flow-card-plus
-            entities:
-              battery:
-                entity: sensor.solax_local_battery_power_adjusted
-                state_of_charge: sensor.solax_local_battery_soc
-                invert_state: true
-              grid:
-                entity:
-                  consumption: sensor.solax_local_grid_used_power
-                  production: sensor.solax_local_grid_export_power
-                tap_action:
-                  action: more-info
-                secondary_info: {}
-              home:
-                entity: sensor.solax_local_load_power
-                color_value: true
-                name: Home
-                use_metadata: true
-                override_state: true
-              individual:
-                - entity: sensor.zappi_power_ct_internal_load
-                  secondary_info: {}
-                  name: Zappi
-                  use_metadata: false
-                  display_zero: true
-              fossil_fuel_percentage:
-                state_type: power
-                entity: sensor.electricity_maps_grid_fossil_fuel_percentage
-                color_value: true
-                color_icon: true
-                display_zero: true
-                name: Low Carbon
-                unit_white_space: true
-                use_metadata: true
-                display_zero_state: false
-              solar:
-                entity: sensor.solax_local_pv_output
-                color_value: true
-                color_icon: true
-            clickable_entities: true
-            display_zero_lines:
-              mode: transparency
-              transparency: 50
-              grey_color:
-                - 189
-                - 189
-                - 189
-            use_new_flow_rate_model: true
-            w_decimals: 0
-            kw_decimals: 1
-            min_flow_rate: 0.75
-            max_expected_power: 6000
-            min_expected_power: 0.01
-            watt_threshold: 1000
-            transparency_zero_lines: 0
-            max_flow_rate: 10
-            grid_options:
-              columns: 12
-              rows: 6
       - type: grid
         cards:
           - type: entities
@@ -626,58 +626,117 @@ views:
 
               {% if states('sensor.zappi_plug_status') != 'EV Disconnected'
                  and state_attr('binary_sensor.ev_currently_plugged_in','ev_name') not in [None, 'Unknown'] %}
+              ----------------------
 
-              Charge Target: {{ target_fraction*100 }}% of {{ battery_size }}
-              kWh = {{(target_fraction * battery_size) | round(1)}} kWh
+              EV DETAILS
 
+              ----------------------
 
-              Estimated Dispatch: {{ ((target_fraction * battery_size) /
-              losses_fraction) | round(1) }}
+              <pre>
 
+              {{ "%-22s %s" | format("Current Time:", now().strftime('%d %b %Y,
+              %H:%M')) }}
 
-              {% if states('input_number.octopus_intelligent_total_dispatch') |
-              float(0) < 1 %}
+              {{ "%-22s %s" | format("EV Connected at:",
+              (states('sensor.zappi_last_connected')|as_datetime|as_local).strftime('%d
+              %b %Y, %H:%M')) }}
 
-              Next Schedule @:
-              {{(states('sensor.octopus_schedule_time')|as_datetime|as_local).strftime("%H:%M")
-              }}
+              {{ "%-22s %s" | format("EV:",
+              state_attr('binary_sensor.ev_currently_plugged_in','ev_name')) }}
 
-              {%else%}
+              {{ "%-22s %s kWh" | format("EV Size:",
+              states('sensor.connected_ev_battery_size')) }}
 
-              Total Planned Dispatch: {{
-              states('input_number.octopus_intelligent_total_dispatch') |
-              float(0) | round(1) }} kWh
+              {{ "%-22s %s%%" | format("EV SoC:",
+              states('sensor.ev_active_battery_level') | int(0)) }}
 
-              Total Remaining Dispatch: {{
-              states('sensor.octopus_intelligent_remaining_dispatch') | float(0)
-              | round(1) }} kWh
+              {{ "%-22s %s kWh" | format("Registered Size:", battery_size) }}
 
-              {%endif%}
+              </pre>
 
-              **EV Details**
+              ----------------------
 
-              EV: {{
-              state_attr('binary_sensor.ev_currently_plugged_in','ev_name') }}
+              TARGET DETAILS
 
-              EV Size: {{ states('sensor.connected_ev_battery_size') }} kWh
+              ----------------------
 
-              EV SoC: {{ states('sensor.ev_active_battery_level') | int(0) }}%
+              <pre>
 
-              Registered EV Size: {{ battery_size }} kWh
+              {{ "%-22s %s" | format("Ready by:",
+              (states('sensor.octopus_intelligent_target_time')|as_datetime|as_local).strftime('%d
+              %b %Y, %H:%M')) }}
+
+              {{ "%-22s %s" | format(
+                "Charge Target:",
+                (target_fraction * 100) | round(0) ~ "% of " ~ battery_size ~ " kWh = " )}}
+              {{ "%-22s %s kWh" | format(
+                "",
+                (target_fraction * battery_size) | round(1)
+              ) }}
+
+              {{ "%-22s %s kWh" | format(
+                "Estimated Dispatch:",
+                ((target_fraction * battery_size) / losses_fraction) | round(1)
+              ) }}
+
+              </pre>
+
+              ----------------------
+
+              PLANNED vs REMAINING
+
+              ----------------------
+
+              <pre>
+                {%- if states('select.zappi_charge_mode') == 'Stopped' or states('switch.octopus_intelligent_smart_charge') == 'off'-%}
+              {{ "%-22s %s" | format(
+                "Next Schedule @:",
+                (states('sensor.octopus_schedule_time')|as_datetime|as_local).strftime("%H:%M")
+              ) }}
+
+              {%- else -%}
+
+              {{ "%-22s %s kWh" | format(
+                "Total Planned:",
+                states('input_number.octopus_intelligent_total_dispatch') | float(0) | round(1)
+              ) }}
+
+              {{ "%-22s %s kWh" | format(
+                "Remaining:",
+                states('sensor.octopus_intelligent_remaining_dispatch') | float(0) | round(1)
+              ) }}
+
+              {{ "%-22s %s hr" | format(
+                "Time Spent Charging:",
+                states('sensor.time_spent_charging_ev')| float(0) | round(1)
+              ) }}
+
+              {%- endif %}
+
+              </pre>
 
 
               {% endif %}
+
 
               {% if
               state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh')
               is not none %}
 
-              **Planned Dispatches**
 
-                {% set current = state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh') | list -%}
-                {%- for dispatch in current %}
-                  {{ dispatch.dispatch }}
-                {%- endfor -%}
+              ----------------------
+
+              REMAINING DISPATCHES
+
+              ----------------------
+
+              <pre>
+                {%- set current = state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh') | list -%}
+                {% for dispatch in current %}
+              {{ dispatch.dispatch }}
+                {%- endfor %}
+              </pre>
+
               {%- endif -%}
             visibility:
               - condition: or
@@ -689,39 +748,102 @@ views:
                     entity: sensor.octopus_total_planned_dispatch
                     above: 0
           - type: markdown
-            content: >
-              Octopus Completed Dispatches Since EV Last Connected
+            content: >-
+              {% if states('sensor.zappi_plug_status') == 'EV Disconnected' %}
+
+              ----------------------
+
+              LAST EV CHARGE SUMMARY
+
+              ----------------------
+
+              <pre>
+
+              {{ "%-22s %s" | format("EV Disconnected at:",
+              (states('sensor.zappi_last_disconnected')|as_datetime|as_local).strftime('%d
+              %b %Y, %H:%M')) }}
+
+              {{ "%-22s %s" | format("EV:",
+              states('select.ev_charging_daily_vehicle')) }}
+
+              </pre>
 
 
-              {% set current =
-              state_attr('sensor.octopus_total_completed_dispatch','completed_dispatches_kwh')|list|
-              map(attribute='dispatch') | list %}
-                {% for completed in current%}
-                  {{completed}}
-                {%- endfor %}
+              ----------------------
+
+              TOTAL DISPATCHED
+
+              ----------------------
+
+              <pre>
+                {%- if states('select.zappi_charge_mode') == 'Stopped' -%}
+
+              {{ "%-22s %s kWh" | format(
+                "Total Planned:",
+                states('input_number.octopus_intelligent_total_dispatch')| float(0) | round(1)
+              ) }}
+
+              {{ "%-22s %s kWh" | format(
+                "Total Dispatched:",
+                states('sensor.zappi_charge_added_session')| float(0) | round(1)
+              ) }}
+
+              {{ "%-22s %s hr" | format(
+                "Time Spent Charging:",
+                states('sensor.time_spent_charging_ev')| float(0) | round(1)
+              ) }}
+
+
+              {%- endif -%}
+
+              </pre>
+
+
+              {% endif %}
+
+              ----------------------
+
+              COMPLETED DISPATCHES
+
+              ----------------------
+
+              <pre>
+
+              {%- set current =
+                state_attr(
+                  'sensor.octopus_total_completed_dispatch',
+                  'completed_dispatches_kwh'
+                ) | default([], true)
+                | map(attribute='dispatch')
+                | list
+              %}
+                {%- for completed in current %}
+              {{completed}}
+                {%- endfor -%}
+              </pre>
       - type: grid
         cards:
           - title: kWh/SoC
             type: history-graph
             hours_to_show: 36
             entities:
+              - entity: sensor.solax_discharge_capacity
+              - entity: sensor.battery_budget_reserve_kwh
               - entity: sensor.daily_house_load
               - entity: sensor.daily_battery_use
-              - entity: sensor.battery_budget_reserve_kwh
               - entity: sensor.daily_self_consumed
               - entity: sensor.daily_manual_battery_export
               - entity: sensor.daily_solar_stored
-              - entity: sensor.solax_discharge_capacity
               - entity: sensor.export_daily
               - entity: sensor.solcast_pv_forecast_forecast_remaining_today
               - entity: sensor.daily_battery_heating
+              - entity: sensor.solax_local_battery_soc
+              - entity: sensor.battery_budget_reserve_soc
               - entity: sensor.solax_local_feed_in_battery_min_soc
               - entity: sensor.solax_local_selfuse_battery_min_soc
-              - entity: sensor.battery_budget_reserve_soc
               - entity: input_number.solax_manual_forced_discharge_limit_soc
               - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to
               - entity: sensor.solax_local_feed_in_battery_charge_from_grid_to
-              - entity: sensor.solax_local_battery_soc
               - entity: input_number.solax_default_charge_to_limit_soc
               - entity: input_number.solax_default_discharge_limit_soc
             grid_options:
@@ -738,6 +860,7 @@ views:
               - entity: select.daily_grid_import
                 name: Log
               - entity: binary_sensor.octopus_energy_electricity_off_peak_companion
+                name: Off Peak Companion
               - entity: binary_sensor.octopus_energy_electricity_off_peak
               - entity: binary_sensor.octopus_intelligent_dispatching
               - entity: sensor.zappi_plug_status
@@ -1043,6 +1166,14 @@ views:
         cards:
           - type: heading
             heading_style: subtitle
+            badges:
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: sensor.zappi_power_ct_internal_load
+                state_content:
+                  - name
+                  - state
           - type: history-graph
             hours_to_show: 36
             entities:
@@ -1084,58 +1215,117 @@ views:
 
               {% if states('sensor.zappi_plug_status') != 'EV Disconnected'
                  and state_attr('binary_sensor.ev_currently_plugged_in','ev_name') not in [None, 'Unknown'] %}
+              ----------------------
 
-              Charge Target: {{ target_fraction*100 }}% of {{ battery_size }}
-              kWh = {{(target_fraction * battery_size) | round(1)}} kWh
+              EV DETAILS
 
+              ----------------------
 
-              Estimated Dispatch: {{ ((target_fraction * battery_size) /
-              losses_fraction) | round(1) }}
+              <pre>
 
+              {{ "%-22s %s" | format("Current Time:", now().strftime('%d %b %Y,
+              %H:%M')) }}
 
-              {% if states('input_number.octopus_intelligent_total_dispatch') |
-              float(0) < 1 %}
+              {{ "%-22s %s" | format("EV Connected at:",
+              (states('sensor.zappi_last_connected')|as_datetime|as_local).strftime('%d
+              %b %Y, %H:%M')) }}
 
-              Next Schedule @:
-              {{(states('sensor.octopus_schedule_time')|as_datetime|as_local).strftime("%H:%M")
-              }}
+              {{ "%-22s %s" | format("EV:",
+              state_attr('binary_sensor.ev_currently_plugged_in','ev_name')) }}
 
-              {%else%}
+              {{ "%-22s %s kWh" | format("EV Size:",
+              states('sensor.connected_ev_battery_size')) }}
 
-              Total Planned Dispatch: {{
-              states('input_number.octopus_intelligent_total_dispatch') |
-              float(0) | round(1) }} kWh
+              {{ "%-22s %s%%" | format("EV SoC:",
+              states('sensor.ev_active_battery_level') | int(0)) }}
 
-              Total Remaining Dispatch: {{
-              states('sensor.octopus_intelligent_remaining_dispatch') | float(0)
-              | round(1) }} kWh
+              {{ "%-22s %s kWh" | format("Registered Size:", battery_size) }}
 
-              {%endif%}
+              </pre>
 
-              **EV Details**
+              ----------------------
 
-              EV: {{
-              state_attr('binary_sensor.ev_currently_plugged_in','ev_name') }}
+              TARGET DETAILS
 
-              EV Size: {{ states('sensor.connected_ev_battery_size') }} kWh
+              ----------------------
 
-              EV SoC: {{ states('sensor.ev_active_battery_level') | int(0) }}%
+              <pre>
 
-              Registered EV Size: {{ battery_size }} kWh
+              {{ "%-22s %s" | format("Ready by:",
+              (states('sensor.octopus_intelligent_target_time')|as_datetime|as_local).strftime('%d
+              %b %Y, %H:%M')) }}
+
+              {{ "%-22s %s" | format(
+                "Charge Target:",
+                (target_fraction * 100) | round(0) ~ "% of " ~ battery_size ~ " kWh = " )}}
+              {{ "%-22s %s kWh" | format(
+                "",
+                (target_fraction * battery_size) | round(1)
+              ) }}
+
+              {{ "%-22s %s kWh" | format(
+                "Estimated Dispatch:",
+                ((target_fraction * battery_size) / losses_fraction) | round(1)
+              ) }}
+
+              </pre>
+
+              ----------------------
+
+              PLANNED vs REMAINING
+
+              ----------------------
+
+              <pre>
+                {%- if states('select.zappi_charge_mode') == 'Stopped' or states('switch.octopus_intelligent_smart_charge') == 'off'-%}
+              {{ "%-22s %s" | format(
+                "Next Schedule @:",
+                (states('sensor.octopus_schedule_time')|as_datetime|as_local).strftime("%H:%M")
+              ) }}
+
+              {%- else -%}
+
+              {{ "%-22s %s kWh" | format(
+                "Total Planned:",
+                states('input_number.octopus_intelligent_total_dispatch') | float(0) | round(1)
+              ) }}
+
+              {{ "%-22s %s kWh" | format(
+                "Remaining:",
+                states('sensor.octopus_intelligent_remaining_dispatch') | float(0) | round(1)
+              ) }}
+
+              {{ "%-22s %s hr" | format(
+                "Time Spent Charging:",
+                states('sensor.time_spent_charging_ev')| float(0) | round(1)
+              ) }}
+
+              {%- endif %}
+
+              </pre>
 
 
               {% endif %}
+
 
               {% if
               state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh')
               is not none %}
 
-              **Planned Dispatches**
 
-                {% set current = state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh') | list -%}
-                {%- for dispatch in current %}
-                  {{ dispatch.dispatch }}
-                {%- endfor -%}
+              ----------------------
+
+              REMAINING DISPATCHES
+
+              ----------------------
+
+              <pre>
+                {%- set current = state_attr('sensor.octopus_total_planned_dispatch','dispatches_kwh') | list -%}
+                {% for dispatch in current %}
+              {{ dispatch.dispatch }}
+                {%- endfor %}
+              </pre>
+
               {%- endif -%}
             visibility:
               - condition: or
@@ -1147,15 +1337,79 @@ views:
                     entity: sensor.octopus_total_planned_dispatch
                     above: 0
           - type: markdown
-            content: >
-              Octopus Completed Dispatches Since EV Last Connected
+            content: >-
+              {% if states('sensor.zappi_plug_status') == 'EV Disconnected' %}
 
-              {% set current =
-              state_attr('sensor.octopus_total_completed_dispatch','completed_dispatches_kwh')|list|
-              map(attribute='dispatch') | list %}
+              ----------------------
+
+              LAST EV CHARGE SUMMARY
+
+              ----------------------
+
+              <pre>
+
+              {{ "%-22s %s" | format("EV Disconnected at:",
+              (states('sensor.zappi_last_disconnected')|as_datetime|as_local).strftime('%d
+              %b %Y, %H:%M')) }}
+
+              {{ "%-22s %s" | format("EV:",
+              states('select.ev_charging_daily_vehicle')) }}
+
+              </pre>
+
+
+              ----------------------
+
+              TOTAL DISPATCHED
+
+              ----------------------
+
+              <pre>
+                {%- if states('select.zappi_charge_mode') == 'Stopped' -%}
+
+              {{ "%-22s %s kWh" | format(
+                "Total Planned:",
+                states('input_number.octopus_intelligent_total_dispatch')| float(0) | round(1)
+              ) }}
+
+              {{ "%-22s %s kWh" | format(
+                "Total Dispatched:",
+                states('sensor.zappi_charge_added_session')| float(0) | round(1)
+              ) }}
+
+              {{ "%-22s %s hr" | format(
+                "Time Spent Charging:",
+                states('sensor.time_spent_charging_ev')| float(0) | round(1)
+              ) }}
+
+
+              {%- endif -%}
+
+              </pre>
+
+
+              {% endif %}
+
+              ----------------------
+
+              COMPLETED DISPATCHES
+
+              ----------------------
+
+              <pre>
+
+              {%- set current =
+                state_attr(
+                  'sensor.octopus_total_completed_dispatch',
+                  'completed_dispatches_kwh'
+                ) | default([], true)
+                | map(attribute='dispatch')
+                | list
+              %}
                 {%- for completed in current %}
-                  {{completed}}
+              {{completed}}
                 {%- endfor -%}
+              </pre>
         column_span: 2
       - type: grid
         cards:
@@ -1451,10 +1705,10 @@ views:
             type: history-graph
             hours_to_show: 36
             entities:
-              - entity: sensor.solax_local_feed_in_battery_min_soc
-              - entity: sensor.solax_local_selfuse_battery_min_soc
               - entity: sensor.solax_local_battery_soc
               - entity: sensor.battery_budget_reserve_soc
+              - entity: sensor.solax_local_feed_in_battery_min_soc
+              - entity: sensor.solax_local_selfuse_battery_min_soc
               - entity: input_number.solax_manual_forced_discharge_limit_soc
               - entity: sensor.battery_exportable_allowance_soc
               - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to
@@ -1474,18 +1728,18 @@ views:
             type: history-graph
             hours_to_show: 36
             entities:
+              - entity: sensor.solax_discharge_capacity
+              - entity: sensor.battery_budget_reserve_kwh
               - entity: sensor.daily_total_stored
               - entity: sensor.daily_grid_stored
               - entity: sensor.daily_solar_stored
+              - entity: sensor.battery_exportable_allowance_kwh
               - entity: sensor.daily_battery_use
               - entity: sensor.daily_self_consumed
               - entity: sensor.daily_house_load
               - entity: sensor.daily_manual_battery_export
               - entity: sensor.export_daily
-              - entity: sensor.solax_discharge_capacity
               - entity: sensor.solcast_pv_forecast_forecast_remaining_today
-              - entity: sensor.battery_budget_reserve_kwh
-              - entity: sensor.battery_exportable_allowance_kwh
               - entity: select.daily_grid_import
                 name: Log
               - entity: sensor.solax_local_inverter_mode
@@ -1501,12 +1755,12 @@ views:
             type: history-graph
             hours_to_show: 36
             entities:
+              - entity: sensor.solax_local_battery_power_adjusted
               - entity: select.daily_grid_import
                 name: Log
               - entity: sensor.solax_local_battery_use_in
               - entity: sensor.solax_local_battery_use_in_from_grid
               - entity: sensor.solax_local_battery_in_from_solar
-              - entity: sensor.solax_local_battery_power_adjusted
               - entity: sensor.solax_local_self_consumption_power
               - entity: sensor.solax_local_house_load_power
               - entity: sensor.solax_local_battery_dump_power
@@ -2212,6 +2466,7 @@ views:
                   the HH Slot where you deem it is still worth charging. You
                   need to account for how long inverter modes take to switch.
               - entity: input_number.companion_worth_it
+              - entity: input_select.do_not_charge_after
               - type: section
                 label: >-
                   If the SoC distance from Battery Reserve Target is less than
@@ -2219,7 +2474,7 @@ views:
               - entity: input_number.companion_charge_soc_distance_lte
               - entity: sensor.companion_soc_distance
                 name: Current SoC Distance
-            title: Dispatch Companion Charging
+            title: IOG Dispatch Companion Charging
             show_header_toggle: false
             state_color: true
         column_span: 1
@@ -2642,26 +2897,27 @@ views:
             type: history-graph
             hours_to_show: 36
             entities:
+              - entity: sensor.solax_discharge_capacity
+              - entity: sensor.battery_budget_reserve_kwh
               - entity: sensor.daily_total_stored
               - entity: sensor.daily_grid_stored
               - entity: sensor.daily_solar_stored
+              - entity: sensor.battery_exportable_allowance_kwh
               - entity: sensor.daily_battery_use
               - entity: sensor.daily_self_consumed
               - entity: sensor.daily_house_load
               - entity: sensor.daily_manual_battery_export
               - entity: sensor.export_daily
-              - entity: sensor.solax_discharge_capacity
               - entity: sensor.solcast_pv_forecast_forecast_remaining_today
-              - entity: sensor.battery_budget_reserve_kwh
-              - entity: sensor.battery_exportable_allowance_kwh
+              - entity: select.daily_grid_import
               - entity: sensor.zappi_plug_status
                 name: Plug Status
               - entity: sensor.solax_local_manual_mode_behaviour
                 name: Mode
-              - entity: sensor.solax_local_feed_in_battery_min_soc
-              - entity: sensor.solax_local_selfuse_battery_min_soc
               - entity: sensor.solax_local_battery_soc
               - entity: sensor.battery_budget_reserve_soc
+              - entity: sensor.solax_local_feed_in_battery_min_soc
+              - entity: sensor.solax_local_selfuse_battery_min_soc
               - entity: input_number.solax_manual_forced_discharge_limit_soc
               - entity: sensor.battery_exportable_allowance_soc
               - entity: sensor.solax_local_selfuse_battery_chrg_frm_grd_to

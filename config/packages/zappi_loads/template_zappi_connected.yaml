@@ -1,4 +1,5 @@
 ########################################
+# v10.5.0 Removed actions from zappi_last_disconnected
 # v1.0 
 # Template to for when the ev is last connected
 # and last disconnected
@@ -20,14 +21,14 @@ zappi_loads_template_zappi_connected:
             - Charging
             - Waiting for EV
             - Fault
-      action:
-        - if: "{{ trigger.to_state.state not in ['unknown','unavailable','None','none'] }}"
-          then:
-            - service: input_number.set_value
-              target:
-                entity_id: input_number.octopus_intelligent_total_dispatch
-              data:
-                value: 0
+      # action:
+      #   - if: "{{ trigger.to_state.state not in ['unknown','unavailable','None','none'] }}"
+      #     then:
+      #       - service: input_number.set_value
+      #         target:
+      #           entity_id: input_number.octopus_intelligent_total_dispatch
+      #         data:
+      #           value: 0
       sensor:
         - name: Zappi Last Disconnected
           unique_id: zappi_last_disconnected
@@ -68,6 +69,16 @@ zappi_loads_template_zappi_connected:
             - service: input_number.set_value
               target:
                 entity_id: input_number.octopus_intelligent_total_dispatch
+              data:
+                value: 0
+            - service: utility_meter.calibrate
+              target:
+                entity_id: sensor.zappi_time_spent_charging
+              data:
+                value: 0
+            - service: input_number.set_value
+              target:
+                entity_id: input_number.zappi_charging_minutes
               data:
                 value: 0
             - service: input_datetime.set_datetime

@@ -1,4 +1,5 @@
 ########################################
+# v10.5.0 Small tweaks to Gap and JiT
 # v8.2.0 Hardened battery_exportable_allowance_kwh
 # v8.0.0 added nightly_battery_discharge_soc_window_limit
 # Template to estimate remaining energy required to survive the day
@@ -181,7 +182,7 @@ solax_export_template_discharge_magic:
               and dispatch
               and ev_status == 'EV Connected'
               and connected_for_min >= min_connected_min
-              and next_gap_hr > 0
+              and (prev_state or next_gap_hr > 0)
               and gap_start is not none
               and gap_end is not none
               and now_time >= gap_start
@@ -356,6 +357,7 @@ solax_export_template_discharge_magic:
                     ev_status == 'EV Disconnected'
                     or (ev_status == 'EV Connected' and allow_with_ev_connected)
                   )
+              and exportable_kwh > 0.360 
               and remaining_kwh_to_min > 0
               and now_ts >= just_in_time_start_ts
               and (turn_on or keep_on)

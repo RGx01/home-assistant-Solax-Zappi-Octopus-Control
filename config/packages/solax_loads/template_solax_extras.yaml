@@ -3,6 +3,7 @@ solax_loads_template_solax_extras:
     - sensor:
       
     ######################################################
+    # v10.5.0 Added Batery Power Adjusted
     # v10.2.0 Battery Heating binary sensor and power calc
     # v1.0.0
     # Extended Solax realtime data    
@@ -12,6 +13,26 @@ solax_loads_template_solax_extras:
     # - name: "Solax Local Battery Dump Power"
     # - name: "Solax Local House Load Power"
     ######################################################
+        # Assuming 75W for running inverter and battery plus 95% conversion efficiency; if above 1kW, trust the inverter
+        # This needs to recognise the discharge allowed period...
+        - name: "Solax Local Battery Power Adjusted"
+          unique_id: solax_local_battery_power_adjusted
+          unit_of_measurement: "W"
+          device_class: power
+          state_class: measurement
+          availability: >
+            {{ 
+              states('sensor.solax_local_inverter_power') not in ['unknown','unavailable']
+              and states('sensor.solax_local_battery_power') not in ['unknown','unavailable']
+              and states('sensor.solax_local_pv_output') not in ['unknown','unavailable'] 
+            }}
+          state: >
+            {% set ac = states('sensor.solax_local_inverter_power') | int(0) %}
+            {% set battery = states('sensor.solax_local_battery_power') | int(0) %}
+            {% set pv = (states('sensor.solax_local_pv_output') | float(0) * 0.95) | round(0) %}
+            {% set adjusted = (0 - ac + pv - 75) if (ac + pv != 0) else 0 %}
+            {{ adjusted if (adjusted < battery and adjusted < 1000) else battery }}
+
         - name: "Solax Local House Load Power"
           unique_id: solax_local_house_load_power
           # if your solax system can see load from zappi then set solax_can_see_zappi_load =1 else set it to 0
@@ -265,7 +286,26 @@ solax_loads_template_solax_extras:
             {{ mapper[state] if state in mapper else '0' }}
           icon: mdi:cursor-default-outline
 
-      
+    ######################################################
+    # Binary sensor for when house battery is allowed to discharge
+    ######################################################
+    - binary_sensor:
+        - name: "Solax Discharge Period"
+          unique_id: solax_discharge_period
+          state: >
+            {% set start = states('input_datetime.solax_battery_start_discharge_time').split(':') %}
+            {% set end = states('input_datetime.solax_battery_stop_discharge_time').split(':') %}
+            {% set now = now().hour * 60 + now().minute %}
+
+            {% set start_min = start[0]|int * 60 + start[1]|int %}
+            {% set end_min = end[0]|int * 60 + end[1]|int %}
+
+            {% if start_min < end_min %}
+              {{ start_min <= now < end_min }}
+            {% else %}
+              {{ now >= start_min or now < end_min }}
+            {% endif %}
+
 
     ######################################################
     # Binary sensor for when house battery is supposed to be charging
