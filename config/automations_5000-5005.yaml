@@ -714,33 +714,6 @@
                 {{ new }}'
             target:
               entity_id: input_number.octopus_intelligent_total_dispatch
-        - conditions:
-          - condition: template
-            value_template: "{{\n  trigger is not none\n  and trigger.entity_id ==
-              'switch.octopus_intelligent_smart_charge'\n  and trigger.to_state is
-              not none\n  and trigger.to_state.state == 'off'\n}}\n  "
-          sequence:
-          - action: input_number.set_value
-            metadata: {}
-            data:
-              value: 0
-            target:
-              entity_id: input_number.octopus_intelligent_total_dispatch
-            enabled: false
-        - conditions:
-          - condition: template
-            value_template: "{{\n  trigger is not none\n  and trigger.entity_id ==
-              'sensor.zappi_plug_status'\n  and trigger.from_state == 'EV Disconnected'\n
-              \ and trigger.to_state is not none\n  and trigger.to_state.state ==
-              'EV Connected'\n}}\n  "
-          sequence:
-          - action: input_number.set_value
-            metadata: {}
-            data:
-              value: 0
-            target:
-              entity_id: input_number.octopus_intelligent_total_dispatch
-            enabled: false
       alias: New Octopus Dispatch
     - conditions:
       - condition: trigger
@@ -843,26 +816,30 @@
           target:
             entity_id: number.octopus_intelligent_charge_target
           data:
-            value: "    {# THIS TEMPLATE IS TO RESET THE 6HR LIMIT IF AN EARLY MORNING
-              PLUGIN HAPPENS AFTER A PREVIOUS CHARGE #}\n\n    {# --- Battery sizes
-              --- #} \n    {% set cap = state_attr('sensor.connected_ev_battery_size','registered_ev_size')|float
+            value: "    {# EV Soc Target#}\n    {% set target = 100 %}\n    {# ---
+              Battery sizes --- #} \n    {% set cap = state_attr('sensor.connected_ev_battery_size','registered_ev_size')|float
               %} \n    {% set cap_ev = states('sensor.connected_ev_battery_size')|float
               %}  \n    {# --- Current battery levels --- #} \n    {% set current_ev_level
               = state_attr('binary_sensor.ev_currently_plugged_in','battery_level')
               | float %} \n    \n    {# --- Max energy allowed per 24hrs 12:00 to
-              12:00 --- #}  \n    {# --- Max energy allowed logic --- #} \n\n    {%
-              set ignore = is_state('input_boolean.ignore_6hr', 'off') %} \n\n    {%
-              set max_kwh = cap if ignore else \n          [\n            states('input_number.limit_ev_kwh_charge_target')|float
-              * ((100-states('input_number.estimated_charging_losses')|float)/100),
-              \n            states('sensor.octopus_intelligent_remaining_today')|float(42)*((100-states('input_number.estimated_charging_losses')|float)/100)\n
-              \         ]|min\n    %}\n\n    {# --- Desired target % --- #} \n    {%
-              set target = 100 %}  \n    {% set percent_needed = target - current_ev_level
-              %}     \n    {% set kwh_needed = (percent_needed / 100) * cap_ev %}
-              \    \n    {% set percent_equiv = (kwh_needed / cap) * 100 %}   \n    {#
-              --- Capped equiv target % --- #} \n    {% set percent_equiv_capped =
-              (max_kwh / cap) * 100 %}     \n    {% set limited_percent = [percent_equiv,
-              percent_equiv_capped] | min %}     \n    {{ [limited_percent, 10] |
-              max | int }}\n"
+              12:00 --- #}  \n    {# --- Max energy allowed logic --- #} \n    {#
+              --- Grid allowance (kWh, AC) --- #}\n    {% set ignore = is_state('input_boolean.ignore_6hr',
+              'off') %}\n    \n    {% set estimated_losses = states('input_number.estimated_charging_losses')
+              | float(0) %}\n    {% set daily_limit_ac = states('input_number.limit_ev_kwh_charge_target')
+              | float(42) %}\n    {% set daily_remaining_limit_ac = states('sensor.octopus_intelligent_remaining_today')
+              | float(42) %}\n    \n    {% set grid_allowance_kwh = cap if ignore
+              else\n        [\n            daily_remaining_limit_ac * (1 - estimated_losses
+              / 100),\n            daily_limit_ac * (1 - estimated_losses / 100)\n
+              \       ] | min\n    %}\n    \n    \n    {# --- Energy needed to reach
+              target for the actual EV (DC kWh) --- #}\n    {% set kwh_needed = ((target
+              - current_ev_level) / 100) * cap_ev %}\n    \n    {# --- Percent of
+              registered EV needed to reach target --- #}\n    {% set percent_needed_of_cap
+              = (kwh_needed / cap) * 100 %}\n    \n    {# --- Percent of registered
+              EV allowed by grid --- #}\n    {% set percent_grid_of_cap = (grid_allowance_kwh
+              / cap) * 100 %}\n    \n    {# --- Constrain by grid limit --- #}\n    {%
+              set constrained_percent_of_cap = [percent_needed_of_cap, percent_grid_of_cap]
+              | min %}\n    \n    {{ [constrained_percent_of_cap, 10] | max | int
+              }}"
       alias: Reset Octopus Usage Limits
     - conditions:
       - condition: trigger
@@ -902,23 +879,29 @@
         target:
           entity_id: number.octopus_intelligent_charge_target
         data:
-          value: "    {# --- Battery sizes --- #} \n    {% set cap = state_attr('sensor.connected_ev_battery_size','registered_ev_size')|float
+          value: "    {# EV Soc Target#}\n    {% set target = 100 %}\n    {# --- Battery
+            sizes --- #} \n    {% set cap = state_attr('sensor.connected_ev_battery_size','registered_ev_size')|float
             %} \n    {% set cap_ev = states('sensor.connected_ev_battery_size')|float
             %}  \n    {# --- Current battery levels --- #} \n    {% set current_ev_level
             = state_attr('binary_sensor.ev_currently_plugged_in','battery_level')
             | float %} \n    \n    {# --- Max energy allowed per 24hrs 12:00 to 12:00
-            --- #}  \n    {# --- Max energy allowed logic --- #} \n\n    {% set ignore
-            = is_state('input_boolean.ignore_6hr', 'off') %} \n\n    {% set max_kwh
-            = cap if ignore else \n          [\n            states('input_number.limit_ev_kwh_charge_target')|float
-            * ((100-states('input_number.estimated_charging_losses')|float)/100),
-            \n            states('sensor.octopus_intelligent_remaining_today')|float(42)*((100-states('input_number.estimated_charging_losses')|float)/100)\n
-            \         ]|min\n    %}\n\n    {# --- Desired target % --- #} \n    {%
-            set target = 100 %}  \n    {% set percent_needed = target - current_ev_level
-            %}     \n    {% set kwh_needed = (percent_needed / 100) * cap_ev %}     \n
-            \   {% set percent_equiv = (kwh_needed / cap) * 100 %}   \n    {# ---
-            Capped equiv target % --- #} \n    {% set percent_equiv_capped = (max_kwh
-            / cap) * 100 %}     \n    {% set limited_percent = [percent_equiv, percent_equiv_capped]
-            | min %}     \n    {{ [limited_percent, 10] | max | int }}\n"
+            --- #}  \n    {# --- Max energy allowed logic --- #} \n    {# --- Grid
+            allowance (kWh, AC) --- #}\n    {% set ignore = is_state('input_boolean.ignore_6hr',
+            'off') %}\n    \n    {% set estimated_losses = states('input_number.estimated_charging_losses')
+            | float(0) %}\n    {% set daily_limit_ac = states('input_number.limit_ev_kwh_charge_target')
+            | float(42) %}\n    {% set daily_remaining_limit_ac = states('sensor.octopus_intelligent_remaining_today')
+            | float(42) %}\n    \n    {% set grid_allowance_kwh = cap if ignore else\n
+            \       [\n            daily_remaining_limit_ac * (1 - estimated_losses
+            / 100),\n            daily_limit_ac * (1 - estimated_losses / 100)\n        ]
+            | min\n    %}\n    \n    \n    {# --- Energy needed to reach target for
+            the actual EV (DC kWh) --- #}\n    {% set kwh_needed = ((target - current_ev_level)
+            / 100) * cap_ev %}\n    \n    {# --- Percent of registered EV needed to
+            reach target --- #}\n    {% set percent_needed_of_cap = (kwh_needed /
+            cap) * 100 %}\n    \n    {# --- Percent of registered EV allowed by grid
+            --- #}\n    {% set percent_grid_of_cap = (grid_allowance_kwh / cap) *
+            100 %}\n    \n    {# --- Constrain by grid limit --- #}\n    {% set constrained_percent_of_cap
+            = [percent_needed_of_cap, percent_grid_of_cap] | min %}\n    \n    {{
+            [constrained_percent_of_cap, 10] | max | int }}"
       alias: Which EV Connected
     - conditions:
       - condition: trigger

@@ -21,14 +21,6 @@ zappi_loads_template_zappi_connected:
             - Charging
             - Waiting for EV
             - Fault
-      # action:
-      #   - if: "{{ trigger.to_state.state not in ['unknown','unavailable','None','none'] }}"
-      #     then:
-      #       - service: input_number.set_value
-      #         target:
-      #           entity_id: input_number.octopus_intelligent_total_dispatch
-      #         data:
-      #           value: 0
       sensor:
         - name: Zappi Last Disconnected
           unique_id: zappi_last_disconnected
