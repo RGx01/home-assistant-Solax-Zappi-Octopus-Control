@@ -1,4 +1,4 @@
-#v10.5
+#v10.5.1
 views:
   - badges:
       - type: entity
@@ -702,6 +702,11 @@ views:
               ) }}
 
               {{ "%-22s %s kWh" | format(
+                "Total Delivered:",
+                states('sensor.zappi_charge_added_session') | float(0) | round(1)
+              ) }}
+
+              {{ "%-22s %s kWh" | format(
                 "Remaining:",
                 states('sensor.octopus_intelligent_remaining_dispatch') | float(0) | round(1)
               ) }}
@@ -809,17 +814,24 @@ views:
 
               <pre>
 
-              {%- set current =
+              {%- set raw =
                 state_attr(
                   'sensor.octopus_total_completed_dispatch',
                   'completed_dispatches_kwh'
-                ) | default([], true)
-                | map(attribute='dispatch')
-                | list
+                )
               %}
-                {%- for completed in current %}
-              {{completed}}
-                {%- endfor -%}
+
+
+              {%- if raw is iterable and raw | length > 0 %}
+                {%- for completed in raw | map(attribute='dispatch') %}
+              {{ completed }}
+                {%- endfor %}
+              {%- else %}
+
+              (no completed dispatches)
+
+              {%- endif %}
+
               </pre>
       - type: grid
         cards:
@@ -1291,6 +1303,11 @@ views:
               ) }}
 
               {{ "%-22s %s kWh" | format(
+                "Total Delivered:",
+                states('sensor.zappi_charge_added_session') | float(0) | round(1)
+              ) }}
+
+              {{ "%-22s %s kWh" | format(
                 "Remaining:",
                 states('sensor.octopus_intelligent_remaining_dispatch') | float(0) | round(1)
               ) }}
@@ -1398,17 +1415,24 @@ views:
 
               <pre>
 
-              {%- set current =
+              {%- set raw =
                 state_attr(
                   'sensor.octopus_total_completed_dispatch',
                   'completed_dispatches_kwh'
-                ) | default([], true)
-                | map(attribute='dispatch')
-                | list
+                )
               %}
-                {%- for completed in current %}
-              {{completed}}
-                {%- endfor -%}
+
+
+              {%- if raw is iterable and raw | length > 0 %}
+                {%- for completed in raw | map(attribute='dispatch') %}
+              {{ completed }}
+                {%- endfor %}
+              {%- else %}
+
+              (no completed dispatches)
+
+              {%- endif %}
+
               </pre>
         column_span: 2
       - type: grid

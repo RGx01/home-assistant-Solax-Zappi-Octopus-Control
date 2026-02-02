@@ -1,10 +1,10 @@
 - id: '5000'
   alias: 5000 - Solax Zappi Octopus Control - House Keeping
-  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v10.2.0
-    Improved dispatch tracking\n---\n- v10.1.6 Update to 6hr limit if EV plugged in
-    before 12, @ 12 a new charge target is computed to ensure max allowance.\n---\n-
-    v10.1.0 Update to 6hr limit input_boolean\n---\n- v9.5.0 Account for charging
-    losses in EV limiting\n---\n- v9.3.0 General hardening of dispatch tracking\n---\n-
+  description: "# 5000 - Solax Zappi Octopus Control - House Keeping\n---\n- v10.5.0
+    deprecating some housing keeping tasks that reset some input numbers at the end
+    of an EV Charge.\n---\n- v10.2.0 Improved dispatch tracking\n---\n- v10.1.6 Update
+    to 6hr limit if EV plugged in before 12, @ 12 a new charge target is computed
+    to ensure max allowance.\n---\n- v10.1.0 Update to 6hr limit input_boolean\n---\n-
     v9.0.0 Changes to IOG 6hr limit\n---\n- v8.0.0 Minor updates to triggers\n---\n-
     v7.0.0 New function Battery Budget\n---\n- v1.0.0 Initial \nSee documentation
     in repo"
@@ -696,12 +696,14 @@
               entity_id: input_number.octopus_intelligent_total_dispatch
         - conditions:
           - condition: template
-            value_template: "{{\n  trigger is not none\n  and trigger.entity_id ==
-              'number.octopus_intelligent_charge_target'\n  and (states('input_number.octopus_intelligent_total_dispatch')
+            value_template: "{% set now_ts = now().timestamp() %}\n{% set end = states('sensor.octopus_intelligent_target_time')
+              | as_timestamp %}\n\n{{\n  trigger is not none\n  and trigger.entity_id
+              == 'number.octopus_intelligent_charge_target'\n  and (states('input_number.octopus_intelligent_total_dispatch')
               | float(0)) != 0\n  and trigger.from_state is not none\n  and trigger.to_state
               is not none\n  and (trigger.from_state.state | default('none')) not
               in ['unavailable','unknown','none']\n  and (trigger.to_state.state |
-              default('none')) not in ['unavailable','unknown','none']\n}}"
+              default('none')) not in ['unavailable','unknown','none']\n  and now_ts
+              < end\n}}"
           sequence:
           - action: input_number.set_value
             metadata: {}
@@ -845,25 +847,22 @@
               PLUGIN HAPPENS AFTER A PREVIOUS CHARGE #}\n\n    {# --- Battery sizes
               --- #} \n    {% set cap = state_attr('sensor.connected_ev_battery_size','registered_ev_size')|float
               %} \n    {% set cap_ev = states('sensor.connected_ev_battery_size')|float
-              %}  \n\n    {# --- Max energy allowed per 24hrs 12:00 to 12:00 --- #}
-              \ \n    {# --- Max energy allowed logic --- #} \n\n    {% set ignore
-              = is_state('input_boolean.ignore_6hr', 'off') %} \n    {% set max_kwh
-              = cap if ignore else \n          [\n            states('input_number.limit_ev_kwh_charge_target')|float
+              %}  \n    {# --- Current battery levels --- #} \n    {% set current_ev_level
+              = state_attr('binary_sensor.ev_currently_plugged_in','battery_level')
+              | float %} \n    \n    {# --- Max energy allowed per 24hrs 12:00 to
+              12:00 --- #}  \n    {# --- Max energy allowed logic --- #} \n\n    {%
+              set ignore = is_state('input_boolean.ignore_6hr', 'off') %} \n\n    {%
+              set max_kwh = cap if ignore else \n          [\n            states('input_number.limit_ev_kwh_charge_target')|float
               * ((100-states('input_number.estimated_charging_losses')|float)/100),
               \n            states('sensor.octopus_intelligent_remaining_today')|float(42)*((100-states('input_number.estimated_charging_losses')|float)/100)\n
-              \         ]|min\n    %}\n\n    {% set max_percent_ev = (max_kwh / cap_ev)
-              * 100 %}  \n\n    {# --- Which car is currently plugged in? --- #} \n
-              \   {% set active_car = state_attr('binary_sensor.ev_currently_plugged_in','ev_name')
-              %}  \n\n    {# --- Current battery levels --- #}\n\n    {% set battery_entity
-              = state_attr('binary_sensor.ev_currently_plugged_in','battery_entity')%}\n\n
-              \   {% set current_ev_level = states(battery_entity)|float(0)  %} \n\n
-              \   {# --- Desired target % --- #} \n    {% set target = 100 %}  \n
-              \    \n    {% set percent_needed = target - current_ev_level %}     \n
-              \   {% set kwh_needed = (percent_needed / 100) * cap_ev %}     \n    {%
-              set percent_equiv = (kwh_needed / cap) * 100 %}     \n    {% set percent_equiv_capped
-              = (max_kwh / cap) * 100 %}     \n    {% set limited_percent = [percent_equiv,
+              \         ]|min\n    %}\n\n    {# --- Desired target % --- #} \n    {%
+              set target = 100 %}  \n    {% set percent_needed = target - current_ev_level
+              %}     \n    {% set kwh_needed = (percent_needed / 100) * cap_ev %}
+              \    \n    {% set percent_equiv = (kwh_needed / cap) * 100 %}   \n    {#
+              --- Capped equiv target % --- #} \n    {% set percent_equiv_capped =
+              (max_kwh / cap) * 100 %}     \n    {% set limited_percent = [percent_equiv,
               percent_equiv_capped] | min %}     \n    {{ [limited_percent, 10] |
-              max | int }}"
+              max | int }}\n"
       alias: Reset Octopus Usage Limits
     - conditions:
       - condition: trigger
@@ -905,24 +904,21 @@
         data:
           value: "    {# --- Battery sizes --- #} \n    {% set cap = state_attr('sensor.connected_ev_battery_size','registered_ev_size')|float
             %} \n    {% set cap_ev = states('sensor.connected_ev_battery_size')|float
-            %}  \n\n    {# --- Max energy allowed per 24hrs 12:00 to 12:00 --- #}
-            \ \n    {# --- Max energy allowed logic --- #} \n\n    {% set ignore =
-            is_state('input_boolean.ignore_6hr', 'off') %} \n\n    {% set max_kwh
+            %}  \n    {# --- Current battery levels --- #} \n    {% set current_ev_level
+            = state_attr('binary_sensor.ev_currently_plugged_in','battery_level')
+            | float %} \n    \n    {# --- Max energy allowed per 24hrs 12:00 to 12:00
+            --- #}  \n    {# --- Max energy allowed logic --- #} \n\n    {% set ignore
+            = is_state('input_boolean.ignore_6hr', 'off') %} \n\n    {% set max_kwh
             = cap if ignore else \n          [\n            states('input_number.limit_ev_kwh_charge_target')|float
             * ((100-states('input_number.estimated_charging_losses')|float)/100),
             \n            states('sensor.octopus_intelligent_remaining_today')|float(42)*((100-states('input_number.estimated_charging_losses')|float)/100)\n
-            \         ]|min\n    %}\n    {% set max_percent_ev = (max_kwh / cap) *
-            100 %}  \n    {# --- Which car is currently plugged in? --- #} \n    {%
-            set active_car = state_attr('binary_sensor.ev_currently_plugged_in','ev_name')
-            %}  \n    {# --- Current battery levels --- #} \n    {% set current_ev_level
-            = state_attr('binary_sensor.ev_currently_plugged_in','battery_level')
-            | float %} \n    {# --- Desired target % --- #} \n    {% set target =
-            100 %}  \n  \n    {% set percent_needed = target - current_ev_level %}
-            \    \n    {% set kwh_needed = (percent_needed / 100) * cap_ev %}     \n
-            \   {% set percent_equiv = (kwh_needed / cap) * 100 %}     \n    {% set
-            percent_equiv_capped = (max_kwh / cap) * 100 %}     \n    {% set limited_percent
-            = [percent_equiv, percent_equiv_capped] | min %}     \n    {{ [limited_percent,
-            10] | max | int }}\n"
+            \         ]|min\n    %}\n\n    {# --- Desired target % --- #} \n    {%
+            set target = 100 %}  \n    {% set percent_needed = target - current_ev_level
+            %}     \n    {% set kwh_needed = (percent_needed / 100) * cap_ev %}     \n
+            \   {% set percent_equiv = (kwh_needed / cap) * 100 %}   \n    {# ---
+            Capped equiv target % --- #} \n    {% set percent_equiv_capped = (max_kwh
+            / cap) * 100 %}     \n    {% set limited_percent = [percent_equiv, percent_equiv_capped]
+            | min %}     \n    {{ [limited_percent, 10] | max | int }}\n"
       alias: Which EV Connected
     - conditions:
       - condition: trigger
@@ -1270,7 +1266,7 @@
     for:
       hours: 0
       minutes: 0
-      seconds: 15
+      seconds: 0
     id: Companion Charge
   conditions: []
   actions:
@@ -2136,23 +2132,31 @@
               is not none\n    and trigger.from_state.state != trigger.to_state.state\n
               \   and trigger.to_state.state == 'off'\n  )\n}}"
           sequence:
-          - action: script.solax_set_mode_and_settings
-            data:
-              settings:
-                selfuse_battery_min_soc: '{{min_soc}}'
-                feedin_battery_min_soc: '{{min_soc}}'
-                period2_enabled: '{{0}}'
-          - if:
-            - condition: template
-              value_template: "{{ trigger.entity_id ==\n           'binary_sensor.octopus_energy_electricity_off_peak_companion'
-                }}"
-            then:
-            - event: Solax Zappi Octopus Control
-              event_data:
-                message: Companion charge stopped @ {{now().strftime('%H:%M')}}
-                title: Companion Charge Stopped
-                class: normal
-              enabled: true
+          - choose:
+            - conditions:
+              - condition: template
+                value_template: "      {% set d = state_attr('sensor.solax_local_settings','Data')
+                  or [] %}\n      {% set chargeperiod2_raw = (d[7] | int(0)) == 1
+                  %}\n      {{chargeperiod2_raw}}"
+              sequence:
+              - action: script.solax_set_mode_and_settings
+                data:
+                  settings:
+                    selfuse_battery_min_soc: '{{min_soc}}'
+                    feedin_battery_min_soc: '{{min_soc}}'
+                    period2_enabled: '{{0}}'
+              - if:
+                - condition: template
+                  value_template: "{{ trigger.entity_id ==\n           'binary_sensor.octopus_energy_electricity_off_peak_companion'
+                    }}"
+                then:
+                - event: Solax Zappi Octopus Control
+                  event_data:
+                    message: Companion charge stopped @ {{now().strftime('%H:%M')}}
+                    title: Companion Charge Stopped
+                    class: normal
+                  enabled: true
+            alias: Turn Off if the charge period 2 needs to be turned off
           alias: 'OFF'
       alias: Companion Charge
     enabled: true
