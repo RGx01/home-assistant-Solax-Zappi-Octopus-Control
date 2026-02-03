@@ -1,4 +1,4 @@
-#v10.5.1
+#v10.6.0
 views:
   - badges:
       - type: entity
@@ -626,61 +626,6 @@ views:
 
               {% if states('sensor.zappi_plug_status') != 'EV Disconnected'
                  and state_attr('binary_sensor.ev_currently_plugged_in','ev_name') not in [None, 'Unknown'] %}
-              ----------------------
-
-              EV DETAILS
-
-              ----------------------
-
-              <pre>
-
-              {{ "%-22s %s" | format("Current Time:", now().strftime('%d %b %Y,
-              %H:%M')) }}
-
-              {{ "%-22s %s" | format("EV Connected at:",
-              (states('sensor.zappi_last_connected')|as_datetime|as_local).strftime('%d
-              %b %Y, %H:%M')) }}
-
-              {{ "%-22s %s" | format("EV:",
-              state_attr('binary_sensor.ev_currently_plugged_in','ev_name')) }}
-
-              {{ "%-22s %s kWh" | format("EV Size:",
-              states('sensor.connected_ev_battery_size')) }}
-
-              {{ "%-22s %s%%" | format("EV SoC:",
-              states('sensor.ev_active_battery_level') | int(0)) }}
-
-              {{ "%-22s %s kWh" | format("Registered Size:", battery_size) }}
-
-              </pre>
-
-              ----------------------
-
-              TARGET DETAILS
-
-              ----------------------
-
-              <pre>
-
-              {{ "%-22s %s" | format("Ready by:",
-              (states('sensor.octopus_intelligent_target_time')|as_datetime|as_local).strftime('%d
-              %b %Y, %H:%M')) }}
-
-              {{ "%-22s %s" | format(
-                "Charge Target:",
-                (target_fraction * 100) | round(0) ~ "% of " ~ battery_size ~ " kWh = " )}}
-              {{ "%-22s %s kWh" | format(
-                "",
-                (target_fraction * battery_size) | round(1)
-              ) }}
-
-              {{ "%-22s %s kWh" | format(
-                "Estimated Dispatch:",
-                ((target_fraction * battery_size) / losses_fraction) | round(1)
-              ) }}
-
-              </pre>
-
               ----------------------
 
               PLANNED vs REMAINING
@@ -4550,6 +4495,9 @@ views:
               - sensor.monthly_grid_import_offpeak
               - sensor.monthly_grid_import_peak
               - sensor.zappi_charging
+              - sensor.monthly_house_load
+              - sensor.monthly_battery_use
+              - sensor.monthly_manual_battery_export
             stat_types:
               - state
             grid_options:

@@ -1,11 +1,12 @@
 ###############################################
-# v9.5.0 Auto detect entity names so you don't have to replace them when new ones are 
-#        created (make sure you delete the old ones)
-# v9.4.0 More hardening
-# v9.3.0 Hardening to reduce the amount of unnecessary triggering of the house keeping automation 
-#.       when the octopus api stops responding. Also trying to maintain the remaining disptch helper from changing
-#.       in an active charging session. (it should only change when there is a genuine new charge target)
-# V6.0.0 Refactor for Octopus Energy V17+
+# v10.6.0 Added more normalised entities (£)
+# v9.5.0  Auto detect entity names so you don't have to replace them when new ones are 
+#         created (make sure you delete the old ones)
+# v9.4.0  More hardening
+# v9.3.0  Hardening to reduce the amount of unnecessary triggering of the house keeping automation 
+#         when the octopus api stops responding. Also trying to maintain the remaining disptch helper from changing
+#         in an active charging session. (it should only change when there is a genuine new charge target)
+# V6.0.0  Refactor for Octopus Energy V17+
 ###############################################
 octopus_renamed_entities_templates:
   template:
@@ -43,7 +44,27 @@ octopus_renamed_entities_templates:
               | list
             %}
             {% if matches | length > 0 %}
-              {{ matches[0].replace('binary_sensor.', '').replace('_off_peak', '') }}
+              {{ matches[0].replace('binary_sensor.octopus_energy_electricity_', '').replace('_off_peak', '') }}
+            {% else %}
+              unknown
+            {% endif %}
+
+    ######################################################
+    # Export MPAN
+    ######################################################
+    - sensor:
+        - name: "Octopus Electricity Export MPAN Base"
+          unique_id: octopus_electricity_export_mpan_base
+          state: >
+            {% set matches =
+              states
+              | selectattr('entity_id', 'match', '^binary_sensor\.octopus_energy_electricity_.*_off_peak$')
+              | selectattr('entity_id', 'search', '_export_')
+              | map(attribute='entity_id')
+              | list
+            %}
+            {% if matches | length > 0 %}
+              {{ matches[0].replace('binary_sensor.octopus_energy_electricity_', '').replace('_export_off_peak', '') }}
             {% else %}
               unknown
             {% endif %}
@@ -134,13 +155,64 @@ octopus_renamed_entities_templates:
           unique_id: octopus_energy_electricity_off_peak
           state: >
             {% set mpan = states('sensor.octopus_electricity_mpan_base') %}
-            {% set master = 'binary_sensor.' ~ mpan ~ '_off_peak' %}
+            {% set master = 'binary_sensor.octopus_energy_electricity_' ~ mpan ~ '_off_peak' %}
             {% set s = states(master) %}
             {% if s in ['unavailable', 'unknown'] %}
               {{ states('binary_sensor.octopus_energy_electricity_off_peak') }}
             {% else %}
               {{ s }}
             {% endif %}
+
+    ######################################################
+    # Octopus Energy Electricity Export Current Rate unknown when cloud response is not available
+    ######################################################
+    - sensor:
+        - name: Octopus Energy Electricity Export Current Rate
+          unique_id: octopus_energy_electricity_export_current_rate
+          device_class: monetary
+          state: >
+            {% set mpan = states('sensor.octopus_electricity_export_mpan_base') %}
+            {% set master = 'sensor.octopus_energy_electricity_' ~ mpan ~ '_export_current_rate' %}
+            {% set s = states(master) %}
+            {% if s in ['unavailable', 'unknown'] %}
+              {{ states('sensor.octopus_energy_electricity_export_current_rate') }}
+            {% else %}
+              {{ s }}
+            {% endif %}   
+
+    ######################################################
+    # Octopus Energy Electricity Current Rate unknown when cloud response is not available
+    ######################################################
+    - sensor:
+        - name: Octopus Energy Electricity Current Rate
+          unique_id: octopus_energy_electricity_current_rate
+          device_class: monetary
+          state: >
+            {% set mpan = states('sensor.octopus_electricity_mpan_base') %}
+            {% set master = 'sensor.octopus_energy_electricity_' ~ mpan ~ '_current_rate' %}
+            {% set s = states(master) %}
+            {% if s in ['unavailable', 'unknown'] %}
+              {{ states('sensor.octopus_energy_electricity_current_rate') }}
+            {% else %}
+              {{ s }}
+            {% endif %}
+
+    ######################################################
+    # Octopus Energy Electricity Standing Charge unknown when cloud response is not available
+    ######################################################
+    - sensor:
+        - name: Octopus Energy Electricity Current Standing Charge
+          unique_id: octopus_energy_electricity_current_standing_charge
+          device_class: monetary
+          state: >
+            {% set mpan = states('sensor.octopus_electricity_mpan_base') %}
+            {% set master = 'sensor.octopus_energy_electricity_' ~ mpan ~ '_current_standing_charge' %}
+            {% set s = states(master) %}
+            {% if s in ['unavailable', 'unknown'] %}
+              {{ states('sensor.octopus_energy_electricity_current_standing_charge') }}
+            {% else %}
+              {{ s }}
+            {% endif %}  
 
     ######################################################
     # Octopus Intelligent Dispatching avoiding unknown when cloud response is not available

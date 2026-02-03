@@ -702,7 +702,7 @@
               | float(0)) != 0\n  and trigger.from_state is not none\n  and trigger.to_state
               is not none\n  and (trigger.from_state.state | default('none')) not
               in ['unavailable','unknown','none']\n  and (trigger.to_state.state |
-              default('none')) not in ['unavailable','unknown','none']\n  and now_ts
+              default('none')) not in ['unavailable','unknown','none']\n  and now_ts-3600
               < end\n}}"
           sequence:
           - action: input_number.set_value
@@ -946,16 +946,17 @@
   alias: 5001 - Solax Zappi Octopus Control
   description: "# 5001 - Solax Zappi Octopus Control\n---\n## Automation Description\n
     + Idempotent handling of inverter mode and settings\n + Zappi and Octopus event
-    handling\n---\n## v10 Changes\n---\n- v10.5.0 Variables block adjustment for Companion
-    Charging when transitioning into normal solax discharging periods\n---\n- v10.3.0
-    Companion Charging\n----\n- v10.1.0 Update to 6hr limit input_boolean\n----\n##
-    Summary of Historical Changes\n----\n- v9 Added addition case for 6hr limit trigger
-    in the min_soc calculation. Moved time spent charging to house keeping automation.
-    Added a separate option for 6hr limit. This forces zappi to stopped and ignores
-    always in eco mode. Bit lazy as always in ECO+ when connected is now in the correct
-    state. We need to force 'stopped' as turning off smart charge isn't enough to
-    reliably end the charge. \n---\n- v8 Refinement of tiny Octopus dispatches and
-    pauses\n---\n- v7 New function Battery Budget\n---\n\n\n"
+    handling\n---\n## v10 Changes\n---\n- v10.6.0 Handles early disconnect when companion
+    is on\n---\n- v10.5.0 Variables block adjustment for Companion Charging when transitioning
+    into normal solax discharging periods\n---\n- v10.3.0 Companion Charging\n----\n-
+    v10.1.0 Update to 6hr limit input_boolean\n----\n## Summary of Historical Changes\n----\n-
+    v9 Added addition case for 6hr limit trigger in the min_soc calculation. Moved
+    time spent charging to house keeping automation. Added a separate option for 6hr
+    limit. This forces zappi to stopped and ignores always in eco mode. Bit lazy as
+    always in ECO+ when connected is now in the correct state. We need to force 'stopped'
+    as turning off smart charge isn't enough to reliably end the charge. \n---\n-
+    v8 Refinement of tiny Octopus dispatches and pauses\n---\n- v7 New function Battery
+    Budget\n---\n\n\n"
   triggers:
   - entity_id:
     - sensor.zappi_plug_status
@@ -1029,7 +1030,7 @@
     trigger: state
     for:
       hours: 0
-      minutes: 9
+      minutes: 5
       seconds: 0
   - alias: EV Paused
     entity_id:
@@ -1042,7 +1043,7 @@
     trigger: state
     for:
       hours: 0
-      minutes: 9
+      minutes: 5
       seconds: 0
   - alias: Peak Rate
     entity_id:
@@ -1297,8 +1298,11 @@
         second=0, microsecond=0) -%}   \n  {# race condition was found when using
         input_boolean.solaxchargeperiod2 so we need to use the raw sensor value #}\n
         \ {% set d = state_attr('sensor.solax_local_settings','Data') or [] %}\n  {%
-        set chargeperiod2_raw = (d[7] | int(0)) == 1 %}\n\n  {# --- DISCHARGE ALLOWED
-        WINDOW (can cross midnight) --- #}\n\n  {% set discharge_start_raw = states('input_datetime.solax_battery_start_discharge_time')
+        set fallback = is_state('input_boolean.solaxchargeperiod2', 'on') %}\n  \n
+        \ {% if d is sequence and d | length > 7 %}\n    {% set chargeperiod2_raw
+        = (d[7] | int(0)) == 1 %}\n  {% else %}\n    {% set chargeperiod2_raw = fallback
+        %}\n  {% endif %}\n\n  {# --- DISCHARGE ALLOWED WINDOW (can cross midnight)
+        --- #}\n\n  {% set discharge_start_raw = states('input_datetime.solax_battery_start_discharge_time')
         -%}\n  {% set discharge_stop_raw  = states('input_datetime.solax_battery_stop_discharge_time')
         -%}\n  \n  {% set discharge_start = today_at(discharge_start_raw) -%}\n  {%
         set discharge_stop  = today_at(discharge_stop_raw) -%}\n  \n  {# If stop <=
@@ -1385,7 +1389,8 @@
           value_template: "{{(state_attr('sensor.solax_local_settings', 'Data')[10]
             != default_mode) \nor (state_attr('sensor.solax_local_settings', 'Data')[0]
             != min_soc) \nor (state_attr('sensor.solax_local_settings', 'Data')[12]
-            != min_soc)}}"
+            != min_soc)\nor (state_attr('sensor.solax_local_settings', 'Data')[7]
+            != 'false')}}"
         - condition: template
           value_template: '{{(state_attr(''sensor.solax_local_settings'', ''Data'')[10]
             != 3)}}'
@@ -1397,6 +1402,7 @@
             settings:
               selfuse_battery_min_soc: '{{min_soc}}'
               feedin_battery_min_soc: '{{min_soc}}'
+              period2_enabled: '{{0}}'
       - event: Solax Zappi Octopus Control
         event_data:
           message: EV disconnected @ {{now().strftime('%H:%M')}}
